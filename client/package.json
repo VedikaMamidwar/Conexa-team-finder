@@ -13,7 +13,11 @@
     "axios": "^1.19.0",
     "framer-motion": "^12.43.0",
     "lightningcss": "^1.33.0",
+<<<<<<< HEAD
+    "lucide-react": "^1.29.0",
+=======
     "lucide-react": "^1.30.0",
+>>>>>>> 5f6d01de87a497cc74e0212ecc03f949af3b6fd9
     "react": "^19.2.7",
     "react-countup": "^6.5.3",
     "react-dom": "^19.2.7",
