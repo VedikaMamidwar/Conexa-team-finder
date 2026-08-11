@@ -1,3 +1,4 @@
+
 import { Routes, Route } from "react-router-dom";
 
 import Splash from "../pages/Splash";
@@ -12,45 +13,46 @@ import ResetPassword from "../pages/auth/ResetPassword";
 import CompleteProfile from "../pages/dashboard/CompleteProfile";
 import Dashboard from "../pages/dashboard/Dashboard";
 import BuildTeam from "../pages/dashboard/BuildTeam";
+import Hackathons from "../pages/dashboard/Hackathons";
 
 import ProtectedRoute from "./ProtectedRoute";
 
 export default function AppRoutes() {
     return (
         <Routes>
-            <Route path="/" element={<Splash />} />
 
+            {/* Public Routes */}
+            <Route path="/" element={<Splash />} />
             <Route path="/landing" element={<Landing />} />
 
+            {/* Authentication Routes */}
             <Route path="/register" element={<Register />} />
-
             <Route path="/login" element={<Login />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/verify-otp" element={<VerifyOTP />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
 
-            <Route
-                path="/forgot-password"
-                element={<ForgotPassword />}
-            />
-
-            <Route
-                path="/verify-otp"
-                element={<VerifyOTP />}
-            />
-
-            <Route
-                path="/reset-password"
-                element={<ResetPassword />}
-            />
-
+            {/* Profile */}
             <Route
                 path="/complete-profile"
                 element={<CompleteProfile />}
             />
 
+            {/* Protected Routes */}
             <Route
                 path="/build-team"
                 element={
                     <ProtectedRoute>
                         <BuildTeam />
+                    </ProtectedRoute>
+                }
+            />
+
+            <Route
+                path="/hackathons"
+                element={
+                    <ProtectedRoute>
+                        <Hackathons />
                     </ProtectedRoute>
                 }
             />
@@ -63,6 +65,7 @@ export default function AppRoutes() {
                     </ProtectedRoute>
                 }
             />
+
         </Routes>
     );
 }
