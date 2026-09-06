@@ -1,0 +1,39 @@
+.chat-page {
+  display: flex;
+  height: calc(100vh - 70px);
+  width: 100%;
+  overflow: hidden;
+}
+
+.chat-sidebar {
+  width: 350px;
+  min-width: 300px;
+  border-right: 1px solid #e5e5e5;
+  background: #ffffff;
+}
+
+.chat-main {
+  flex: 1;
+  background: #f7f7fb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.empty-chat {
+  text-align: center;
+  color: #555;
+}
+
+.empty-chat-icon {
+  font-size: 60px;
+  margin-bottom: 15px;
+}
+
+.empty-chat h2 {
+  margin-bottom: 8px;
+}
+
+.empty-chat p {
+  color: #888;
+}
