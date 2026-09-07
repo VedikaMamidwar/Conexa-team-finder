@@ -213,71 +213,8 @@ export default function FAQ() {
                     })}
                 </div>
 
-                {/* Bottom Help Card */}
-                <motion.div
-                    initial={{ opacity: 0, y: 30 }}
-                    whileInView={{ opacity: 1, y: 0 }}
-                    viewport={{ once: true }}
-                    transition={{ delay: 0.3 }}
-                    className="
-                        mt-10 sm:mt-12
-                        bg-[#1E1B4B]
-                        rounded-2xl sm:rounded-3xl
-                        p-5 sm:p-7 lg:p-8
-                        flex flex-col sm:flex-row
-                        items-center
-                        justify-between
-                        gap-5
-                        text-center sm:text-left
-                        shadow-xl
-                    "
-                >
-                    <div className="flex flex-col sm:flex-row items-center gap-4">
-                        <div className="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center">
-                            <HelpCircle
-                                size={25}
-                                className="text-[#14B8A6]"
-                            />
-                        </div>
 
-                        <div>
-                            <h3 className="text-lg sm:text-xl font-bold text-white">
-                                Still have questions?
-                            </h3>
 
-                            <p className="mt-1 text-sm text-slate-300">
-                                We're here to help you get started.
-                            </p>
-                        </div>
-                    </div>
-
-                    <button
-                        type="button"
-                        onClick={() =>
-                            document
-                                .getElementById("contact")
-                                ?.scrollIntoView({
-                                    behavior: "smooth",
-                                })
-                        }
-                        className="
-                            w-full sm:w-auto
-                            px-6 py-3
-                            rounded-xl
-                            bg-[#14B8A6]
-                            text-white
-                            font-semibold
-                            hover:bg-[#0f9f91]
-                            hover:scale-105
-                            active:scale-95
-                            transition-all
-                            duration-200
-                            shadow-lg
-                        "
-                    >
-                        Contact Us
-                    </button>
-                </motion.div>
 
             </div>
         </section>

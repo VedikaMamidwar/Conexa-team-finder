@@ -244,7 +244,15 @@ export default function Hero() {
                             {/* Dashboard Button */}
                             <button
                                 type="button"
-                                className="mt-2 sm:mt-4 w-full bg-[#1E1B4B] hover:bg-[#312E81] text-white rounded-xl py-3 sm:py-4 font-semibold transition text-sm sm:text-base"
+                                onClick={() =>
+                                    document
+                                        .getElementById("demo")
+                                        ?.scrollIntoView({
+                                            behavior: "smooth",
+                                            block: "start",
+                                        })
+                                }
+                                className="mt-2 sm:mt-4 w-full bg-[#1E1B4B] hover:bg-[#312E81] text-white rounded-xl py-3 sm:py-4 font-semibold transition text-sm sm:text-base active:scale-[0.98]"
                             >
                                 Explore Dashboard
                             </button>

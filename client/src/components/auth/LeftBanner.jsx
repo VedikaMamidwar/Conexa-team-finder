@@ -27,172 +27,76 @@ const features = [
 
 export default function LeftBanner() {
     return (
-        <div className="relative flex flex-col justify-between h-full w-full text-white">
-
-            {/* Top */}
-
+        <div className="flex h-full flex-col justify-between rounded-2xl bg-[#1E1B4B] p-6 text-white shadow-2xl shadow-indigo-950/40 sm:p-8">
             <div>
-
                 <motion.div
-                    initial={{ opacity: 0, y: -25 }}
+                    initial={{ opacity: 0, y: -20 }}
                     animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.7 }}
+                    transition={{ duration: 0.5 }}
+                    className="mb-8 flex items-center gap-3"
                 >
-                    <h1 className="text-5xl font-black tracking-widest">
-                        CONEXA
-                    </h1>
-
-                    <p className="mt-4 text-cyan-100 text-lg">
-                        Where Great Teams Begin.
-                    </p>
+                    <div className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/10 ring-1 ring-white/10">
+                        <Sparkles className="h-5 w-5 text-indigo-300" />
+                    </div>
+                    <div>
+                        <p className="text-xs uppercase tracking-[0.2em] text-indigo-200/80">
+                            Conexa
+                        </p>
+                        <h2 className="text-lg font-semibold">Build better teams</h2>
+                    </div>
                 </motion.div>
-
-                {/* Heading */}
 
                 <motion.div
-                    initial={{ opacity: 0 }}
-                    animate={{ opacity: 1 }}
-                    transition={{ delay: .3 }}
-                    className="mt-16"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.5, delay: 0.1 }}
+                    className="mb-8"
                 >
-
-                    <span className="inline-flex items-center gap-2 bg-white/10 px-4 py-2 rounded-full backdrop-blur-md text-sm">
-
-                        <Sparkles size={16} />
-
-                        India's Smart Team Building Platform
-
-                    </span>
-
-                    <h2 className="mt-8 text-5xl font-black leading-tight">
-
-                        Connect.
-                        <br />
-
-                        Collaborate.
-                        <br />
-
-                        Win Together.
-
-                    </h2>
-
-                    <p className="mt-6 text-cyan-100 leading-8 text-lg max-w-lg">
-
-                        Discover talented developers, designers, AI engineers,
-                        cybersecurity experts and innovators from colleges across India.
-
+                    <p className="mb-3 text-sm font-medium uppercase tracking-[0.25em] text-indigo-200/80">
+                        For student innovators
                     </p>
-
+                    <h1 className="max-w-md text-4xl font-bold leading-tight sm:text-5xl">
+                        Join the next wave of hackathon teams.
+                    </h1>
                 </motion.div>
 
-                {/* Features */}
-
-                <div className="mt-12 space-y-5">
-
-                    {features.map((item, index) => {
-
-                        const Icon = item.icon;
-
-                        return (
-
-                            <motion.div
-                                key={index}
-                                initial={{ opacity: 0, x: -40 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                transition={{ delay: index * .2 }}
-                                className="flex items-start gap-5 bg-white/10 rounded-2xl p-5 backdrop-blur-md border border-white/10"
-                            >
-
-                                <div className="w-14 h-14 rounded-xl bg-white flex items-center justify-center">
-
-                                    <Icon
-                                        className="text-[#1E1B4B]"
-                                        size={26}
-                                    />
-
-                                </div>
-
-                                <div>
-
-                                    <h3 className="font-bold text-lg">
-                                        {item.title}
-                                    </h3>
-
-                                    <p className="text-cyan-100 text-sm mt-1">
-                                        {item.description}
-                                    </p>
-
-                                </div>
-
-                            </motion.div>
-
-                        );
-
-                    })}
-
+                <div className="space-y-4">
+                    {features.map(({ icon: Icon, title, description }, index) => (
+                        <motion.div
+                            key={title}
+                            initial={{ opacity: 0, x: -20 }}
+                            animate={{ opacity: 1, x: 0 }}
+                            transition={{ duration: 0.4, delay: 0.15 + index * 0.1 }}
+                            className="flex items-start gap-4 rounded-xl border border-white/10 bg-white/5 p-4 backdrop-blur-sm"
+                        >
+                            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-lg bg-indigo-500/20 text-indigo-200">
+                                <Icon className="h-5 w-5" />
+                            </div>
+                            <div>
+                                <h3 className="text-base font-semibold text-white">{title}</h3>
+                                <p className="mt-1 text-sm text-indigo-100/80">{description}</p>
+                            </div>
+                        </motion.div>
+                    ))}
                 </div>
-
             </div>
 
-            {/* Bottom */}
-
             <motion.div
-                initial={{ opacity: 0, y: 40 }}
+                initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: .8 }}
-                className="mt-12"
+                transition={{ duration: 0.5, delay: 0.4 }}
+                className="mt-8 rounded-xl border border-indigo-300/20 bg-white/5 p-4"
             >
-
-                <div className="grid grid-cols-3 gap-4">
-
-                    <div className="bg-white/10 rounded-2xl p-5 backdrop-blur-md text-center">
-
-                        <h3 className="text-3xl font-black">
-                            10K+
-                        </h3>
-
-                        <p className="text-sm text-cyan-100 mt-2">
-                            Students
-                        </p>
-
+                <div className="flex items-center justify-between gap-4">
+                    <div>
+                        <p className="text-sm text-indigo-200/80">Trusted by students across India</p>
+                        <p className="mt-1 text-2xl font-bold">50K+ members</p>
                     </div>
-
-                    <div className="bg-white/10 rounded-2xl p-5 backdrop-blur-md text-center">
-
-                        <h3 className="text-3xl font-black">
-                            180+
-                        </h3>
-
-                        <p className="text-sm text-cyan-100 mt-2">
-                            Colleges
-                        </p>
-
+                    <div className="flex h-10 w-10 items-center justify-center rounded-full bg-indigo-500/20 text-indigo-200">
+                        <ArrowUpRight className="h-5 w-5" />
                     </div>
-
-                    <div className="bg-white/10 rounded-2xl p-5 backdrop-blur-md text-center">
-
-                        <h3 className="text-3xl font-black">
-                            350+
-                        </h3>
-
-                        <p className="text-sm text-cyan-100 mt-2">
-                            Hackathons
-                        </p>
-
-                    </div>
-
                 </div>
-
-                <button className="mt-8 flex items-center gap-2 text-cyan-100 hover:text-white transition">
-
-                    Learn More
-
-                    <ArrowUpRight size={18} />
-
-                </button>
-
             </motion.div>
-
         </div>
     );
 }

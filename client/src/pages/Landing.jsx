@@ -4,7 +4,6 @@ import Trusted from "../components/landing/Trusted";
 import Features from "../components/landing/Features";
 import DashboardShowcase from "../components/landing/DashboardShowcase";
 import HowItWorks from "../components/landing/HowItWorks";
-import Statistics from "../components/landing/Statistics";
 import Testimonials from "../components/landing/Testimonials";
 import FAQ from "../components/landing/FAQ";
 import CTA from "../components/landing/CTA";
@@ -24,28 +23,20 @@ export default function Landing() {
                 <Features />
             </section>
 
-            <section id="how">
-                <HowItWorks />
-            </section>
-
             <section id="demo">
                 <DashboardShowcase />
             </section>
 
-
-
-
-
-
+            <section id="how">
+                <HowItWorks />
+            </section>
 
             <Trusted />
 
             <FindTeammatesPreview />
 
-            <Statistics />
 
             <Testimonials />
-
 
 
             <section id="faq">
