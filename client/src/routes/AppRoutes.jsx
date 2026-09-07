@@ -15,7 +15,7 @@ import ResetPassword from "../pages/auth/ResetPassword";
 import CompleteProfile from "../pages/dashboard/CompleteProfile";
 import Dashboard from "../pages/dashboard/Dashboard";
 import BuildTeam from "../pages/dashboard/BuildTeam";
-import Hackathon from "../pages/dashboard/Hackathon";
+
 import FindTeammates from "../pages/dashboard/FindTeammates";
 
 // ================= USER =================
@@ -127,7 +127,6 @@ export default function AppRoutes() {
 
             {/* ================= HACKATHONS ================= */}
 
-            <Route path="/hackathons" element={<Hackathon />} />
 
 
             {/* ================= USER ================= */}
