@@ -212,8 +212,8 @@ const Hackathons = () => {
 
             </main>
         </div>
-            </div >
-        </div >
+
+
     );
 };
 
