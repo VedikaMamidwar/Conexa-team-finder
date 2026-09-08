@@ -1,0 +1,471 @@
+/* =========================================
+   MODAL OVERLAY
+========================================= */
+
+.group-modal-overlay {
+  position: fixed;
+  inset: 0;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(0, 0, 0, 0.65);
+
+  z-index: 1000;
+
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+
+/* =========================================
+   MODAL
+========================================= */
+
+.group-modal {
+  width: 100%;
+  max-width: 520px;
+  max-height: 90vh;
+
+  display: flex;
+  flex-direction: column;
+
+  background: #ffffff;
+  color: #222222;
+
+  border-radius: 20px;
+
+  box-shadow:
+    0 20px 60px rgba(0, 0, 0, 0.3);
+
+  overflow: hidden;
+}
+
+
+/* =========================================
+   HEADER
+========================================= */
+
+.group-modal-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+
+  padding: 22px 26px 12px;
+}
+
+.group-modal-header h2 {
+  margin: 0;
+
+  color: #222222;
+
+  font-size: 22px;
+  font-weight: 600;
+}
+
+.group-modal-header button {
+  width: 40px;
+  height: 40px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: none;
+  border-radius: 50%;
+
+  background: #f1f1f3;
+  color: #555555;
+
+  font-size: 25px;
+  line-height: 1;
+
+  cursor: pointer;
+
+  transition: 0.2s;
+}
+
+.group-modal-header button:hover {
+  background: #e5e5e8;
+  color: #222222;
+}
+
+
+/* =========================================
+   GROUP PHOTO
+========================================= */
+
+.group-photo-section {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+
+  padding: 10px 20px 18px;
+}
+
+.group-photo {
+  width: 96px;
+  height: 96px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: #eee5ff;
+
+  cursor: pointer;
+
+  overflow: hidden;
+
+  transition: 0.2s;
+}
+
+.group-photo:hover {
+  transform: scale(1.04);
+  background: #e4d7ff;
+}
+
+.group-photo img {
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+}
+
+.group-photo span {
+  font-size: 30px;
+}
+
+.group-photo-section > span {
+  margin-top: 10px;
+
+  color: #333333;
+
+  font-size: 14px;
+  font-weight: 500;
+}
+
+
+/* =========================================
+   GROUP NAME
+========================================= */
+
+.group-name-input {
+  width: calc(100% - 52px);
+
+  margin: 8px 26px 18px;
+
+  height: 52px;
+
+  padding: 0 16px;
+
+  box-sizing: border-box;
+
+  border: 1px solid #cccccc;
+  border-radius: 12px;
+
+  outline: none;
+
+  background: #ffffff;
+
+  color: #222222;
+
+  font-size: 14px;
+}
+
+.group-name-input:focus {
+  border-color: #7c3aed;
+
+  box-shadow:
+    0 0 0 3px rgba(124, 58, 237, 0.1);
+}
+
+.group-name-input::placeholder {
+  color: #999999;
+}
+
+
+/* =========================================
+   ADD MEMBERS TITLE
+========================================= */
+
+.group-modal h3 {
+  margin: 0;
+
+  padding: 0 26px 10px;
+
+  color: #333333;
+
+  font-size: 14px;
+  font-weight: 600;
+}
+
+
+/* =========================================
+   USER LIST
+========================================= */
+
+.group-user-list {
+  flex: 1;
+
+  min-height: 0;
+
+  max-height: 300px;
+
+  overflow-y: auto;
+
+  padding: 0 18px;
+}
+
+
+/* =========================================
+   USER
+========================================= */
+
+.group-user {
+  width: 100%;
+
+  min-height: 70px;
+
+  display: flex;
+  align-items: center;
+
+  gap: 12px;
+
+  padding: 9px 10px;
+
+  margin-bottom: 5px;
+
+  border: none;
+  border-radius: 12px;
+
+  background: transparent;
+
+  text-align: left;
+
+  cursor: pointer;
+
+  box-sizing: border-box;
+
+  transition: 0.2s;
+}
+
+.group-user:hover {
+  background: #f6f3fb;
+}
+
+.group-user.selected {
+  background: #eee5ff;
+}
+
+
+/* =========================================
+   USER AVATAR
+========================================= */
+
+.group-user-avatar {
+  width: 48px;
+  height: 48px;
+
+  min-width: 48px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+
+  background: #7c3aed;
+
+  color: white;
+
+  font-size: 18px;
+  font-weight: 600;
+
+  overflow: hidden;
+}
+
+.group-user-avatar img {
+  width: 100%;
+  height: 100%;
+
+  object-fit: cover;
+}
+
+
+/* =========================================
+   USER INFORMATION
+========================================= */
+
+.group-user-info {
+  flex: 1;
+
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+
+  gap: 4px;
+}
+
+.group-user-info strong {
+  color: #222222;
+
+  font-size: 14px;
+  font-weight: 600;
+
+  white-space: nowrap;
+
+  overflow: hidden;
+
+  text-overflow: ellipsis;
+}
+
+.group-user-info span {
+  color: #777777;
+
+  font-size: 12px;
+}
+
+
+/* =========================================
+   SELECTION CIRCLE
+========================================= */
+
+.selection-circle {
+  width: 24px;
+  height: 24px;
+
+  min-width: 24px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 2px solid #222222;
+
+  border-radius: 50%;
+
+  color: white;
+
+  font-size: 14px;
+  font-weight: 700;
+
+  box-sizing: border-box;
+}
+
+.group-user.selected .selection-circle {
+  border-color: #7c3aed;
+
+  background: #7c3aed;
+}
+
+
+/* =========================================
+   CREATE GROUP BUTTON
+========================================= */
+
+.create-group-btn {
+  width: calc(100% - 52px);
+
+  min-height: 50px;
+
+  margin: 18px 26px 24px;
+
+  border: none;
+
+  border-radius: 12px;
+
+  background: #7c3aed;
+
+  color: white;
+
+  font-size: 15px;
+  font-weight: 600;
+
+  cursor: pointer;
+
+  transition: 0.2s;
+
+  box-shadow:
+    0 5px 15px rgba(124, 58, 237, 0.25);
+}
+
+.create-group-btn:hover {
+  background: #6d28d9;
+
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 7px 20px rgba(124, 58, 237, 0.35);
+}
+
+.create-group-btn:active {
+  transform: translateY(0);
+}
+
+
+/* =========================================
+   SCROLLBAR
+========================================= */
+
+.group-user-list::-webkit-scrollbar {
+  width: 5px;
+}
+
+.group-user-list::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.group-user-list::-webkit-scrollbar-thumb {
+  background: #cccccc;
+  border-radius: 10px;
+}
+
+
+/* =========================================
+   MOBILE
+========================================= */
+
+@media (max-width: 600px) {
+  .group-modal-overlay {
+    padding: 12px;
+  }
+
+  .group-modal {
+    max-height: 94vh;
+
+    border-radius: 16px;
+  }
+
+  .group-modal-header {
+    padding: 18px 18px 10px;
+  }
+
+  .group-name-input {
+    width: calc(100% - 36px);
+
+    margin-left: 18px;
+    margin-right: 18px;
+  }
+
+  .group-modal h3 {
+    padding-left: 18px;
+    padding-right: 18px;
+  }
+
+  .group-user-list {
+    padding: 0 10px;
+  }
+
+  .create-group-btn {
+    width: calc(100% - 36px);
+
+    margin-left: 18px;
+    margin-right: 18px;
+  }
+}

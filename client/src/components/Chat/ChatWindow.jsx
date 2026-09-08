@@ -1,102 +1,172 @@
 import React, { useState } from "react";
+
+import MessageList from "./MessageList";
+import MessageInput from "./MessageInput";
+import OnlineStatus from "./OnlineStatus";
+import TypingIndicator from "./TypingIndicator";
+
 import "./ChatWindow.css";
 
-const ChatWindow = ({ chat }) => {
-  const [message, setMessage] = useState("");
+const ChatWindow = ({
+  chat,
+  messages = [],
+  onSendMessage,
+  onExitGroup,
+  onDeleteChat,
+  onUpdateProfile,
+}) => {
+  const [isTyping, setIsTyping] = useState(false);
+  const [showMenu, setShowMenu] = useState(false);
 
-  // Temporary messages
-  // Later these will come from your backend
-  const [messages, setMessages] = useState([
-    {
-      id: 1,
-      sender: "other",
-      text: "Hey! Are you joining the team?",
-      time: "2:35 PM",
-    },
-    {
-      id: 2,
-      sender: "me",
-      text: "Yes! I'm interested in joining.",
-      time: "2:36 PM",
-    },
-    {
-      id: 3,
-      sender: "other",
-      text: "Great! Let's discuss the project.",
-      time: "2:37 PM",
-    },
-  ]);
+  const isGroup = chat?.type === "group";
 
-  // Send message
-  const handleSendMessage = () => {
-    if (!message.trim()) return;
+  // Voice call
+  const handleCall = () => {
+    if (!chat?.phone) {
+      alert("Phone number is not available.");
+      return;
+    }
 
-    const newMessage = {
-      id: Date.now(),
-      sender: "me",
-      text: message,
-      time: new Date().toLocaleTimeString([], {
-        hour: "2-digit",
-        minute: "2-digit",
-      }),
-    };
-
-    setMessages((prevMessages) => [
-      ...prevMessages,
-      newMessage,
-    ]);
-
-    setMessage("");
+    window.location.href = `tel:${chat.phone}`;
   };
 
-  // Send message when Enter is pressed
-  const handleKeyDown = (e) => {
-    if (e.key === "Enter" && !e.shiftKey) {
-      e.preventDefault();
-      handleSendMessage();
+  // Video call
+  const handleVideoCall = () => {
+    const roomName = `CONEXA-${chat.id}`;
+
+    window.open(
+      `https://meet.jit.si/${roomName}`,
+      "_blank",
+      "noopener,noreferrer"
+    );
+  };
+
+  // Update profile
+  const handleUpdateProfile = () => {
+    setShowMenu(false);
+
+    if (onUpdateProfile) {
+      onUpdateProfile(chat);
+      return;
     }
+
+    alert("Update Profile feature is ready to connect.");
+  };
+
+  // Exit group
+  const handleExitGroup = () => {
+    setShowMenu(false);
+
+    const confirmed = window.confirm(
+      `Are you sure you want to exit "${chat?.name}"?`
+    );
+
+    if (!confirmed) return;
+
+    onExitGroup?.(chat);
+  };
+
+  // Delete group/chat
+  const handleDelete = () => {
+    setShowMenu(false);
+
+    const itemName = chat?.name || "this conversation";
+
+    const confirmed = window.confirm(
+      `Are you sure you want to delete "${itemName}"?`
+    );
+
+    if (!confirmed) return;
+
+    onDeleteChat?.(chat);
   };
 
   return (
     <div className="chat-window">
 
-      {/* ================= HEADER ================= */}
+      {/* =================================
+          HEADER
+      ================================= */}
+
       <div className="chat-window-header">
 
         <div className="chat-user-info">
 
-          {/* Avatar */}
-          {chat?.avatar ? (
-            <img
-              src={chat.avatar}
-              alt={chat.name}
-              className="chat-window-avatar"
-            />
-          ) : (
-            <div className="chat-window-avatar initials">
-              {chat?.name?.charAt(0)?.toUpperCase()}
-            </div>
-          )}
+          <div className="chat-window-avatar-wrapper">
 
-          <div>
+            {chat?.avatar ? (
+              <img
+                src={chat.avatar}
+                alt={chat.name}
+                className="chat-window-avatar"
+              />
+            ) : (
+              <div className="chat-window-avatar initials">
+                {chat?.type === "group"
+                  ? "👥"
+                  : chat?.name
+                      ?.charAt(0)
+                      ?.toUpperCase()}
+              </div>
+            )}
+
+            {chat?.online && chat?.type !== "group" && (
+              <span className="header-online-dot" />
+            )}
+
+          </div>
+
+
+          <div className="chat-user-details">
+
             <h3>{chat?.name}</h3>
 
-            <span
-              className={
-                chat?.online
-                  ? "user-status online"
-                  : "user-status offline"
-              }
-            >
-              {chat?.online ? "Online" : "Offline"}
-            </span>
+            {isGroup ? (
+              <span className="group-members">
+                {chat?.members?.length || 0} members
+              </span>
+            ) : (
+              <>
+                <OnlineStatus online={chat?.online} />
+
+                <span className="phone-number">
+                  {chat?.phone}
+                </span>
+              </>
+            )}
+
           </div>
 
         </div>
 
-        {/* Header buttons */}
+
+        {/* =================================
+            HEADER ACTIONS
+        ================================= */}
+
         <div className="chat-header-actions">
 
+          {/* CALL */}
+          <button
+            className="header-action-btn"
+            title="Voice call"
+            onClick={handleCall}
+          >
+            📞
+          </button>
+
+
+          {/* VIDEO CALL */}
+          <button
+            className="header-action-btn"
+            title="Video call"
+            onClick={handleVideoCall}
+          >
+            🎥
+          </button>
+
+
+          {/* SEARCH */}
           <button
             className="header-action-btn"
             title="Search"
@@ -104,82 +174,113 @@ const ChatWindow = ({ chat }) => {
             🔍
           </button>
 
-          <button
-            className="header-action-btn"
-            title="More options"
-          >
-            ⋮
-          </button>
+
+          {/* THREE DOT */}
+          <div className="more-menu-wrapper">
+
+            <button
+              className={`header-action-btn ${
+                showMenu ? "menu-open" : ""
+              }`}
+              title="More options"
+              onClick={() =>
+                setShowMenu((previous) => !previous)
+              }
+            >
+              ⋮
+            </button>
+
+
+            {/* =================================
+                MORE MENU
+            ================================= */}
+
+            {showMenu && (
+              <div className="chat-more-menu">
+
+                {/* UPDATE PROFILE */}
+                <button
+                  className="chat-menu-item"
+                  onClick={handleUpdateProfile}
+                >
+                  <span className="menu-icon">
+                    ✏️
+                  </span>
+
+                  <span>
+                    Update Profile
+                  </span>
+                </button>
+
+
+                {/* GROUP ONLY */}
+                {isGroup && (
+                  <button
+                    className="chat-menu-item exit-item"
+                    onClick={handleExitGroup}
+                  >
+                    <span className="menu-icon">
+                      🚪
+                    </span>
+
+                    <span>
+                      Exit Group
+                    </span>
+                  </button>
+                )}
+
+
+                {/* DELETE */}
+                <button
+                  className="chat-menu-item delete-item"
+                  onClick={handleDelete}
+                >
+                  <span className="menu-icon">
+                    🗑️
+                  </span>
+
+                  <span>
+                    {isGroup
+                      ? "Delete Group"
+                      : "Delete Chat"}
+                  </span>
+                </button>
+
+              </div>
+            )}
+
+          </div>
 
         </div>
 
       </div>
 
 
-      {/* ================= MESSAGES ================= */}
+      {/* =================================
+          MESSAGES
+      ================================= */}
+
       <div className="messages-container">
 
-        {messages.map((msg) => (
-          <div
-            key={msg.id}
-            className={`message-wrapper ${
-              msg.sender === "me"
-                ? "sent"
-                : "received"
-            }`}
-          >
+        <MessageList messages={messages} />
 
-            <div className="message-bubble">
-
-              <p>{msg.text}</p>
-
-              <span className="message-time">
-                {msg.time}
-              </span>
-
-            </div>
-
-          </div>
-        ))}
+        {isTyping && (
+          <TypingIndicator
+            name={chat?.name}
+          />
+        )}
 
       </div>
 
 
-      {/* ================= INPUT ================= */}
-      <div className="message-input-container">
+      {/* =================================
+          MESSAGE INPUT
+      ================================= */}
 
-        <button
-          className="input-action-btn"
-          title="Emoji"
-        >
-          😊
-        </button>
-
-        <button
-          className="input-action-btn"
-          title="Attach file"
-        >
-          📎
-        </button>
-
-        <textarea
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          onKeyDown={handleKeyDown}
-          placeholder="Type a message..."
-          rows="1"
-        />
-
-        <button
-          className="send-message-btn"
-          onClick={handleSendMessage}
-          disabled={!message.trim()}
-          title="Send message"
-        >
-          ➤
-        </button>
-
-      </div>
+      <MessageInput
+        onSendMessage={onSendMessage}
+        onTyping={setIsTyping}
+      />
 
     </div>
   );

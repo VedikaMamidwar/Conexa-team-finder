@@ -1,0 +1,34 @@
+/* MessageList.css */
+
+.message-list {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 20px;
+  box-sizing: border-box;
+}
+
+/* Empty message state */
+.empty-message-list {
+  flex: 1;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: #888;
+}
+
+.empty-message-list p {
+  margin: 0 0 6px;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.empty-message-list span {
+  font-size: 14px;
+}
+
+/* Scroll to bottom helper */
+.message-list > div:last-child {
+  min-height: 1px;
+}

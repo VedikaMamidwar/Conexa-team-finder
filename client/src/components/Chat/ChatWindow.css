@@ -3,19 +3,22 @@
   height: 100%;
   display: flex;
   flex-direction: column;
-  background: #ffffff;
+  background: #f7f7fb;
 }
 
 /* ================= HEADER ================= */
 
 .chat-window-header {
-  height: 75px;
-  padding: 0 25px;
+  min-height: 76px;
+  padding: 10px 22px;
+  box-sizing: border-box;
+
   display: flex;
   align-items: center;
   justify-content: space-between;
+
+  background: white;
   border-bottom: 1px solid #e5e5e5;
-  background: #ffffff;
 }
 
 .chat-user-info {
@@ -24,9 +27,13 @@
   gap: 12px;
 }
 
+.chat-window-avatar-wrapper {
+  position: relative;
+}
+
 .chat-window-avatar {
-  width: 45px;
-  height: 45px;
+  width: 52px;
+  height: 52px;
   border-radius: 50%;
   object-fit: cover;
 }
@@ -35,162 +42,320 @@
   display: flex;
   align-items: center;
   justify-content: center;
+
   background: #7c3aed;
   color: white;
-  font-size: 18px;
+
+  font-size: 20px;
   font-weight: 600;
 }
 
-.chat-user-info h3 {
-  margin: 0;
-  font-size: 16px;
-  color: #222;
+.header-online-dot {
+  position: absolute;
+  right: 0;
+  bottom: 1px;
+
+  width: 13px;
+  height: 13px;
+
+  border-radius: 50%;
+
+  background: #22c55e;
+  border: 2px solid white;
 }
 
-.user-status {
+.chat-user-details h3 {
+  margin: 0 0 3px;
+
+  font-size: 17px;
+  font-weight: 600;
+}
+
+.phone-number {
   display: block;
-  margin-top: 4px;
-  font-size: 12px;
-}
+  margin-top: 3px;
 
-.user-status.online {
-  color: #22c55e;
-}
-
-.user-status.offline {
+  font-size: 11px;
   color: #999;
 }
 
-/* ================= HEADER BUTTONS ================= */
+.group-members {
+  font-size: 12px;
+  color: #777;
+}
 
 .chat-header-actions {
   display: flex;
-  gap: 8px;
+  align-items: center;
+  gap: 5px;
 }
 
 .header-action-btn {
-  width: 38px;
-  height: 38px;
+  width: 42px;
+  height: 42px;
+
   border: none;
   border-radius: 50%;
+
   background: transparent;
+
+  font-size: 19px;
   cursor: pointer;
-  font-size: 17px;
+
+  transition: 0.2s;
 }
 
 .header-action-btn:hover {
-  background: #f3f3f3;
+  background: #f0edf8;
 }
 
 /* ================= MESSAGES ================= */
 
 .messages-container {
   flex: 1;
-  padding: 25px;
+  min-height: 0;
+
   overflow-y: auto;
-  background: #f8f7fc;
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
+
+  background: #f7f7fb;
 }
 
-.message-wrapper {
-  display: flex;
-  width: 100%;
+/* ================= DARK ================= */
+
+/* =========================
+   DARK MODE - CHAT WINDOW
+========================= */
+
+.dark .chat-window {
+  background: #0f172a;
 }
 
-.message-wrapper.sent {
-  justify-content: flex-end;
-}
-
-.message-wrapper.received {
-  justify-content: flex-start;
-}
-
-.message-bubble {
-  max-width: 65%;
-  padding: 10px 14px;
-  border-radius: 14px;
-}
-
-.sent .message-bubble {
-  background: #7c3aed;
+.dark .chat-window-header {
+  background: #182233;
+  border-color: #293548;
   color: white;
-  border-bottom-right-radius: 4px;
 }
 
-.received .message-bubble {
+.dark .messages-container {
+  background: #0f172a;
+}
+
+.dark .chat-user-details h3 {
+  color: white;
+}
+
+.dark .phone-number,
+.dark .group-members {
+  color: #9ca3af;
+}
+
+.dark .header-action-btn {
+  color: white;
+}
+
+.dark .header-action-btn:hover {
+  background: #293548;
+}
+
+.dark .header-online-dot {
+  border-color: #182233;
+}
+
+/* ================= MOBILE ================= */
+
+@media (max-width: 600px) {
+  .chat-window-header {
+    padding: 8px 12px;
+  }
+
+  .chat-window-avatar {
+    width: 44px;
+    height: 44px;
+  }
+
+  .chat-user-details h3 {
+    font-size: 15px;
+  }
+
+  .header-action-btn {
+    width: 35px;
+    height: 35px;
+    font-size: 16px;
+  }
+}
+/* =========================================
+   THREE DOT MENU
+========================================= */
+
+.more-menu-wrapper {
+  position: relative;
+}
+
+
+/* =========================================
+   ACTIVE THREE DOT BUTTON
+========================================= */
+
+.header-action-btn.menu-open {
+  background: #eee5ff;
+  color: #7c3aed;
+}
+
+
+/* =========================================
+   MORE MENU
+========================================= */
+
+.chat-more-menu {
+  position: absolute;
+
+  top: 50px;
+  right: 0;
+
+  width: 210px;
+
+  padding: 7px;
+
   background: white;
-  color: #333;
+
   border: 1px solid #e5e5e5;
-  border-bottom-left-radius: 4px;
+
+  border-radius: 12px;
+
+  box-shadow:
+    0 10px 35px rgba(0, 0, 0, 0.18);
+
+  z-index: 100;
+
+  animation: menuAppear 0.15s ease;
 }
 
-.message-bubble p {
-  margin: 0;
-  font-size: 14px;
-  line-height: 1.5;
+
+/* =========================================
+   MENU ANIMATION
+========================================= */
+
+@keyframes menuAppear {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-.message-time {
-  display: block;
-  margin-top: 5px;
-  font-size: 10px;
-  opacity: 0.7;
-  text-align: right;
-}
 
-/* ================= INPUT ================= */
+/* =========================================
+   MENU ITEM
+========================================= */
 
-.message-input-container {
-  min-height: 70px;
-  padding: 12px 20px;
+.chat-menu-item {
+  width: 100%;
+
+  min-height: 44px;
+
   display: flex;
   align-items: center;
-  gap: 8px;
-  border-top: 1px solid #e5e5e5;
-  background: white;
-}
 
-.message-input-container textarea {
-  flex: 1;
-  resize: none;
-  border: none;
-  outline: none;
-  padding: 12px;
-  font-size: 14px;
-  font-family: inherit;
-  background: #f5f5f7;
-  border-radius: 22px;
-}
+  gap: 12px;
 
-.input-action-btn,
-.send-message-btn {
+  padding: 10px 12px;
+
   border: none;
-  cursor: pointer;
+  border-radius: 8px;
+
   background: transparent;
-  font-size: 18px;
+
+  color: #222;
+
+  font-size: 14px;
+
+  text-align: left;
+
+  cursor: pointer;
+
+  transition: 0.15s;
 }
 
-.input-action-btn {
-  width: 35px;
-  height: 35px;
+.chat-menu-item:hover {
+  background: #f5f2fa;
 }
 
-.input-action-btn:hover {
-  background: #f2f2f2;
-  border-radius: 50%;
+
+/* =========================================
+   MENU ICON
+========================================= */
+
+.menu-icon {
+  width: 25px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  font-size: 17px;
 }
 
-.send-message-btn {
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  background: #7c3aed;
-  color: white;
+
+/* =========================================
+   EXIT
+========================================= */
+
+.chat-menu-item.exit-item:hover {
+  background: #fff7ed;
 }
 
-.send-message-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
+
+/* =========================================
+   DELETE
+========================================= */
+
+.chat-menu-item.delete-item {
+  color: #dc2626;
+}
+
+.chat-menu-item.delete-item:hover {
+  background: #fef2f2;
+}
+
+
+/* =========================================
+   DARK MODE
+========================================= */
+
+.dark .chat-more-menu {
+  background: #1f2937;
+
+  border-color: #374151;
+
+  box-shadow:
+    0 10px 35px rgba(0, 0, 0, 0.45);
+}
+
+.dark .chat-menu-item {
+  color: #f9fafb;
+}
+
+.dark .chat-menu-item:hover {
+  background: #293548;
+}
+
+.dark .chat-menu-item.exit-item:hover {
+  background: #3b2f20;
+}
+
+.dark .chat-menu-item.delete-item {
+  color: #f87171;
+}
+
+.dark .chat-menu-item.delete-item:hover {
+  background: #3a2025;
+}
+
+.dark .header-action-btn.menu-open {
+  background: #31235a;
+  color: #c4b5fd;
 }
