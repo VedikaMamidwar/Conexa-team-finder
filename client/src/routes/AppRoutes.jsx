@@ -14,21 +14,46 @@ import ResetPassword from "../pages/auth/ResetPassword";
 // ================= DASHBOARD =================
 import CompleteProfile from "../pages/dashboard/CompleteProfile";
 import Dashboard from "../pages/dashboard/Dashboard";
-import BuildTeam from "../pages/dashboard/BuildTeam";
+import Home from "../pages/dashboard/Home";
+import Explore from "../pages/dashboard/Explore";
 import FindTeammates from "../pages/dashboard/FindTeammates";
+import BuildTeam from "../pages/dashboard/BuildTeam";
+import Profile from "../pages/dashboard/Profile";
+
+// ================= EVENTS =================
+import UpcomingEvents from "../pages/dashboard/UpcomingEvents";
+
+// ================= DAILY CHALLENGE =================
+import DailyChallenge from "../pages/dashboard/DailyChallenge";
+
+// ================= NOTIFICATIONS =================
+import DashboardNotification from "../pages/dashboard/Dashboard-notification";
+
+// ================= ACHIEVEMENTS =================
+import Achievements from "../pages/dashboard/Achievements";
+
+// ================= SETTINGS =================
+import Settings from "../pages/dashboard/Settings";
+
+// ================= WORKSPACE =================
+
+
 
 // ================= CHAT =================
-import ChatPage from "../pages/chat/ChatPage";
+
 
 // ================= PROTECTED ROUTE =================
 import ProtectedRoute from "./ProtectedRoute";
 
 
 export default function AppRoutes() {
+
     return (
         <Routes>
 
-            {/* ================= PUBLIC ================= */}
+            {/* =====================================================
+                PUBLIC
+            ===================================================== */}
 
             <Route
                 path="/"
@@ -41,7 +66,9 @@ export default function AppRoutes() {
             />
 
 
-            {/* ================= AUTHENTICATION ================= */}
+            {/* =====================================================
+                AUTHENTICATION
+            ===================================================== */}
 
             <Route
                 path="/register"
@@ -69,7 +96,9 @@ export default function AppRoutes() {
             />
 
 
-            {/* ================= COMPLETE PROFILE ================= */}
+            {/* =====================================================
+                COMPLETE PROFILE
+            ===================================================== */}
 
             <Route
                 path="/complete-profile"
@@ -81,7 +110,9 @@ export default function AppRoutes() {
             />
 
 
-            {/* ================= DASHBOARD ================= */}
+            {/* =====================================================
+                DASHBOARD
+            ===================================================== */}
 
             <Route
                 path="/dashboard"
@@ -92,8 +123,28 @@ export default function AppRoutes() {
                 }
             />
 
+            <Route
+                path="/home"
+                element={
+                    <ProtectedRoute>
+                        <Home />
+                    </ProtectedRoute>
+                }
+            />
 
-            {/* ================= TEAM ================= */}
+            <Route
+                path="/explore"
+                element={
+                    <ProtectedRoute>
+                        <Explore />
+                    </ProtectedRoute>
+                }
+            />
+
+
+            {/* =====================================================
+                TEAM
+            ===================================================== */}
 
             <Route
                 path="/find-teammates"
@@ -105,6 +156,16 @@ export default function AppRoutes() {
             />
 
             <Route
+                path="/team-builder"
+                element={
+                    <ProtectedRoute>
+                        <BuildTeam />
+                    </ProtectedRoute>
+                }
+            />
+
+            {/* Old URL */}
+            <Route
                 path="/build-team"
                 element={
                     <ProtectedRoute>
@@ -113,17 +174,114 @@ export default function AppRoutes() {
                 }
             />
 
-
-            {/* ================= CHAT ================= */}
+            {/* =====================================================
+    PROFILE
+===================================================== */}
 
             <Route
-                path="/chat"
+                path="/profile"
                 element={
                     <ProtectedRoute>
-                        <ChatPage />
+                        <Profile />
                     </ProtectedRoute>
                 }
             />
+
+
+            {/* =====================================================
+                CHAT
+            ===================================================== */}
+
+
+
+            {/* =====================================================
+                EVENTS
+            ===================================================== */}
+
+            <Route
+                path="/events"
+                element={
+                    <ProtectedRoute>
+                        <UpcomingEvents />
+                    </ProtectedRoute>
+                }
+            />
+
+
+            {/* =====================================================
+                DAILY CHALLENGE
+            ===================================================== */}
+
+            <Route
+                path="/daily-challenge"
+                element={
+                    <ProtectedRoute>
+                        <DailyChallenge />
+                    </ProtectedRoute>
+                }
+            />
+
+
+            {/* =====================================================
+                NOTIFICATIONS
+            ===================================================== */}
+
+            <Route
+                path="/dashboard-notification"
+                element={
+                    <ProtectedRoute>
+                        <DashboardNotification />
+                    </ProtectedRoute>
+                }
+            />
+
+            {/* Also allow simple notification URL */}
+            <Route
+                path="/notifications"
+                element={
+                    <ProtectedRoute>
+                        <DashboardNotification />
+                    </ProtectedRoute>
+                }
+            />
+
+
+            {/* =====================================================
+                ACHIEVEMENTS
+            ===================================================== */}
+
+            <Route
+                path="/achievements"
+                element={
+                    <ProtectedRoute>
+                        <Achievements />
+                    </ProtectedRoute>
+                }
+            />
+
+
+            {/* =====================================================
+                SETTINGS
+            ===================================================== */}
+
+            <Route
+                path="/settings"
+                element={
+                    <ProtectedRoute>
+                        <Settings />
+                    </ProtectedRoute>
+                }
+            />
+
+
+            {/* =====================================================
+                WORKSPACE
+            ===================================================== */}
+
+
+
+
+
 
         </Routes>
     );

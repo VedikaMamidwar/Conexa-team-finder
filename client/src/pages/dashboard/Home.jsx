@@ -1,315 +1,529 @@
-import { Link } from "react-router-dom";
-import { motion } from "framer-motion";
+import { useAuth } from "../../context/AuthContext";
+import { useNavigate } from "react-router-dom";
 import {
-    FaUsers,
-    FaLaptopCode,
-    FaRocket,
-    FaArrowRight,
-} from "react-icons/fa";
+    Users,
+    UserPlus,
+    Trophy,
+    CalendarDays,
+    ArrowRight,
+    Sparkles,
+    MessageCircle,
+} from "lucide-react";
 
-function Home() {
+export default function Home() {
+    const { user } = useAuth();
+    const navigate = useNavigate();
+
     return (
-        <>
+        <div className="min-h-screen bg-[#F8FAFC] p-4 sm:p-6 lg:p-8">
 
-            {/* ================= HERO SECTION ================= */}
+            {/* ================= HEADER ================= */}
 
-            <section className="relative overflow-hidden bg-gradient-to-br from-indigo-50 via-white to-cyan-50">
+            <div className="mb-6">
+                <p className="text-sm font-semibold text-[#14B8A6]">
+                    Welcome back 👋
+                </p>
 
-                {/* Background Blur */}
+                <h1 className="mt-1 text-2xl sm:text-3xl font-black text-[#1E1B4B]">
+                    Hello, {user?.name || "Student"}!
+                </h1>
 
-                <div className="absolute -top-32 -left-24 w-72 h-72 bg-indigo-300 rounded-full blur-[120px] opacity-30"></div>
+                <p className="mt-1 text-sm text-slate-500">
+                    Ready to find your perfect team and build something amazing?
+                </p>
+            </div>
 
-                <div className="absolute bottom-0 right-0 w-80 h-80 bg-cyan-300 rounded-full blur-[140px] opacity-30"></div>
+            {/* ================= HERO ================= */}
 
-                <div className="max-w-7xl mx-auto px-6 py-24 lg:py-36">
+            <div className="
+                relative
+                overflow-hidden
+                rounded-3xl
+                p-6
+                sm:p-8
+                bg-gradient-to-r
+                from-[#1E1B4B]
+                via-[#312E81]
+                to-[#14B8A6]
+                text-white
+                shadow-lg
+                mb-6
+            ">
 
-                    <div className="grid lg:grid-cols-2 gap-16 items-center">
+                <div className="relative z-10 max-w-2xl">
 
-                        {/* LEFT */}
+                    <div className="
+                        inline-flex
+                        items-center
+                        gap-2
+                        px-4
+                        py-2
+                        rounded-full
+                        bg-white/15
+                        backdrop-blur-sm
+                        text-sm
+                        font-medium
+                        mb-5
+                    ">
+                        <Sparkles size={17} />
+                        AI Team Recommendation
+                    </div>
 
-                        <motion.div
-                            initial={{ opacity: 0, x: -80 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ duration: 0.8 }}
+                    <h2 className="
+                        text-3xl
+                        sm:text-4xl
+                        lg:text-5xl
+                        font-black
+                        leading-tight
+                    ">
+                        Find the right
+                        <br />
+                        teammates 🚀
+                    </h2>
+
+                    <p className="
+                        mt-4
+                        text-sm
+                        sm:text-base
+                        text-white/80
+                        max-w-xl
+                        leading-6
+                    ">
+                        Discover students with matching skills, join exciting
+                        hackathons, and build amazing projects together.
+                    </p>
+
+                    <div className="flex flex-wrap gap-3 mt-6">
+
+                        <button
+                            onClick={() => navigate("/find-teammates")}
+                            className="
+                                flex
+                                items-center
+                                gap-2
+                                px-5
+                                py-3
+                                rounded-xl
+                                bg-white
+                                text-[#1E1B4B]
+                                font-bold
+                                hover:bg-slate-100
+                                transition
+                            "
                         >
+                            <Users size={18} />
+                            Find Teammates
+                        </button>
 
-                            <span className="bg-indigo-100 text-indigo-700 px-4 py-2 rounded-full font-semibold">
-                                🚀 India's Smart Team Finder Platform
-                            </span>
-
-                            <h1 className="mt-8 text-5xl lg:text-7xl font-extrabold leading-tight text-slate-900">
-
-                                Find Your
-
-                                <span className="text-indigo-600">
-                                    {" "}Dream Team
-                                </span>
-
-                                <br />
-
-                                Build Amazing Projects
-
-                            </h1>
-
-                            <p className="mt-8 text-lg text-gray-600 leading-8">
-
-                                Conexa helps students discover teammates,
-                                participate in hackathons,
-                                showcase skills,
-                                and build startups together.
-
-                            </p>
-
-                            <div className="mt-10 flex flex-wrap gap-5">
-
-                                <Link
-                                    to="/register"
-                                    className="bg-indigo-600 hover:bg-indigo-700 text-white px-8 py-4 rounded-xl font-semibold flex items-center gap-2 transition"
-                                >
-                                    Get Started
-
-                                    <FaArrowRight />
-
-                                </Link>
-
-                                <Link
-                                    to="/explore"
-                                    className="border-2 border-indigo-600 text-indigo-600 hover:bg-indigo-600 hover:text-white px-8 py-4 rounded-xl font-semibold transition"
-                                >
-                                    Explore Teams
-                                </Link>
-
-                            </div>
-
-                            {/* Small Cards */}
-
-                            <div className="mt-14 flex flex-wrap gap-6">
-
-                                <div className="bg-white shadow-xl rounded-2xl p-5 w-44">
-
-                                    <FaUsers
-                                        className="text-indigo-600 text-3xl"
-                                    />
-
-                                    <h3 className="font-bold mt-3 text-xl">
-                                        20K+
-                                    </h3>
-
-                                    <p className="text-gray-500">
-                                        Developers
-                                    </p>
-
-                                </div>
-
-                                <div className="bg-white shadow-xl rounded-2xl p-5 w-44">
-
-                                    <FaRocket
-                                        className="text-cyan-600 text-3xl"
-                                    />
-
-                                    <h3 className="font-bold mt-3 text-xl">
-                                        1000+
-                                    </h3>
-
-                                    <p className="text-gray-500">
-                                        Hackathons
-                                    </p>
-
-                                </div>
-
-                                <div className="bg-white shadow-xl rounded-2xl p-5 w-44">
-
-                                    <FaLaptopCode
-                                        className="text-green-600 text-3xl"
-                                    />
-
-                                    <h3 className="font-bold mt-3 text-xl">
-                                        3000+
-                                    </h3>
-
-                                    <p className="text-gray-500">
-                                        Teams Created
-                                    </p>
-
-                                </div>
-
-                            </div>
-
-                        </motion.div>
-
-                        {/* RIGHT */}
-
-                        <motion.div
-                            initial={{ opacity: 0, x: 80 }}
-                            animate={{ opacity: 1, x: 0 }}
-                            transition={{ duration: 0.8 }}
-                            className="relative"
+                        <button
+                            onClick={() => navigate("/team-builder")}
+                            className="
+                                flex
+                                items-center
+                                gap-2
+                                px-5
+                                py-3
+                                rounded-xl
+                                border
+                                border-white/40
+                                text-white
+                                font-semibold
+                                hover:bg-white/10
+                                transition
+                            "
                         >
-
-                            <img
-                                src="https://images.unsplash.com/photo-1521737604893-d14cc237f11d?w=900"
-                                alt="Developers"
-                                className="rounded-3xl shadow-2xl"
-                            />
-
-                            {/* Floating Card */}
-
-                            <motion.div
-
-                                animate={{
-                                    y: [0, -12, 0],
-                                }}
-
-                                transition={{
-                                    repeat: Infinity,
-                                    duration: 3,
-                                }}
-
-                                className="absolute -bottom-8 left-10 bg-white rounded-2xl shadow-2xl p-5"
-
-                            >
-
-                                <p className="font-semibold text-gray-600">
-
-                                    🎉 Team Match Success
-
-                                </p>
-
-                                <h2 className="text-3xl font-bold text-indigo-600 mt-2">
-
-                                    98%
-
-                                </h2>
-
-                            </motion.div>
-
-                        </motion.div>
-
-
-
-                        {/* ================= SMART SEARCH ================= */}
-
-                        <section className="py-24 bg-white">
-
-                            <div className="max-w-7xl mx-auto px-6">
-
-                                <div className="text-center">
-
-                                    <span className="text-indigo-600 font-semibold uppercase tracking-widest">
-                                        Smart Search
-                                    </span>
-
-                                    <h2 className="mt-4 text-4xl font-bold text-slate-900">
-                                        Find Your Perfect Teammate
-                                    </h2>
-
-                                    <p className="mt-5 text-gray-600 max-w-2xl mx-auto">
-                                        Search developers based on skills, role,
-                                        experience, or location and instantly connect
-                                        with people who match your project.
-                                    </p>
-
-                                </div>
-
-                                {/* Search Card */}
-
-                                <div className="mt-16 bg-white rounded-3xl shadow-2xl p-8 border">
-
-                                    <div className="grid lg:grid-cols-5 gap-5">
-
-                                        <input
-                                            type="text"
-                                            placeholder="Skill (React, AI, Java...)"
-                                            className="border rounded-xl px-5 py-4 outline-none focus:ring-2 focus:ring-indigo-500"
-                                        />
-
-                                        <select className="border rounded-xl px-5 py-4 outline-none">
-
-                                            <option>Role</option>
-                                            <option>Frontend</option>
-                                            <option>Backend</option>
-                                            <option>Full Stack</option>
-                                            <option>UI/UX</option>
-                                            <option>AI/ML</option>
-
-                                        </select>
-
-                                        <select className="border rounded-xl px-5 py-4 outline-none">
-
-                                            <option>Experience</option>
-                                            <option>Beginner</option>
-                                            <option>Intermediate</option>
-                                            <option>Advanced</option>
-
-                                        </select>
-
-                                        <select className="border rounded-xl px-5 py-4 outline-none">
-
-                                            <option>Location</option>
-                                            <option>Remote</option>
-                                            <option>India</option>
-                                            <option>USA</option>
-
-                                        </select>
-
-                                        <button className="bg-indigo-600 hover:bg-indigo-700 text-white rounded-xl font-semibold transition">
-                                            Search
-                                        </button>
-
-                                    </div>
-
-                                </div>
-
-                                {/* Trending Skills */}
-
-                                <div className="mt-16">
-
-                                    <h3 className="text-xl font-bold mb-6 text-slate-800">
-                                        🔥 Trending Skills
-                                    </h3>
-
-                                    <div className="flex flex-wrap gap-4">
-
-                                        {[
-                                            "React",
-                                            "Node.js",
-                                            "Java",
-                                            "Python",
-                                            "MongoDB",
-                                            "AI",
-                                            "Machine Learning",
-                                            "Flutter",
-                                            "UI/UX",
-                                            "DevOps",
-                                            "AWS",
-                                            "Next.js",
-                                        ].map((skill) => (
-
-                                            <button
-                                                key={skill}
-                                                className="px-5 py-3 rounded-full bg-indigo-50 text-indigo-700 font-medium hover:bg-indigo-600 hover:text-white transition"
-                                            >
-                                                {skill}
-                                            </button>
-
-                                        ))}
-
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                        </section>
+                            Create Team
+                            <ArrowRight size={18} />
+                        </button>
 
                     </div>
 
                 </div>
 
-            </section>
+                {/* Decorative circles */}
 
-        </>
+                <div className="
+                    absolute
+                    -right-20
+                    -top-20
+                    w-64
+                    h-64
+                    rounded-full
+                    bg-white/10
+                />
+
+                <div className="
+                    absolute
+
+                    w-72
+                    h-72
+                    rounded-full
+
+                />
+
+            </div>
+
+            {/* ================= QUICK ACTIONS ================= */}
+
+            <div className="
+                grid
+                grid-cols-1
+                sm:grid-cols-2
+                lg:grid-cols-4
+                gap-4
+                mb-6
+            ">
+
+                <ActionCard
+                    icon={<Users size={22} />}
+                    title="Find Teammates"
+                    text="Discover students"
+                    onClick={() => navigate("/find-teammates")}
+                />
+
+                <ActionCard
+                    icon={<UserPlus size={22} />}
+                    title="Team Builder"
+                    text="Create your team"
+                    onClick={() => navigate("/team-builder")}
+                />
+
+                <ActionCard
+                    icon={<Trophy size={22} />}
+                    title="Hackathons"
+                    text="Explore competitions"
+                    onClick={() => navigate("/hackathons")}
+                />
+
+                <ActionCard
+                    icon={<MessageCircle size={22} />}
+                    title="Chat"
+                    text="Talk with teammates"
+                    onClick={() => navigate("/chat")}
+                />
+
+            </div>
+
+            {/* ================= MAIN GRID ================= */}
+
+            <div className="
+                grid
+                grid-cols-1
+                lg:grid-cols-3
+                gap-5
+            ">
+
+                {/* UPCOMING EVENTS */}
+
+                <div className="
+                    lg:col-span-2
+                    bg-white
+                    rounded-2xl
+                    border
+                    border-slate-200
+                    p-5
+                    shadow-sm
+                ">
+
+                    <div className="flex items-center justify-between mb-5">
+
+                        <div className="flex items-center gap-3">
+
+                            <div className="
+                                w-11
+                                h-11
+                                rounded-xl
+                                bg-blue-50
+                                text-blue-600
+                                flex
+                                items-center
+                                justify-center
+                            ">
+                                <CalendarDays size={22} />
+                            </div>
+
+                            <div>
+                                <h2 className="font-bold text-[#1E1B4B]">
+                                    Upcoming Events
+                                </h2>
+
+                                <p className="text-xs text-slate-500">
+                                    Don't miss these opportunities
+                                </p>
+                            </div>
+
+                        </div>
+
+                        <button
+                            onClick={() => navigate("/events")}
+                            className="
+                                text-sm
+                                font-semibold
+                                text-[#14B8A6]
+                                hover:text-[#0f9488]
+                            "
+                        >
+                            View all
+                        </button>
+
+                    </div>
+
+                    <EventItem
+                        title="Smart India Hackathon"
+                        date="12 September"
+                        onClick={() => navigate("/events")}
+                    />
+
+                    <EventItem
+                        title="HackNova Registration"
+                        date="18 September"
+                        onClick={() => navigate("/events")}
+                    />
+
+                    <EventItem
+                        title="Tech Innovation Meetup"
+                        date="24 September"
+                        onClick={() => navigate("/events")}
+                    />
+
+                </div>
+
+                {/* QUICK STATS */}
+
+                <div className="
+                    bg-white
+                    rounded-2xl
+                    border
+                    border-slate-200
+                    p-5
+                    shadow-sm
+                ">
+
+                    <h2 className="font-bold text-[#1E1B4B] mb-4">
+                        Your Activity
+                    </h2>
+
+                    <StatItem
+                        icon={<Users size={20} />}
+                        value="8"
+                        label="Active Teams"
+                    />
+
+                    <StatItem
+                        icon={<Trophy size={20} />}
+                        value="18"
+                        label="Hackathons Joined"
+                    />
+
+                    <StatItem
+                        icon={<UserPlus size={20} />}
+                        value="24"
+                        label="Invitations"
+                    />
+
+                    <button
+                        onClick={() => navigate("/find-teammates")}
+                        className="
+                            w-full
+                            mt-3
+                            py-3
+                            rounded-xl
+                            bg-indigo-50
+                            text-[#1E1B4B]
+                            font-semibold
+                            text-sm
+                            hover:bg-indigo-100
+                            transition
+                        "
+                    >
+                        Explore More
+                    </button>
+
+                </div>
+
+            </div>
+
+        </div>
     );
 }
 
-export default Home;
+
+/* =========================================================
+   ACTION CARD
+========================================================= */
+
+function ActionCard({
+    icon,
+    title,
+    text,
+    onClick,
+}) {
+    return (
+        <button
+            onClick={onClick}
+            className="
+                group
+                bg-white
+                border
+                border-slate-200
+                rounded-2xl
+                p-4
+                text-left
+                shadow-sm
+                hover:shadow-md
+                hover:-translate-y-1
+                transition-all
+            "
+        >
+
+            <div className="
+                w-11
+                h-11
+                rounded-xl
+                bg-indigo-50
+                text-[#1E1B4B]
+                flex
+                items-center
+                justify-center
+                group-hover:bg-[#1E1B4B]
+                group-hover:text-white
+                transition
+            ">
+                {icon}
+            </div>
+
+            <h3 className="
+                mt-3
+                font-bold
+                text-[#1E1B4B]
+            ">
+                {title}
+            </h3>
+
+            <p className="
+                mt-1
+                text-xs
+                text-slate-500
+            ">
+                {text}
+            </p>
+
+        </button>
+    );
+}
+
+
+/* =========================================================
+   EVENT ITEM
+========================================================= */
+
+function EventItem({
+    title,
+    date,
+    onClick,
+}) {
+    return (
+        <button
+            onClick={onClick}
+            className="
+                w-full
+                flex
+                items-center
+                justify-between
+                py-4
+                border-b
+                border-slate-100
+                last:border-0
+                text-left
+                hover:bg-slate-50
+                transition
+                rounded-lg
+                px-2
+            "
+        >
+
+            <div>
+
+                <h3 className="
+                    font-semibold
+                    text-sm
+                    text-[#1E1B4B]
+                ">
+                    {title}
+                </h3>
+
+                <p className="
+                    text-xs
+                    text-slate-500
+                    mt-1
+                ">
+                    {date}
+                </p>
+
+            </div>
+
+            <ArrowRight
+                size={18}
+                className="text-slate-400"
+            />
+
+        </button>
+    );
+}
+
+
+/* =========================================================
+   STAT ITEM
+========================================================= */
+
+function StatItem({
+    icon,
+    value,
+    label,
+}) {
+    return (
+        <div className="
+            flex
+            items-center
+            gap-3
+            py-4
+            border-b
+            border-slate-100
+            last:border-0
+        ">
+
+            <div className="
+                w-10
+                h-10
+                rounded-xl
+                bg-teal-50
+                text-teal-600
+                flex
+                items-center
+                justify-center
+            ">
+                {icon}
+            </div>
+
+            <div>
+
+                <p className="
+                    text-xl
+                    font-black
+                    text-[#1E1B4B]
+                ">
+                    {value}
+                </p>
+
+                <p className="
+                    text-xs
+                    text-slate-500
+                ">
+                    {label}
+                </p>
+
+            </div>
+
+        </div>
+    );
+}

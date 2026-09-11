@@ -1,10 +1,10 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
+import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 
 import {
     Menu,
-    Search,
     Bell,
     Sparkles,
     User,
@@ -14,17 +14,89 @@ import {
     ChevronDown,
 } from "lucide-react";
 
-
+const API_URL = "http://localhost:5000/api/notifications";
 
 export default function Topbar({
     sidebarOpen,
     setSidebarOpen,
 }) {
+    const navigate = useNavigate();
+
     const [profileOpen, setProfileOpen] = useState(false);
+    const [unreadCount, setUnreadCount] = useState(0);
 
     const profileRef = useRef(null);
 
     const { user } = useAuth();
+
+    /* =========================================================
+       GET TOKEN
+    ========================================================= */
+
+    const getToken = () => {
+        return (
+            localStorage.getItem("token") ||
+            localStorage.getItem("authToken") ||
+            localStorage.getItem("jwt")
+        );
+    };
+
+    /* =========================================================
+       FETCH UNREAD COUNT
+    ========================================================= */
+
+    const fetchUnreadCount = async () => {
+        try {
+            const token = getToken();
+
+            if (!token) return;
+
+            const response = await fetch(API_URL, {
+                method: "GET",
+                headers: {
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json",
+                },
+            });
+
+            if (!response.ok) return;
+
+            const data = await response.json();
+
+            const notifications =
+                data.notifications || [];
+
+            const unread = notifications.filter(
+                (notification) =>
+                    !notification.read
+            ).length;
+
+            setUnreadCount(unread);
+        } catch (error) {
+            console.error(
+                "Unread notification error:",
+                error
+            );
+        }
+    };
+
+    /* =========================================================
+       INITIAL LOAD + AUTO REFRESH
+    ========================================================= */
+
+    useEffect(() => {
+        fetchUnreadCount();
+
+        const interval = setInterval(() => {
+            fetchUnreadCount();
+        }, 10000);
+
+        return () => clearInterval(interval);
+    }, []);
+
+    /* =========================================================
+       CLOSE PROFILE WHEN CLICKING OUTSIDE
+    ========================================================= */
 
     useEffect(() => {
         function handleClickOutside(e) {
@@ -36,72 +108,214 @@ export default function Topbar({
             }
         }
 
-        document.addEventListener("mousedown", handleClickOutside);
+        document.addEventListener(
+            "mousedown",
+            handleClickOutside
+        );
 
-        return () =>
+        return () => {
             document.removeEventListener(
                 "mousedown",
                 handleClickOutside
             );
+        };
     }, []);
 
+    /* =========================================================
+       OPEN NOTIFICATIONS
+    ========================================================= */
+
+    const openNotifications = () => {
+        navigate("/notifications");
+    };
+
+    /* =========================================================
+       LOGOUT
+    ========================================================= */
+
+    const handleLogout = () => {
+        localStorage.removeItem("token");
+        localStorage.removeItem("authToken");
+        localStorage.removeItem("jwt");
+
+        setProfileOpen(false);
+
+        navigate("/login");
+    };
+
+    /* =========================================================
+       INITIALS
+    ========================================================= */
+
+    const getInitials = () => {
+        if (!user?.name) return "ST";
+
+        return user.name
+            .split(" ")
+            .map((name) => name[0])
+            .join("")
+            .toUpperCase();
+    };
+
     return (
-        <header className="sticky top-0 z-40 bg-white border-b border-slate-200 h-20 px-6 flex items-center justify-between">
+        <header
+            className="
+                sticky
+                top-0
+                z-40
+                h-20
+                border-b
+                border-slate-200
+                bg-white
+                px-4
+                sm:px-6
+                flex
+                items-center
+                justify-between
+            "
+        >
 
-            {/* Left */}
+            {/* =================================================
+                LEFT
+            ================================================= */}
 
-            <div className="flex items-center gap-5">
+            <div className="flex items-center gap-4">
+
+                {/* MOBILE MENU */}
 
                 <button
-                    onClick={() => setSidebarOpen(!sidebarOpen)}
-                    className="lg:hidden w-11 h-11 rounded-xl hover:bg-slate-100 flex items-center justify-center"
+                    onClick={() =>
+                        setSidebarOpen(
+                            !sidebarOpen
+                        )
+                    }
+                    className="
+                        lg:hidden
+                        flex
+                        h-11
+                        w-11
+                        items-center
+                        justify-center
+                        rounded-xl
+                        hover:bg-slate-100
+                        transition
+                    "
                 >
                     <Menu size={24} />
                 </button>
 
-                {/* Search */}
+                {/* PAGE TITLE */}
 
-                <div className="hidden md:flex items-center gap-3 bg-slate-100 rounded-2xl px-5 py-3 w-[360px]">
+                <div className="hidden sm:block">
 
-                    <Search
-                        size={18}
-                        className="text-slate-400"
-                    />
+                    <p className="text-xs font-medium text-slate-400">
+                        CONEXA
+                    </p>
 
-                    <input
-                        type="text"
-                        placeholder="Search teammates..."
-                        className="bg-transparent outline-none w-full text-sm"
-                    />
+                    <h2 className="text-lg font-bold text-[#1E1B4B]">
+                        Dashboard
+                    </h2>
 
                 </div>
 
             </div>
 
-            {/* Right */}
+            {/* =================================================
+                RIGHT
+            ================================================= */}
 
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-2 sm:gap-4">
 
-                {/* AI Match */}
+                {/* =================================================
+                    AI MATCH
+                ================================================= */}
 
-                <button className="hidden md:flex items-center gap-2 px-4 py-2 rounded-full bg-blue-50 text-[#1E1B4B] hover:bg-blue-100 transition font-medium text-sm">
-
+                <button
+                    onClick={() =>
+                        navigate("/ai-match")
+                    }
+                    className="
+                        hidden
+                        md:flex
+                        items-center
+                        gap-2
+                        rounded-full
+                        bg-blue-50
+                        px-4
+                        py-2
+                        text-sm
+                        font-semibold
+                        text-[#1E1B4B]
+                        transition
+                        hover:bg-blue-100
+                    "
+                >
                     <Sparkles size={16} />
 
-
+                    <span>
+                        AI Match
+                    </span>
                 </button>
 
-                {/* Notification */}
+                {/* =================================================
+                    NOTIFICATION BELL
+                ================================================= */}
 
-                <button className="relative w-11 h-11 rounded-xl bg-slate-100 hover:bg-slate-200 transition flex items-center justify-center">
+                <button
+                    onClick={openNotifications}
+                    title="Notifications"
+                    className="
+                        relative
+                        flex
+                        h-11
+                        w-11
+                        items-center
+                        justify-center
+                        rounded-xl
+                        bg-slate-100
+                        text-slate-700
+                        transition
+                        hover:bg-indigo-50
+                        hover:text-[#1E1B4B]
+                    "
+                >
 
                     <Bell size={20} />
 
-                    <span className="absolute top-2 right-2 w-2 h-2 rounded-full bg-red-500"></span>
+                    {/* UNREAD BADGE */}
+
+                    {unreadCount > 0 && (
+                        <span
+                            className="
+                                absolute
+                                -right-1
+                                -top-1
+                                flex
+                                min-h-5
+                                min-w-5
+                                items-center
+                                justify-center
+                                rounded-full
+                                bg-red-500
+                                px-1
+                                text-[10px]
+                                font-bold
+                                text-white
+                                ring-2
+                                ring-white
+                            "
+                        >
+                            {unreadCount > 99
+                                ? "99+"
+                                : unreadCount}
+                        </span>
+                    )}
 
                 </button>
 
-                {/* Profile */}
+                {/* =================================================
+                    PROFILE
+                ================================================= */}
 
                 <div
                     className="relative"
@@ -110,25 +324,53 @@ export default function Topbar({
 
                     <button
                         onClick={() =>
-                            setProfileOpen(!profileOpen)
+                            setProfileOpen(
+                                !profileOpen
+                            )
                         }
-                        className="flex items-center gap-3 bg-slate-100 hover:bg-slate-200 rounded-2xl px-3 py-2 transition"
+                        className="
+                            flex
+                            items-center
+                            gap-2
+                            rounded-2xl
+                            bg-slate-100
+                            px-2
+                            py-2
+                            transition
+                            hover:bg-slate-200
+                            sm:gap-3
+                            sm:px-3
+                        "
                     >
 
-                        <div className="w-11 h-11 rounded-full bg-gradient-to-r from-[#1E1B4B] to-blue-600 text-white flex items-center justify-center font-bold">
+                        {/* AVATAR */}
 
-                            {user?.name
-                                ? user.name
-                                    .split(" ")
-                                    .map((n) => n[0])
-                                    .join("")
-                                    .toUpperCase()
-                                : "ST"}
-
+                        <div
+                            className="
+                                flex
+                                h-10
+                                w-10
+                                items-center
+                                justify-center
+                                rounded-full
+                                bg-gradient-to-r
+                                from-[#1E1B4B]
+                                to-blue-600
+                                text-sm
+                                font-bold
+                                text-white
+                                sm:h-11
+                                sm:w-11
+                            "
+                        >
+                            {getInitials()}
                         </div>
 
-                        <div className="hidden lg:block">
-                            <h3 className="font-semibold text-sm">
+                        {/* USER INFO */}
+
+                        <div className="hidden lg:block text-left">
+
+                            <h3 className="text-sm font-semibold text-slate-800">
                                 {user?.name || "Student"}
                             </h3>
 
@@ -140,13 +382,17 @@ export default function Topbar({
 
                         <ChevronDown
                             size={18}
-                            className={`transition-transform ${profileOpen
-                                ? "rotate-180"
-                                : ""
+                            className={`hidden sm:block transition-transform ${profileOpen
+                                    ? "rotate-180"
+                                    : ""
                                 }`}
                         />
 
                     </button>
+
+                    {/* =================================================
+                        PROFILE DROPDOWN
+                    ================================================= */}
 
                     <AnimatePresence>
 
@@ -156,7 +402,7 @@ export default function Topbar({
                                 initial={{
                                     opacity: 0,
                                     y: 10,
-                                    scale: 0.98,
+                                    scale: 0.96,
                                 }}
                                 animate={{
                                     opacity: 1,
@@ -166,40 +412,60 @@ export default function Topbar({
                                 exit={{
                                     opacity: 0,
                                     y: 10,
-                                    scale: 0.98,
+                                    scale: 0.96,
                                 }}
                                 transition={{
-                                    duration: 0.2,
+                                    duration: 0.18,
                                 }}
-                                className="absolute right-0 mt-3 w-72 bg-white rounded-2xl shadow-2xl border border-slate-200 overflow-hidden"
+                                className="
+                                    absolute
+                                    right-0
+                                    mt-3
+                                    w-72
+                                    overflow-hidden
+                                    rounded-2xl
+                                    border
+                                    border-slate-200
+                                    bg-white
+                                    shadow-2xl
+                                "
                             >
 
-                                {/* Header */}
+                                {/* PROFILE HEADER */}
 
-                                <div className="p-5 border-b">
+                                <div className="border-b border-slate-100 p-5">
 
                                     <div className="flex items-center gap-4">
 
-                                        <div className="w-14 h-14 rounded-full bg-gradient-to-r from-[#1E1B4B] to-blue-600 text-white flex items-center justify-center font-bold text-lg">
-
-                                            {user?.name
-                                                ? user.name
-                                                    .split(" ")
-                                                    .map((n) => n[0])
-                                                    .join("")
-                                                    .toUpperCase()
-                                                : "ST"}
-
+                                        <div
+                                            className="
+                                                flex
+                                                h-14
+                                                w-14
+                                                items-center
+                                                justify-center
+                                                rounded-full
+                                                bg-gradient-to-r
+                                                from-[#1E1B4B]
+                                                to-blue-600
+                                                text-lg
+                                                font-bold
+                                                text-white
+                                            "
+                                        >
+                                            {getInitials()}
                                         </div>
 
-                                        <div>
+                                        <div className="min-w-0">
 
-                                            <h2 className="font-bold">
-                                                {user?.name || "Student"}
+                                            <h2 className="truncate font-bold text-[#1E1B4B]">
+                                                {user?.name ||
+                                                    "Student"}
                                             </h2>
 
-                                            <p className="text-sm text-slate-500">
-                                                {user?.branch || "Student"}
+                                            <p className="truncate text-sm text-slate-500">
+                                                {user?.branch ||
+                                                    "Student"}
                                             </p>
 
                                         </div>
@@ -208,27 +474,73 @@ export default function Topbar({
 
                                 </div>
 
-                                {/* Menu */}
+                                {/* =================================================
+                                    MY PROFILE
+                                ================================================= */}
 
                                 <DropdownItem
-                                    icon={<User size={18} />}
+                                    icon={
+                                        <User size={18} />
+                                    }
                                     text="My Profile"
+                                    onClick={() => {
+                                        setProfileOpen(false);
+
+                                        navigate(
+                                            "/profile"
+                                        );
+                                    }}
                                 />
 
+                                {/* =================================================
+                                    ACHIEVEMENTS
+                                ================================================= */}
+
                                 <DropdownItem
-                                    icon={<Trophy size={18} />}
+                                    icon={
+                                        <Trophy size={18} />
+                                    }
                                     text="Achievements"
+                                    onClick={() => {
+                                        setProfileOpen(false);
+
+                                        navigate(
+                                            "/achievements"
+                                        );
+                                    }}
                                 />
 
+                                {/* =================================================
+                                    SETTINGS
+                                ================================================= */}
+
                                 <DropdownItem
-                                    icon={<Settings size={18} />}
+                                    icon={
+                                        <Settings size={18} />
+                                    }
                                     text="Settings"
+                                    onClick={() => {
+                                        setProfileOpen(false);
+
+                                        navigate(
+                                            "/settings"
+                                        );
+                                    }}
                                 />
 
+                                {/* =================================================
+                                    LOGOUT
+                                ================================================= */}
+
                                 <DropdownItem
-                                    icon={<LogOut size={18} />}
+                                    icon={
+                                        <LogOut size={18} />
+                                    }
                                     text="Logout"
                                     danger
+                                    onClick={
+                                        handleLogout
+                                    }
                                 />
 
                             </motion.div>
@@ -245,23 +557,57 @@ export default function Topbar({
     );
 }
 
+/* =========================================================
+   DROPDOWN ITEM
+========================================================= */
+
 function DropdownItem({
     icon,
     text,
-    danger,
+    badge,
+    danger = false,
+    onClick,
 }) {
     return (
         <button
-            className={`w-full flex items-center gap-3 px-5 py-4 text-left transition ${danger
-                ? "text-red-500 hover:bg-red-50"
-                : "hover:bg-slate-100 text-slate-700"
-                }`}
+            onClick={onClick}
+            className={`
+                flex
+                w-full
+                items-center
+                gap-3
+                px-5
+                py-4
+                text-left
+                transition
+                ${danger
+                    ? "text-red-500 hover:bg-red-50"
+                    : "text-slate-700 hover:bg-slate-100"
+                }
+            `}
         >
+
             {icon}
 
-            <span className="font-medium">
+            <span className="flex-1 font-medium">
                 {text}
             </span>
+
+            {badge && (
+                <span
+                    className="
+                        rounded-full
+                        bg-red-500
+                        px-2
+                        py-0.5
+                        text-[10px]
+                        font-bold
+                        text-white
+                    "
+                >
+                    {badge}
+                </span>
+            )}
 
         </button>
     );
