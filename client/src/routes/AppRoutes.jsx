@@ -17,21 +17,6 @@ import Dashboard from "../pages/dashboard/Dashboard";
 import BuildTeam from "../pages/dashboard/BuildTeam";
 import FindTeammates from "../pages/dashboard/FindTeammates";
 
-// ================= EVENTS =================
-import UpcomingEvents from "../pages/dashboard/UpcomingEvents";
-
-// ================= DAILY CHALLENGE =================
-import DailyChallenge from "../pages/dashboard/DailyChallenge";
-
-// ================= NOTIFICATIONS =================
-import DashboardNotification from "../pages/dashboard/Dashboard-notification";
-
-// ================= HACKATHONS =================
-import Hackathons from "../pages/dashboard/Hackathons";
-import HackathonRegistration from "../pages/dashboard/HackathonRegistration";
-import CreateHackathon from "../pages/dashboard/CreateHackathon";
-import MyHackathons from "../pages/dashboard/MyHackathons";
-
 // ================= CHAT =================
 import ChatPage from "../pages/chat/ChatPage";
 
@@ -136,81 +121,6 @@ export default function AppRoutes() {
                 element={
                     <ProtectedRoute>
                         <ChatPage />
-                    </ProtectedRoute>
-                }
-            />
-
-
-            {/* ================= HACKATHONS ================= */}
-
-            <Route
-                path="/hackathons"
-                element={
-                    <ProtectedRoute>
-                        <Hackathons />
-                    </ProtectedRoute>
-                }
-            />
-
-            <Route
-                path="/hackathons/:id/register"
-                element={
-                    <ProtectedRoute>
-                        <HackathonRegistration />
-                    </ProtectedRoute>
-                }
-            />
-
-            <Route
-                path="/create-hackathon"
-                element={
-                    <ProtectedRoute>
-                        <CreateHackathon />
-                    </ProtectedRoute>
-                }
-            />
-
-            <Route
-                path="/my-hackathons"
-                element={
-                    <ProtectedRoute>
-                        <MyHackathons />
-                    </ProtectedRoute>
-                }
-            />
-
-
-            {/* ================= EVENTS ================= */}
-
-            <Route
-                path="/events"
-                element={
-                    <ProtectedRoute>
-                        <UpcomingEvents />
-                    </ProtectedRoute>
-                }
-            />
-
-
-            {/* ================= DAILY CHALLENGE ================= */}
-
-            <Route
-                path="/daily-challenge"
-                element={
-                    <ProtectedRoute>
-                        <DailyChallenge />
-                    </ProtectedRoute>
-                }
-            />
-
-
-            {/* ================= NOTIFICATIONS ================= */}
-
-            <Route
-                path="/dashboard-notification"
-                element={
-                    <ProtectedRoute>
-                        <DashboardNotification />
                     </ProtectedRoute>
                 }
             />
