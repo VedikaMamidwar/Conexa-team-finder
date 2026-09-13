@@ -5,13 +5,13 @@ import {
     ArrowLeft,
     ArrowRight,
     Check,
+    FileText,
     GraduationCap,
     MapPin,
     Save,
     Upload,
     User,
     X,
-    FileText,
 } from "lucide-react";
 
 import { FaGithub, FaLinkedin } from "react-icons/fa";
@@ -19,7 +19,6 @@ import { FaGithub, FaLinkedin } from "react-icons/fa";
 import { useAuth } from "../../context/AuthContext";
 
 const PROFILE_STORAGE_KEY = "conexaProfile";
-
 const API_URL = "http://localhost:5000/api/profile";
 
 const defaultProfile = {
@@ -32,7 +31,6 @@ const defaultProfile = {
     year: "",
 
     photo: null,
-
     resume: null,
 
     github: "",
@@ -50,52 +48,152 @@ const defaultProfile = {
 
 export default function CompleteProfile() {
     const navigate = useNavigate();
-
     const { user } = useAuth();
 
     const [formData, setFormData] = useState(defaultProfile);
-
     const [errors, setErrors] = useState({});
-
     const [saving, setSaving] = useState(false);
+    const [loading, setLoading] = useState(true);
 
     // =====================================================
-    // LOAD EXISTING PROFILE
+    // GET USER ID
+    // =====================================================
+
+    const getUserId = () => {
+        return user?._id || user?.id || user?.userId || null;
+    };
+
+    // =====================================================
+    // LOAD PROFILE FROM BACKEND
     // =====================================================
 
     useEffect(() => {
-        try {
-            const savedProfile = localStorage.getItem(
-                PROFILE_STORAGE_KEY
-            );
+        const loadProfile = async () => {
+            try {
+                setLoading(true);
 
-            if (savedProfile) {
-                const parsedProfile =
-                    JSON.parse(savedProfile);
+                const userId = getUserId();
 
-                setFormData({
+                // Basic user information first
+                const baseProfile = {
                     ...defaultProfile,
-                    ...parsedProfile,
-                });
-            } else {
-                setFormData((prev) => ({
-                    ...prev,
                     name: user?.name || "",
                     email: user?.email || "",
-                }));
-            }
-        } catch (error) {
-            console.error(
-                "Complete profile loading error:",
-                error
-            );
+                    college: user?.college || "",
+                    branch: user?.branch || "",
+                    year: user?.year || "",
+                };
 
-            setFormData((prev) => ({
-                ...prev,
-                name: user?.name || "",
-                email: user?.email || "",
-            }));
-        }
+                // If user ID is not available yet
+                if (!userId) {
+                    console.log(
+                        "User ID not available yet."
+                    );
+
+                    setFormData(baseProfile);
+                    return;
+                }
+
+                console.log(
+                    "Loading profile for user:",
+                    userId
+                );
+
+                // GET profile from MongoDB
+                const response = await fetch(
+                    `${API_URL}/${userId}`
+                );
+
+                // Profile does not exist yet
+                if (response.status === 404) {
+                    console.log(
+                        "No profile found. Creating new profile."
+                    );
+
+                    setFormData(baseProfile);
+
+                    return;
+                }
+
+                const data = await response.json();
+
+                console.log(
+                    "Profile GET response:",
+                    data
+                );
+
+                if (!response.ok) {
+                    throw new Error(
+                        data.message ||
+                        "Failed to load profile"
+                    );
+                }
+
+                if (data.success && data.profile) {
+                    const backendProfile = {
+                        ...defaultProfile,
+                        ...data.profile,
+                    };
+
+                    setFormData(backendProfile);
+
+                    localStorage.setItem(
+                        PROFILE_STORAGE_KEY,
+                        JSON.stringify(
+                            backendProfile
+                        )
+                    );
+                } else {
+                    setFormData(baseProfile);
+                }
+            } catch (error) {
+                console.error(
+                    "Load profile error:",
+                    error
+                );
+
+                // Fallback to localStorage
+                try {
+                    const savedProfile =
+                        localStorage.getItem(
+                            PROFILE_STORAGE_KEY
+                        );
+
+                    if (savedProfile) {
+                        const parsedProfile =
+                            JSON.parse(
+                                savedProfile
+                            );
+
+                        setFormData({
+                            ...defaultProfile,
+                            ...parsedProfile,
+                        });
+                    } else {
+                        setFormData({
+                            ...defaultProfile,
+                            name: user?.name || "",
+                            email: user?.email || "",
+                            college:
+                                user?.college || "",
+                            branch:
+                                user?.branch || "",
+                            year:
+                                user?.year || "",
+                        });
+                    }
+                } catch (localError) {
+                    console.error(
+                        "Local profile error:",
+                        localError
+                    );
+                }
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        loadProfile();
     }, [user]);
 
     // =====================================================
@@ -124,19 +222,26 @@ export default function CompleteProfile() {
         if (!file) return;
 
         if (!file.type.startsWith("image/")) {
-            alert("Please upload JPG, PNG or WEBP image.");
+            alert(
+                "Please upload JPG, PNG or WEBP image."
+            );
             return;
         }
 
         if (file.size > 5 * 1024 * 1024) {
-            alert("Photo must be less than 5 MB.");
+            alert(
+                "Photo must be less than 5 MB."
+            );
             return;
         }
 
         const reader = new FileReader();
 
         reader.onloadend = () => {
-            handleChange("photo", reader.result);
+            handleChange(
+                "photo",
+                reader.result
+            );
         };
 
         reader.readAsDataURL(file);
@@ -157,7 +262,9 @@ export default function CompleteProfile() {
         }
 
         if (file.size > 5 * 1024 * 1024) {
-            alert("Resume must be less than 5 MB.");
+            alert(
+                "Resume must be less than 5 MB."
+            );
             return;
         }
 
@@ -199,11 +306,13 @@ export default function CompleteProfile() {
         const newErrors = {};
 
         if (!formData.name?.trim()) {
-            newErrors.name = "Name is required";
+            newErrors.name =
+                "Name is required";
         }
 
         if (!formData.email?.trim()) {
-            newErrors.email = "Email is required";
+            newErrors.email =
+                "Email is required";
         }
 
         if (!formData.college?.trim()) {
@@ -212,11 +321,13 @@ export default function CompleteProfile() {
         }
 
         if (!formData.branch?.trim()) {
-            newErrors.branch = "Branch is required";
+            newErrors.branch =
+                "Branch is required";
         }
 
         if (!formData.year?.trim()) {
-            newErrors.year = "Year is required";
+            newErrors.year =
+                "Year is required";
         }
 
         if (!formData.location?.trim()) {
@@ -230,7 +341,7 @@ export default function CompleteProfile() {
         }
 
         if (
-            !formData.skills ||
+            !Array.isArray(formData.skills) ||
             formData.skills.length === 0
         ) {
             newErrors.skills =
@@ -239,16 +350,22 @@ export default function CompleteProfile() {
 
         setErrors(newErrors);
 
-        return Object.keys(newErrors).length === 0;
+        return (
+            Object.keys(newErrors).length === 0
+        );
     };
 
     // =====================================================
-    // SAVE PROFILE - BACKEND + MONGODB
+    // HANDLE SUBMIT
+    // SAVE PROFILE TO MONGODB
     // =====================================================
 
     const handleSubmit = async (event) => {
         event.preventDefault();
 
+        console.log("SAVE PROFILE CLICKED");
+
+        // Validate
         if (!validateForm()) {
             window.scrollTo({
                 top: 0,
@@ -261,22 +378,28 @@ export default function CompleteProfile() {
         try {
             setSaving(true);
 
-            // Get logged-in user ID
-            const userId =
-                user?._id || user?.id;
+            const userId = getUserId();
+
+            console.log(
+                "User ID:",
+                userId
+            );
 
             if (!userId) {
                 alert(
                     "User ID not found. Please login again."
                 );
 
+                setSaving(false);
                 return;
             }
 
-            const updatedProfile = {
-                ...formData,
+            // =================================================
+            // DATA TO SEND TO BACKEND
+            // =================================================
 
-                userId,
+            const updatedProfile = {
+                userId: String(userId),
 
                 name:
                     formData.name?.trim() || "",
@@ -300,8 +423,11 @@ export default function CompleteProfile() {
                 year:
                     formData.year?.trim() || "",
 
-                bio:
-                    formData.bio?.trim() || "",
+                photo:
+                    formData.photo || null,
+
+                resume:
+                    formData.resume || null,
 
                 github:
                     formData.github?.trim() || "",
@@ -312,22 +438,30 @@ export default function CompleteProfile() {
                 portfolio:
                     formData.portfolio?.trim() || "",
 
-                skills: Array.isArray(
-                    formData.skills
-                )
-                    ? formData.skills
-                    : [],
+                availability:
+                    formData.availability ||
+                    "Available",
+
+                bio:
+                    formData.bio?.trim() || "",
+
+                skills:
+                    Array.isArray(
+                        formData.skills
+                    )
+                        ? formData.skills
+                        : [],
 
                 profileCompleted: true,
             };
 
             console.log(
-                "Sending profile to backend:",
+                "Sending profile:",
                 updatedProfile
             );
 
             // =================================================
-            // SEND DATA TO BACKEND
+            // POST TO BACKEND
             // =================================================
 
             const response = await fetch(
@@ -346,6 +480,11 @@ export default function CompleteProfile() {
                 }
             );
 
+            console.log(
+                "Response status:",
+                response.status
+            );
+
             const data =
                 await response.json();
 
@@ -353,6 +492,10 @@ export default function CompleteProfile() {
                 "Backend response:",
                 data
             );
+
+            // =================================================
+            // ERROR
+            // =================================================
 
             if (!response.ok) {
                 throw new Error(
@@ -362,27 +505,43 @@ export default function CompleteProfile() {
             }
 
             // =================================================
-            // SAVE LOCAL COPY
+            // SAVE BACKEND RESPONSE LOCALLY
             // =================================================
 
-            localStorage.setItem(
-                PROFILE_STORAGE_KEY,
-                JSON.stringify(
-                    data.profile ||
-                    updatedProfile
-                )
-            );
+            if (data.profile) {
+                const savedProfile = {
+                    ...defaultProfile,
+                    ...data.profile,
+                };
+
+                setFormData(
+                    savedProfile
+                );
+
+                localStorage.setItem(
+                    PROFILE_STORAGE_KEY,
+                    JSON.stringify(
+                        savedProfile
+                    )
+                );
+            } else {
+                localStorage.setItem(
+                    PROFILE_STORAGE_KEY,
+                    JSON.stringify(
+                        updatedProfile
+                    )
+                );
+            }
+
+            // =================================================
+            // SUCCESS
+            // =================================================
 
             alert(
-                "Profile completed successfully!"
+                "Profile saved successfully!"
             );
 
-            // =================================================
-            // GO TO PROFILE
-            // =================================================
-
             navigate("/profile");
-
         } catch (error) {
             console.error(
                 "Profile save error:",
@@ -391,7 +550,7 @@ export default function CompleteProfile() {
 
             alert(
                 error.message ||
-                "Something went wrong while saving profile."
+                "Failed to save profile. Please try again."
             );
         } finally {
             setSaving(false);
@@ -399,22 +558,28 @@ export default function CompleteProfile() {
     };
 
     // =====================================================
-    // SKILLS INPUT
+    // SKILLS
     // =====================================================
 
-    const skillsText = Array.isArray(
-        formData.skills
-    )
-        ? formData.skills.join(", ")
-        : "";
+    const skillsText =
+        Array.isArray(formData.skills)
+            ? formData.skills.join(", ")
+            : "";
 
-    const handleSkillsChange = (value) => {
+    const handleSkillsChange = (
+        value
+    ) => {
         const skills = value
             .split(",")
-            .map((skill) => skill.trim())
+            .map((skill) =>
+                skill.trim()
+            )
             .filter(Boolean);
 
-        handleChange("skills", skills);
+        handleChange(
+            "skills",
+            skills
+        );
     };
 
     // =====================================================
@@ -440,21 +605,45 @@ export default function CompleteProfile() {
         ];
 
         const completed =
-            fields.filter(Boolean).length;
+            fields.filter(Boolean)
+                .length;
 
         return Math.round(
-            (completed / fields.length) * 100
+            (completed /
+                fields.length) *
+            100
         );
     };
 
-    const progress = calculateProgress();
+    const progress =
+        calculateProgress();
+
+    // =====================================================
+    // LOADING
+    // =====================================================
+
+    if (loading) {
+        return (
+            <div className="flex min-h-screen items-center justify-center bg-[#F8FAFC]">
+                <div className="text-center">
+                    <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-[#1E1B4B]" />
+
+                    <p className="mt-4 text-sm font-semibold text-slate-500">
+                        Loading profile...
+                    </p>
+                </div>
+            </div>
+        );
+    }
+
+    // =====================================================
+    // UI
+    // =====================================================
 
     return (
         <div className="min-h-screen bg-[#F8FAFC] text-[#1E1B4B]">
 
-            {/* =====================================================
-                HEADER
-            ===================================================== */}
+            {/* HEADER */}
 
             <header className="sticky top-0 z-40 border-b border-slate-200 bg-white/95 backdrop-blur-md">
 
@@ -465,11 +654,15 @@ export default function CompleteProfile() {
                         <button
                             type="button"
                             onClick={() =>
-                                navigate("/profile")
+                                navigate(
+                                    "/profile"
+                                )
                             }
                             className="flex h-10 w-10 items-center justify-center rounded-xl border border-slate-200 bg-white transition hover:bg-slate-50"
                         >
-                            <ArrowLeft size={18} />
+                            <ArrowLeft
+                                size={18}
+                            />
                         </button>
 
                         <div>
@@ -500,22 +693,17 @@ export default function CompleteProfile() {
 
             </header>
 
-            {/* =====================================================
-                MAIN
-            ===================================================== */}
+            {/* MAIN */}
 
             <main className="mx-auto max-w-6xl px-4 py-6 sm:px-6 lg:px-8">
 
-                {/* =====================================================
-                    PROGRESS
-                ===================================================== */}
+                {/* PROGRESS */}
 
                 <section className="mb-6 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-6">
 
                     <div className="flex items-center justify-between gap-4">
 
                         <div>
-
                             <h2 className="font-bold">
                                 Profile Progress
                             </h2>
@@ -523,7 +711,6 @@ export default function CompleteProfile() {
                             <p className="mt-1 text-xs text-slate-400">
                                 Complete your profile to improve teammate recommendations.
                             </p>
-
                         </div>
 
                         <span className="text-xl font-black">
@@ -545,16 +732,22 @@ export default function CompleteProfile() {
 
                 </section>
 
-                <form onSubmit={handleSubmit}>
+                <form
+                    onSubmit={
+                        handleSubmit
+                    }
+                >
 
-                    {/* =====================================================
-                        BASIC INFORMATION
-                    ===================================================== */}
+                    {/* BASIC INFORMATION */}
 
                     <section className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
 
                         <SectionHeader
-                            icon={<User size={20} />}
+                            icon={
+                                <User
+                                    size={20}
+                                />
+                            }
                             title="Basic Information"
                             description="Tell us about yourself."
                         />
@@ -564,21 +757,31 @@ export default function CompleteProfile() {
                             <FormInput
                                 label="Full Name"
                                 required
-                                value={formData.name}
-                                onChange={(value) =>
+                                value={
+                                    formData.name
+                                }
+                                onChange={(
+                                    value
+                                ) =>
                                     handleChange(
                                         "name",
                                         value
                                     )
                                 }
                                 placeholder="Enter your full name"
-                                error={errors.name}
+                                error={
+                                    errors.name
+                                }
                             />
 
                             <FormInput
                                 label="Professional Role"
-                                value={formData.role}
-                                onChange={(value) =>
+                                value={
+                                    formData.role
+                                }
+                                onChange={(
+                                    value
+                                ) =>
                                     handleChange(
                                         "role",
                                         value
@@ -591,31 +794,47 @@ export default function CompleteProfile() {
                                 label="Email"
                                 required
                                 type="email"
-                                value={formData.email}
-                                onChange={(value) =>
+                                value={
+                                    formData.email
+                                }
+                                onChange={(
+                                    value
+                                ) =>
                                     handleChange(
                                         "email",
                                         value
                                     )
                                 }
                                 placeholder="your@email.com"
-                                error={errors.email}
+                                error={
+                                    errors.email
+                                }
                             />
 
                             <FormInput
                                 label="Location"
                                 required
-                                value={formData.location}
-                                onChange={(value) =>
+                                value={
+                                    formData.location
+                                }
+                                onChange={(
+                                    value
+                                ) =>
                                     handleChange(
                                         "location",
                                         value
                                     )
                                 }
                                 placeholder="Nagpur, Maharashtra"
-                                error={errors.location}
+                                error={
+                                    errors.location
+                                }
                                 icon={
-                                    <MapPin size={15} />
+                                    <MapPin
+                                        size={
+                                            15
+                                        }
+                                    />
                                 }
                             />
 
@@ -623,16 +842,16 @@ export default function CompleteProfile() {
 
                     </section>
 
-                    {/* =====================================================
-                        EDUCATION
-                    ===================================================== */}
+                    {/* EDUCATION */}
 
                     <section className="mt-6 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
 
                         <SectionHeader
                             icon={
                                 <GraduationCap
-                                    size={20}
+                                    size={
+                                        20
+                                    }
                                 />
                             }
                             title="Education"
@@ -644,51 +863,64 @@ export default function CompleteProfile() {
                             <FormInput
                                 label="College / University"
                                 required
-                                value={formData.college}
-                                onChange={(value) =>
+                                value={
+                                    formData.college
+                                }
+                                onChange={(
+                                    value
+                                ) =>
                                     handleChange(
                                         "college",
                                         value
                                     )
                                 }
                                 placeholder="G.H. Raisoni University"
-                                error={errors.college}
+                                error={
+                                    errors.college
+                                }
                             />
 
                             <FormInput
                                 label="Branch"
                                 required
-                                value={formData.branch}
-                                onChange={(value) =>
+                                value={
+                                    formData.branch
+                                }
+                                onChange={(
+                                    value
+                                ) =>
                                     handleChange(
                                         "branch",
                                         value
                                     )
                                 }
                                 placeholder="Computer Science"
-                                error={errors.branch}
+                                error={
+                                    errors.branch
+                                }
                             />
 
                             <div>
 
                                 <label className="text-sm font-semibold">
-
                                     Year
-
                                     <span className="ml-1 text-red-500">
                                         *
                                     </span>
-
                                 </label>
 
                                 <select
                                     value={
                                         formData.year
                                     }
-                                    onChange={(e) =>
+                                    onChange={(
+                                        e
+                                    ) =>
                                         handleChange(
                                             "year",
-                                            e.target.value
+                                            e
+                                                .target
+                                                .value
                                         )
                                     }
                                     className={`mt-2 w-full rounded-xl border bg-white px-4 py-3 text-sm outline-none transition focus:border-[#312E81] focus:ring-2 focus:ring-[#312E81]/10 ${errors.year
@@ -721,7 +953,9 @@ export default function CompleteProfile() {
 
                                 {errors.year && (
                                     <p className="mt-1 text-xs text-red-500">
-                                        {errors.year}
+                                        {
+                                            errors.year
+                                        }
                                     </p>
                                 )}
 
@@ -737,10 +971,14 @@ export default function CompleteProfile() {
                                     value={
                                         formData.availability
                                     }
-                                    onChange={(e) =>
+                                    onChange={(
+                                        e
+                                    ) =>
                                         handleChange(
                                             "availability",
-                                            e.target.value
+                                            e
+                                                .target
+                                                .value
                                         )
                                     }
                                     className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#312E81] focus:ring-2 focus:ring-[#312E81]/10"
@@ -766,14 +1004,16 @@ export default function CompleteProfile() {
 
                     </section>
 
-                    {/* =====================================================
-                        ABOUT
-                    ===================================================== */}
+                    {/* ABOUT */}
 
                     <section className="mt-6 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
 
                         <SectionHeader
-                            icon={<User size={20} />}
+                            icon={
+                                <User
+                                    size={20}
+                                />
+                            }
                             title="About Me"
                             description="Write a short introduction."
                         />
@@ -781,24 +1021,26 @@ export default function CompleteProfile() {
                         <div className="mt-6">
 
                             <label className="text-sm font-semibold">
-
                                 Bio
-
                                 <span className="ml-1 text-red-500">
                                     *
                                 </span>
-
                             </label>
 
                             <textarea
                                 rows={5}
                                 value={
-                                    formData.bio || ""
+                                    formData.bio ||
+                                    ""
                                 }
-                                onChange={(e) =>
+                                onChange={(
+                                    e
+                                ) =>
                                     handleChange(
                                         "bio",
-                                        e.target.value
+                                        e
+                                            .target
+                                            .value
                                     )
                                 }
                                 placeholder="Tell other students about yourself, your interests, experience and what type of projects you enjoy..."
@@ -810,7 +1052,9 @@ export default function CompleteProfile() {
 
                             {errors.bio && (
                                 <p className="mt-1 text-xs text-red-500">
-                                    {errors.bio}
+                                    {
+                                        errors.bio
+                                    }
                                 </p>
                             )}
 
@@ -818,14 +1062,16 @@ export default function CompleteProfile() {
 
                     </section>
 
-                    {/* =====================================================
-                        SKILLS
-                    ===================================================== */}
+                    {/* SKILLS */}
 
                     <section className="mt-6 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
 
                         <SectionHeader
-                            icon={<Check size={20} />}
+                            icon={
+                                <Check
+                                    size={20}
+                                />
+                            }
                             title="Skills"
                             description="Add technologies you know."
                         />
@@ -833,20 +1079,23 @@ export default function CompleteProfile() {
                         <div className="mt-6">
 
                             <label className="text-sm font-semibold">
-
                                 Your Skills
-
                                 <span className="ml-1 text-red-500">
                                     *
                                 </span>
-
                             </label>
 
                             <input
-                                value={skillsText}
-                                onChange={(e) =>
+                                value={
+                                    skillsText
+                                }
+                                onChange={(
+                                    e
+                                ) =>
                                     handleSkillsChange(
-                                        e.target.value
+                                        e
+                                            .target
+                                            .value
                                     )
                                 }
                                 placeholder="React, Node.js, MongoDB, Java, Git..."
@@ -858,7 +1107,9 @@ export default function CompleteProfile() {
 
                             {errors.skills ? (
                                 <p className="mt-1 text-xs text-red-500">
-                                    {errors.skills}
+                                    {
+                                        errors.skills
+                                    }
                                 </p>
                             ) : (
                                 <p className="mt-1 text-xs text-slate-400">
@@ -866,36 +1117,43 @@ export default function CompleteProfile() {
                                 </p>
                             )}
 
-                            {formData.skills?.length > 0 && (
-                                <div className="mt-4 flex flex-wrap gap-2">
+                            {formData.skills
+                                ?.length >
+                                0 && (
+                                    <div className="mt-4 flex flex-wrap gap-2">
 
-                                    {formData.skills.map(
-                                        (skill, index) => (
-                                            <span
-                                                key={`${skill}-${index}`}
-                                                className="rounded-full bg-[#1E1B4B]/5 px-3 py-1.5 text-xs font-semibold text-[#1E1B4B]"
-                                            >
-                                                {skill}
-                                            </span>
-                                        )
-                                    )}
+                                        {formData.skills.map(
+                                            (
+                                                skill,
+                                                index
+                                            ) => (
+                                                <span
+                                                    key={`${skill}-${index}`}
+                                                    className="rounded-full bg-[#1E1B4B]/5 px-3 py-1.5 text-xs font-semibold text-[#1E1B4B]"
+                                                >
+                                                    {
+                                                        skill
+                                                    }
+                                                </span>
+                                            )
+                                        )}
 
-                                </div>
-                            )}
+                                    </div>
+                                )}
 
                         </div>
 
                     </section>
 
-                    {/* =====================================================
-                        SOCIAL LINKS
-                    ===================================================== */}
+                    {/* SOCIAL LINKS */}
 
                     <section className="mt-6 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
 
                         <SectionHeader
                             icon={
-                                <FaGithub size={20} />
+                                <FaGithub
+                                    size={20}
+                                />
                             }
                             title="Social & Portfolio"
                             description="Help teammates know more about your work."
@@ -908,7 +1166,9 @@ export default function CompleteProfile() {
                                 value={
                                     formData.github
                                 }
-                                onChange={(value) =>
+                                onChange={(
+                                    value
+                                ) =>
                                     handleChange(
                                         "github",
                                         value
@@ -916,7 +1176,9 @@ export default function CompleteProfile() {
                                 }
                                 placeholder="https://github.com/username"
                                 icon={
-                                    <FaGithub size={15} />
+                                    <FaGithub
+                                        size={15}
+                                    />
                                 }
                             />
 
@@ -925,7 +1187,9 @@ export default function CompleteProfile() {
                                 value={
                                     formData.linkedin
                                 }
-                                onChange={(value) =>
+                                onChange={(
+                                    value
+                                ) =>
                                     handleChange(
                                         "linkedin",
                                         value
@@ -934,7 +1198,9 @@ export default function CompleteProfile() {
                                 placeholder="https://linkedin.com/in/username"
                                 icon={
                                     <FaLinkedin
-                                        size={15}
+                                        size={
+                                            15
+                                        }
                                     />
                                 }
                             />
@@ -946,7 +1212,9 @@ export default function CompleteProfile() {
                                     value={
                                         formData.portfolio
                                     }
-                                    onChange={(value) =>
+                                    onChange={(
+                                        value
+                                    ) =>
                                         handleChange(
                                             "portfolio",
                                             value
@@ -961,15 +1229,15 @@ export default function CompleteProfile() {
 
                     </section>
 
-                    {/* =====================================================
-                        PHOTO + RESUME
-                    ===================================================== */}
+                    {/* PHOTO + RESUME */}
 
                     <section className="mt-6 rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
 
                         <SectionHeader
                             icon={
-                                <Upload size={20} />
+                                <Upload
+                                    size={20}
+                                />
                             }
                             title="Profile Photo & Resume"
                             description="Upload files to complete your profile."
@@ -986,7 +1254,6 @@ export default function CompleteProfile() {
                                 </label>
 
                                 {formData.photo ? (
-
                                     <div className="mt-3 flex items-center gap-4">
 
                                         <div className="relative">
@@ -1007,22 +1274,24 @@ export default function CompleteProfile() {
                                                 className="absolute -right-1 -top-1 flex h-7 w-7 items-center justify-center rounded-full bg-red-500 text-white hover:bg-red-600"
                                             >
                                                 <X
-                                                    size={14}
+                                                    size={
+                                                        14
+                                                    }
                                                 />
                                             </button>
 
                                         </div>
 
                                     </div>
-
                                 ) : (
-
                                     <label className="mt-3 flex min-h-36 cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 transition hover:border-[#14B8A6] hover:bg-white">
 
                                         <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white shadow-sm">
 
                                             <Upload
-                                                size={22}
+                                                size={
+                                                    22
+                                                }
                                                 className="text-[#1E1B4B]"
                                             />
 
@@ -1046,7 +1315,6 @@ export default function CompleteProfile() {
                                         />
 
                                     </label>
-
                                 )}
 
                             </div>
@@ -1060,7 +1328,6 @@ export default function CompleteProfile() {
                                 </label>
 
                                 {formData.resume ? (
-
                                     <div className="mt-3 rounded-2xl border border-slate-200 bg-slate-50 p-4">
 
                                         <div className="flex items-center justify-between gap-3">
@@ -1070,7 +1337,9 @@ export default function CompleteProfile() {
                                                 <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-white">
 
                                                     <FileText
-                                                        size={21}
+                                                        size={
+                                                            21
+                                                        }
                                                         className="text-[#1E1B4B]"
                                                     />
 
@@ -1102,22 +1371,24 @@ export default function CompleteProfile() {
                                                 className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-red-500 hover:bg-red-100"
                                             >
                                                 <X
-                                                    size={16}
+                                                    size={
+                                                        16
+                                                    }
                                                 />
                                             </button>
 
                                         </div>
 
                                     </div>
-
                                 ) : (
-
                                     <label className="mt-3 flex min-h-36 cursor-pointer flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 transition hover:border-[#14B8A6] hover:bg-white">
 
                                         <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white shadow-sm">
 
                                             <FileText
-                                                size={22}
+                                                size={
+                                                    22
+                                                }
                                                 className="text-[#1E1B4B]"
                                             />
 
@@ -1141,7 +1412,6 @@ export default function CompleteProfile() {
                                         />
 
                                     </label>
-
                                 )}
 
                             </div>
@@ -1150,9 +1420,7 @@ export default function CompleteProfile() {
 
                     </section>
 
-                    {/* =====================================================
-                        SAVE SECTION
-                    ===================================================== */}
+                    {/* SAVE */}
 
                     <section className="mt-6 rounded-3xl bg-gradient-to-r from-[#1E1B4B] to-[#14B8A6] p-6 text-white shadow-lg sm:p-7">
 
@@ -1186,11 +1454,17 @@ export default function CompleteProfile() {
 
                                 <button
                                     type="submit"
-                                    disabled={saving}
+                                    disabled={
+                                        saving
+                                    }
                                     className="flex items-center justify-center gap-2 rounded-xl bg-white px-6 py-3 text-sm font-bold text-[#1E1B4B] transition hover:-translate-y-0.5 hover:bg-slate-100 disabled:cursor-not-allowed disabled:opacity-60"
                                 >
 
-                                    <Save size={17} />
+                                    <Save
+                                        size={
+                                            17
+                                        }
+                                    />
 
                                     {saving
                                         ? "Saving..."
@@ -1198,7 +1472,9 @@ export default function CompleteProfile() {
 
                                     {!saving && (
                                         <ArrowRight
-                                            size={16}
+                                            size={
+                                                16
+                                            }
                                         />
                                     )}
 
@@ -1218,9 +1494,9 @@ export default function CompleteProfile() {
     );
 }
 
-/* =====================================================
-   SECTION HEADER
-===================================================== */
+// =====================================================
+// SECTION HEADER
+// =====================================================
 
 function SectionHeader({
     icon,
@@ -1231,9 +1507,7 @@ function SectionHeader({
         <div className="flex items-center gap-3">
 
             <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#1E1B4B]/5 text-[#1E1B4B]">
-
                 {icon}
-
             </div>
 
             <div>
@@ -1252,9 +1526,9 @@ function SectionHeader({
     );
 }
 
-/* =====================================================
-   FORM INPUT
-===================================================== */
+// =====================================================
+// FORM INPUT
+// =====================================================
 
 function FormInput({
     label,
@@ -1291,7 +1565,9 @@ function FormInput({
                 type={type}
                 value={value || ""}
                 onChange={(e) =>
-                    onChange(e.target.value)
+                    onChange(
+                        e.target.value
+                    )
                 }
                 placeholder={placeholder}
                 className={`mt-2 w-full rounded-xl border bg-white px-4 py-3 text-sm outline-none transition placeholder:text-slate-300 focus:border-[#312E81] focus:ring-2 focus:ring-[#312E81]/10 ${error
