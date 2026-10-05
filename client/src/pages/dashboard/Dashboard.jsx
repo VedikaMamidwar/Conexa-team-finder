@@ -13,26 +13,32 @@ import TeamWorkspace from "../../components/dashboard/TeamWorkspace";
 import RightSidebar from "../../components/dashboard/RightSidebar";
 
 export default function Dashboard() {
-
     const { user } = useAuth();
 
     const [sidebarOpen, setSidebarOpen] = useState(true);
 
     return (
-        <div className="flex min-h-screen bg-slate-100">
+        <div className="min-h-screen bg-slate-100">
 
+            {/* Sidebar */}
             <Sidebar
                 sidebarOpen={sidebarOpen}
                 setSidebarOpen={setSidebarOpen}
             />
 
-            <div className="flex-1 flex flex-col">
+            {/* Main Area */}
+            <div
+                className={`min-h-screen transition-all duration-300 ${sidebarOpen ? "ml-[260px]" : "ml-[100px]"
+                    }`}
+            >
 
+                {/* Topbar */}
                 <Topbar
                     sidebarOpen={sidebarOpen}
                     setSidebarOpen={setSidebarOpen}
                 />
 
+                {/* Main Content */}
                 <main className="p-6">
 
                     {/* Greeting */}
@@ -46,11 +52,13 @@ export default function Dashboard() {
                         </p>
                     </div>
 
+                    {/* Dashboard Grid */}
                     <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
 
+                        {/* Left Content */}
                         <div className="xl:col-span-3 space-y-8">
 
-                            <WelcomeBanner />
+                            <WelcomeBanner user={user} />
 
                             <StatsCards />
 
@@ -60,21 +68,17 @@ export default function Dashboard() {
 
                             <TeamWorkspace />
 
-
                         </div>
 
+                        {/* Right Content */}
                         <div className="space-y-6">
-
                             <RightSidebar />
-
                         </div>
 
                     </div>
 
                 </main>
-
             </div>
-
         </div>
     );
 }

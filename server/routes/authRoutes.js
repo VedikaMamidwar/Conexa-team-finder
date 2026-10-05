@@ -3,6 +3,7 @@ import express from "express";
 import {
     register,
     login,
+    googleLogin,
     getProfile,
     updateProfile,
 } from "../controllers/authController.js";
@@ -11,42 +12,13 @@ import authMiddleware from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-// =====================================================
-// REGISTER
-// POST /api/auth/register
-// =====================================================
-
+// Authentication
 router.post("/register", register);
-
-// =====================================================
-// LOGIN
-// POST /api/auth/login
-// =====================================================
-
 router.post("/login", login);
+router.post("/google", googleLogin);
 
-// =====================================================
-// GET PROFILE
-// GET /api/auth/profile
-// Protected
-// =====================================================
-
-router.get(
-    "/profile",
-    authMiddleware,
-    getProfile
-);
-
-// =====================================================
-// UPDATE PROFILE
-// PUT /api/auth/profile
-// Protected
-// =====================================================
-
-router.put(
-    "/profile",
-    authMiddleware,
-    updateProfile
-);
+// Profile
+router.get("/profile", authMiddleware, getProfile);
+router.put("/profile", authMiddleware, updateProfile);
 
 export default router;

@@ -1,6 +1,15 @@
 import User from "../models/User.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import { OAuth2Client } from "google-auth-library";
+
+// =====================================================
+// GOOGLE CLIENT
+// =====================================================
+
+const googleClient = new OAuth2Client(
+    process.env.GOOGLE_CLIENT_ID
+);
 
 // =====================================================
 // REGISTER STUDENT
@@ -50,7 +59,7 @@ export const register = async (req, res) => {
             { expiresIn: "7d" }
         );
 
-        res.status(201).json({
+        return res.status(201).json({
             success: true,
             message: "Registration Successful",
             token,
@@ -83,9 +92,10 @@ export const register = async (req, res) => {
     } catch (error) {
         console.error("Register Error:", error);
 
-        res.status(500).json({
+        return res.status(500).json({
             success: false,
             message: "Server Error",
+            error: error.message,
         });
     }
 };
@@ -97,6 +107,13 @@ export const register = async (req, res) => {
 export const login = async (req, res) => {
     try {
         const { email, password } = req.body;
+
+        if (!email || !password) {
+            return res.status(400).json({
+                success: false,
+                message: "Email and password are required",
+            });
+        }
 
         const user = await User.findOne({ email });
 
@@ -125,7 +142,7 @@ export const login = async (req, res) => {
             { expiresIn: "7d" }
         );
 
-        res.status(200).json({
+        return res.status(200).json({
             success: true,
             message: "Login Successful",
             token,
@@ -158,9 +175,166 @@ export const login = async (req, res) => {
     } catch (error) {
         console.error("Login Error:", error);
 
-        res.status(500).json({
+        return res.status(500).json({
             success: false,
             message: "Server Error",
+            error: error.message,
+        });
+    }
+};
+
+// =====================================================
+// GOOGLE LOGIN
+// =====================================================
+
+export const googleLogin = async (req, res) => {
+    try {
+        const { credential } = req.body;
+
+        // ---------------------------------------------
+        // Check Google credential
+        // ---------------------------------------------
+
+        if (!credential) {
+            return res.status(400).json({
+                success: false,
+                message: "Google credential is required",
+            });
+        }
+
+        // ---------------------------------------------
+        // Verify Google credential
+        // ---------------------------------------------
+
+        const ticket = await googleClient.verifyIdToken({
+            idToken: credential,
+            audience: process.env.GOOGLE_CLIENT_ID,
+        });
+
+        const payload = ticket.getPayload();
+
+        if (!payload) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid Google credential",
+            });
+        }
+
+        // ---------------------------------------------
+        // Get Google user information
+        // ---------------------------------------------
+
+        const {
+            sub: googleId,
+            email,
+            name,
+            picture,
+            email_verified,
+        } = payload;
+
+        // ---------------------------------------------
+        // Verify Google email
+        // ---------------------------------------------
+
+        if (!email || !email_verified) {
+            return res.status(400).json({
+                success: false,
+                message: "Google email is not verified",
+            });
+        }
+
+        // ---------------------------------------------
+        // Find existing Conexa user
+        // ---------------------------------------------
+
+        let user = await User.findOne({ email });
+
+        // ---------------------------------------------
+        // Create new user if not found
+        // ---------------------------------------------
+
+        if (!user) {
+            const randomPassword = await bcrypt.hash(
+                `google_${googleId}_${Date.now()}`,
+                10
+            );
+
+            user = await User.create({
+                name: name || "Google User",
+                email,
+                password: randomPassword,
+
+                photo: picture || "",
+
+                college: "",
+                branch: "",
+                year: "",
+
+                profileCompleted: false,
+            });
+        }
+
+        // ---------------------------------------------
+        // Update Google profile picture
+        // ---------------------------------------------
+
+        else if (picture && !user.photo) {
+            user.photo = picture;
+            await user.save();
+        }
+
+        // ---------------------------------------------
+        // Create Conexa JWT
+        // ---------------------------------------------
+
+        const token = jwt.sign(
+            { id: user._id },
+            process.env.JWT_SECRET,
+            { expiresIn: "7d" }
+        );
+
+        // ---------------------------------------------
+        // Send response
+        // ---------------------------------------------
+
+        return res.status(200).json({
+            success: true,
+            message: "Google Login Successful",
+            token,
+
+            user: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+
+                college: user.college,
+                branch: user.branch,
+                year: user.year,
+
+                role: user.role,
+                location: user.location,
+                bio: user.bio,
+                availability: user.availability,
+                skills: user.skills,
+
+                github: user.github,
+                linkedin: user.linkedin,
+                portfolio: user.portfolio,
+
+                photo: user.photo,
+                resume: user.resume,
+
+                profileCompleted: user.profileCompleted,
+            },
+        });
+
+    } catch (error) {
+        console.error("Google Login Error:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Google login failed",
+            error: error.message,
         });
     }
 };
@@ -181,7 +355,7 @@ export const getProfile = async (req, res) => {
             });
         }
 
-        res.status(200).json({
+        return res.status(200).json({
             success: true,
             user,
         });
@@ -189,9 +363,10 @@ export const getProfile = async (req, res) => {
     } catch (error) {
         console.error("Get Profile Error:", error);
 
-        res.status(500).json({
+        return res.status(500).json({
             success: false,
             message: "Server Error",
+            error: error.message,
         });
     }
 };
@@ -223,7 +398,7 @@ export const updateProfile = async (req, res) => {
         } = req.body;
 
         // ---------------------------------------------
-        // Check if email belongs to another user
+        // Check duplicate email
         // ---------------------------------------------
 
         if (email) {
@@ -235,7 +410,8 @@ export const updateProfile = async (req, res) => {
             if (existingUser) {
                 return res.status(400).json({
                     success: false,
-                    message: "Email already registered by another user",
+                    message:
+                        "Email already registered by another user",
                 });
             }
         }
@@ -254,19 +430,21 @@ export const updateProfile = async (req, res) => {
             location,
             bio,
             availability,
-            skills: Array.isArray(skills) ? skills : [],
+
+            skills: Array.isArray(skills)
+                ? skills
+                : [],
+
             github,
             linkedin,
             portfolio,
             photo,
             resume,
+
             profileCompleted: true,
         };
 
-        // ---------------------------------------------
         // Remove undefined values
-        // ---------------------------------------------
-
         Object.keys(updateData).forEach((key) => {
             if (updateData[key] === undefined) {
                 delete updateData[key];
@@ -274,17 +452,18 @@ export const updateProfile = async (req, res) => {
         });
 
         // ---------------------------------------------
-        // Update MongoDB
+        // Update user
         // ---------------------------------------------
 
-        const updatedUser = await User.findByIdAndUpdate(
-            userId,
-            updateData,
-            {
-                new: true,
-                runValidators: true,
-            }
-        ).select("-password");
+        const updatedUser =
+            await User.findByIdAndUpdate(
+                userId,
+                updateData,
+                {
+                    new: true,
+                    runValidators: true,
+                }
+            ).select("-password");
 
         if (!updatedUser) {
             return res.status(404).json({
@@ -297,7 +476,7 @@ export const updateProfile = async (req, res) => {
         // Response
         // ---------------------------------------------
 
-        res.status(200).json({
+        return res.status(200).json({
             success: true,
             message: "Profile updated successfully",
             user: updatedUser,
@@ -306,7 +485,7 @@ export const updateProfile = async (req, res) => {
     } catch (error) {
         console.error("Update Profile Error:", error);
 
-        res.status(500).json({
+        return res.status(500).json({
             success: false,
             message: "Failed to update profile",
             error: error.message,
