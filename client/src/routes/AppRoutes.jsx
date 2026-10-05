@@ -1,4 +1,3 @@
-
 import { Routes, Route } from "react-router-dom";
 
 import Splash from "../pages/Splash";
@@ -14,8 +13,17 @@ import CompleteProfile from "../pages/dashboard/CompleteProfile";
 import Dashboard from "../pages/dashboard/Dashboard";
 import BuildTeam from "../pages/dashboard/BuildTeam";
 
+import FindTeammates from "../pages/dashboard/FindTeammates";
+import Profile from "../pages/dashboard/Profile";
+import Achievements from "../pages/dashboard/Achievements";
+import Settings from "../pages/dashboard/Settings";
+import UpcomingEvents from "../pages/dashboard/UpcomingEvents";
+import DailyChallenge from "../pages/dashboard/DailyChallenge";
+import DashboardNotification from "../pages/dashboard/DashboardNotification";
 
 import ProtectedRoute from "./ProtectedRoute";
+
+import ChatPage from "../pages/chat/ChatPage";
 
 export default function AppRoutes() {
     return (
@@ -25,20 +33,39 @@ export default function AppRoutes() {
             <Route path="/" element={<Splash />} />
             <Route path="/landing" element={<Landing />} />
 
-            {/* Authentication Routes */}
+            {/* Authentication */}
             <Route path="/register" element={<Register />} />
             <Route path="/login" element={<Login />} />
             <Route path="/forgot-password" element={<ForgotPassword />} />
             <Route path="/verify-otp" element={<VerifyOTP />} />
             <Route path="/reset-password" element={<ResetPassword />} />
 
-            {/* Profile */}
+            {/* Profile Setup */}
             <Route
                 path="/complete-profile"
                 element={<CompleteProfile />}
             />
 
-            {/* Protected Routes */}
+            {/* Dashboard */}
+            <Route
+                path="/dashboard"
+                element={
+                    <ProtectedRoute>
+                        <Dashboard />
+                    </ProtectedRoute>
+                }
+            />
+
+            {/* Team */}
+            <Route
+                path="/find-teammates"
+                element={
+                    <ProtectedRoute>
+                        <FindTeammates />
+                    </ProtectedRoute>
+                }
+            />
+
             <Route
                 path="/build-team"
                 element={
@@ -48,13 +75,70 @@ export default function AppRoutes() {
                 }
             />
 
-            <Route path="/chat" element={<ChatPage />} />
-
+            {/* Chat */}
             <Route
-                path="/dashboard"
+                path="/chat"
                 element={
                     <ProtectedRoute>
-                        <Dashboard />
+                        <ChatPage />
+                    </ProtectedRoute>
+                }
+            />
+
+            {/* User */}
+            <Route
+                path="/profile"
+                element={
+                    <ProtectedRoute>
+                        <Profile />
+                    </ProtectedRoute>
+                }
+            />
+
+            <Route
+                path="/achievements"
+                element={
+                    <ProtectedRoute>
+                        <Achievements />
+                    </ProtectedRoute>
+                }
+            />
+
+            <Route
+                path="/settings"
+                element={
+                    <ProtectedRoute>
+                        <Settings />
+                    </ProtectedRoute>
+                }
+            />
+
+            {/* Events */}
+            <Route
+                path="/events"
+                element={
+                    <ProtectedRoute>
+                        <UpcomingEvents />
+                    </ProtectedRoute>
+                }
+            />
+
+            {/* Daily Challenge */}
+            <Route
+                path="/daily-challenge"
+                element={
+                    <ProtectedRoute>
+                        <DailyChallenge />
+                    </ProtectedRoute>
+                }
+            />
+
+            {/* Notifications */}
+            <Route
+                path="/dashboard-notification"
+                element={
+                    <ProtectedRoute>
+                        <DashboardNotification />
                     </ProtectedRoute>
                 }
             />
