@@ -10,6 +10,7 @@ import Landing from "../pages/Landing";
 // AUTHENTICATION
 // =====================================================
 
+// ================= AUTHENTICATION =================
 import Register from "../pages/auth/Register";
 import Login from "../pages/auth/Login";
 import ForgotPassword from "../pages/auth/ForgotPassword";
@@ -20,43 +21,11 @@ import ResetPassword from "../pages/auth/ResetPassword";
 // STUDENT DASHBOARD
 // =====================================================
 
+// ================= DASHBOARD =================
 import CompleteProfile from "../pages/dashboard/CompleteProfile";
 import Dashboard from "../pages/dashboard/Dashboard";
 import BuildTeam from "../pages/dashboard/BuildTeam";
-import FindTeammates from "../pages/dashboard/FindTeammates";
-import Profile from "../pages/dashboard/Profile";
-import Projects from "../pages/dashboard/Projects";
-import Achievements from "../pages/dashboard/Achievements";
-import Settings from "../pages/dashboard/Settings";
-import UpcomingEvents from "../pages/dashboard/UpcomingEvents";
-import DailyChallenge from "../pages/dashboard/DailyChallenge";
-import DashboardNotification from "../pages/dashboard/DashboardNotification";
-
-// =====================================================
-// REAL-WORLD PROBLEMS
-// =====================================================
-
-import RealWorldProblems from "../components/dashboard/RealWorldProblems";
-
-// =====================================================
-// CHAT
-// =====================================================
-
-import ChatPage from "../pages/chat/ChatPage";
-
-// =====================================================
-// STAKEHOLDER
-// =====================================================
-
-import StakeholderDashboard from "../pages/stakeholder/StakeholderDashboard";
-import CreateProblem from "../pages/stakeholder/CreateProblem";
-import MyProblems from "../pages/stakeholder/MyProblems";
-import StakeholderProfile from "../pages/stakeholder/StakeholderProfile";
-import StudentResponses from "../pages/stakeholder/StudentResponses";
-
-// =====================================================
-// PROTECTED ROUTE
-// =====================================================
+import Hackathons from "../pages/dashboard/Hackathons";
 
 import ProtectedRoute from "./ProtectedRoute";
 
@@ -64,53 +33,18 @@ export default function AppRoutes() {
     return (
         <Routes>
 
-            {/* =====================================================
-                LANDING PAGE
-            ===================================================== */}
+            {/* Public Routes */}
+            <Route path="/" element={<Splash />} />
+            <Route path="/landing" element={<Landing />} />
 
-            <Route
-                path="/"
-                element={<Landing />}
-            />
+            {/* Authentication Routes */}
+            <Route path="/register" element={<Register />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/forgot-password" element={<ForgotPassword />} />
+            <Route path="/verify-otp" element={<VerifyOTP />} />
+            <Route path="/reset-password" element={<ResetPassword />} />
 
-            <Route
-                path="/landing"
-                element={<Landing />}
-            />
-
-            {/* =====================================================
-                AUTHENTICATION
-            ===================================================== */}
-
-            <Route
-                path="/register"
-                element={<Register />}
-            />
-
-            <Route
-                path="/login"
-                element={<Login />}
-            />
-
-            <Route
-                path="/forgot-password"
-                element={<ForgotPassword />}
-            />
-
-            <Route
-                path="/verify-otp"
-                element={<VerifyOTP />}
-            />
-
-            <Route
-                path="/reset-password"
-                element={<ResetPassword />}
-            />
-
-            {/* =====================================================
-                PROFILE SETUP
-            ===================================================== */}
-
+            {/* Profile */}
             <Route
                 path="/complete-profile"
                 element={
@@ -120,28 +54,7 @@ export default function AppRoutes() {
                 }
             />
 
-            {/* =====================================================
-                STUDENT DASHBOARD
-            ===================================================== */}
-
-            <Route
-                path="/dashboard"
-                element={
-                    <ProtectedRoute allowedAccountType="student">
-                        <Dashboard />
-                    </ProtectedRoute>
-                }
-            />
-
-            <Route
-                path="/find-teammates"
-                element={
-                    <ProtectedRoute allowedAccountType="student">
-                        <FindTeammates />
-                    </ProtectedRoute>
-                }
-            />
-
+            {/* Protected Routes */}
             <Route
                 path="/build-team"
                 element={
@@ -289,10 +202,10 @@ export default function AppRoutes() {
             />
 
             <Route
-                path="/stakeholder/problems/:problemId/responses"
+                path="/hackathons"
                 element={
-                    <ProtectedRoute allowedAccountType="stakeholder">
-                        <StudentResponses />
+                    <ProtectedRoute>
+                        <Hackathons />
                     </ProtectedRoute>
                 }
             />
