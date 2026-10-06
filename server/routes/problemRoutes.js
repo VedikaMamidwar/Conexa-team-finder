@@ -10,13 +10,13 @@ import {
     commentOnProblem,
     saveProblem,
     shareProblem,
+    viewProblem,
 } from "../controllers/problemController.js";
 
 import authMiddleware from "../middleware/authMiddleware.js";
 import stakeholderMiddleware from "../middleware/stakeholderMiddleware.js";
 
 const router = express.Router();
-
 
 // =====================================================
 // GET ALL PROBLEMS
@@ -29,7 +29,6 @@ router.get(
     getAllProblems
 );
 
-
 // =====================================================
 // GET SINGLE PROBLEM
 // Students + Stakeholders
@@ -41,10 +40,9 @@ router.get(
     getProblemById
 );
 
-
 // =====================================================
 // CREATE PROBLEM
-// STAKEHOLDER ONLY
+// ONLY STAKEHOLDER
 // =====================================================
 
 router.post(
@@ -54,11 +52,9 @@ router.post(
     createProblem
 );
 
-
 // =====================================================
 // UPDATE PROBLEM
-// STAKEHOLDER ONLY
-// Owner check is inside controller
+// ONLY STAKEHOLDER
 // =====================================================
 
 router.put(
@@ -68,11 +64,9 @@ router.put(
     updateProblem
 );
 
-
 // =====================================================
 // DELETE PROBLEM
-// STAKEHOLDER ONLY
-// Owner check is inside controller
+// ONLY STAKEHOLDER
 // =====================================================
 
 router.delete(
@@ -81,7 +75,6 @@ router.delete(
     stakeholderMiddleware,
     deleteProblem
 );
-
 
 // =====================================================
 // LIKE / UNLIKE
@@ -94,7 +87,6 @@ router.post(
     likeProblem
 );
 
-
 // =====================================================
 // COMMENT
 // Students + Stakeholders
@@ -105,7 +97,6 @@ router.post(
     authMiddleware,
     commentOnProblem
 );
-
 
 // =====================================================
 // SAVE / UNSAVE
@@ -118,7 +109,6 @@ router.post(
     saveProblem
 );
 
-
 // =====================================================
 // SHARE
 // Students + Stakeholders
@@ -130,5 +120,16 @@ router.post(
     shareProblem
 );
 
+// =====================================================
+// VIEW
+// Students + Stakeholders
+// One view per user
+// =====================================================
+
+router.post(
+    "/:id/view",
+    authMiddleware,
+    viewProblem
+);
 
 export default router;
