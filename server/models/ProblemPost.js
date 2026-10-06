@@ -1,5 +1,9 @@
 import mongoose from "mongoose";
 
+// =====================================================
+// COMMENT SCHEMA
+// =====================================================
+
 const commentSchema = new mongoose.Schema(
     {
         userId: {
@@ -19,13 +23,25 @@ const commentSchema = new mongoose.Schema(
     }
 );
 
+// =====================================================
+// PROBLEM POST SCHEMA
+// =====================================================
+
 const problemPostSchema = new mongoose.Schema(
     {
+        // =================================================
+        // STAKEHOLDER
+        // =================================================
+
         stakeholderId: {
             type: mongoose.Schema.Types.ObjectId,
             ref: "User",
             required: true,
         },
+
+        // =================================================
+        // BASIC PROBLEM INFORMATION
+        // =================================================
 
         title: {
             type: String,
@@ -51,6 +67,10 @@ const problemPostSchema = new mongoose.Schema(
             trim: true,
         },
 
+        // =================================================
+        // REQUIREMENTS
+        // =================================================
+
         requiredSkills: {
             type: [String],
             default: [],
@@ -60,6 +80,10 @@ const problemPostSchema = new mongoose.Schema(
             type: [String],
             default: [],
         },
+
+        // =================================================
+        // LOCATION / DEADLINE / CONTACT
+        // =================================================
 
         location: {
             type: String,
@@ -79,12 +103,20 @@ const problemPostSchema = new mongoose.Schema(
             lowercase: true,
         },
 
+        // =================================================
+        // LIKES
+        // =================================================
+
         likes: [
             {
                 type: mongoose.Schema.Types.ObjectId,
                 ref: "User",
             },
         ],
+
+        // =================================================
+        // SAVES
+        // =================================================
 
         saves: [
             {
@@ -93,19 +125,53 @@ const problemPostSchema = new mongoose.Schema(
             },
         ],
 
+        // =================================================
+        // COMMENTS
+        // =================================================
+
         comments: {
             type: [commentSchema],
             default: [],
         },
 
+        // =================================================
+        // SHARES
+        // =================================================
+
         shares: {
             type: Number,
             default: 0,
         },
+
+        // =================================================
+        // VIEWS
+        // =================================================
+
+        views: {
+            type: Number,
+            default: 0,
+        },
+
+        // Stores users who have already viewed this problem.
+        // This prevents the same logged-in user from
+        // increasing the view count repeatedly.
+        viewedBy: [
+            {
+                type: mongoose.Schema.Types.ObjectId,
+                ref: "User",
+            },
+        ],
     },
     {
         timestamps: true,
     }
 );
 
-export default mongoose.model("ProblemPost", problemPostSchema);
+// =====================================================
+// EXPORT
+// =====================================================
+
+export default mongoose.model(
+    "ProblemPost",
+    problemPostSchema
+);

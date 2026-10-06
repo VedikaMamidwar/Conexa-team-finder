@@ -6,7 +6,6 @@ import {
     Share2,
     Bookmark,
     MapPin,
-    CalendarDays,
     Building2,
     Send,
     ExternalLink,
@@ -14,13 +13,14 @@ import {
     X,
     CheckCircle,
     Sparkles,
-    Users,
     ArrowUpRight,
     Code2,
     BriefcaseBusiness,
     Clock3,
     ChevronDown,
     Mail,
+    ArrowLeft,
+    Home,
 } from "lucide-react";
 
 const API_URL = "http://localhost:5000/api";
@@ -123,6 +123,30 @@ export default function RealWorldProblems() {
             setInterestedProblems(ids);
         } catch (err) {
             console.error("Fetch interests error:", err);
+        }
+    };
+
+    // =====================================================
+    // VIEW PROBLEM
+    // =====================================================
+
+    const handleView = async (problemId) => {
+        try {
+            const token = localStorage.getItem("token");
+
+            if (!token) return;
+
+            await axios.post(
+                `${API_URL}/problems/${problemId}/view`,
+                {},
+                {
+                    headers: {
+                        Authorization: `Bearer ${token}`,
+                    },
+                }
+            );
+        } catch (err) {
+            console.error("View problem error:", err);
         }
     };
 
@@ -312,12 +336,20 @@ export default function RealWorldProblems() {
     };
 
     // =====================================================
+    // BACK TO HOME
+    // =====================================================
+
+    const handleBackHome = () => {
+        window.location.href = "/";
+    };
+
+    // =====================================================
     // LOADING
     // =====================================================
 
     if (loading) {
         return (
-            <div className="flex min-h-[320px] items-center justify-center">
+            <div className="flex min-h-[320px] items-center justify-center bg-[#F8FAFC]">
                 <div className="relative">
                     <div className="h-12 w-12 animate-spin rounded-full border-4 border-slate-200 border-t-[#14B8A6]" />
 
@@ -339,27 +371,145 @@ export default function RealWorldProblems() {
         );
     }
 
+    // =====================================================
+    // ENGAGEMENT TOTAL
+    // =====================================================
+
+    const totalEngagement = problems.reduce(
+        (total, problem) =>
+            total +
+            (problem.likes?.length || 0) +
+            (problem.saves?.length || 0) +
+            (problem.shares || 0) +
+            (problem.comments?.length || 0),
+        0
+    );
+
     return (
         <>
             <section className="space-y-5">
 
                 {/* =================================================
+                    TOP NAVIGATION
+                ================================================= */}
+
+                <div className="flex items-center justify-between gap-3">
+
+                    <button
+                        type="button"
+                        onClick={() => {
+                            window.location.href = "/student-dashboard";
+                        }}
+                        className="
+        group
+        inline-flex
+        items-center
+        gap-2
+        rounded-2xl
+        border
+        border-slate-200
+        bg-white
+        px-4
+        py-2.5
+        text-sm
+        font-bold
+        text-[#1E1B4B]
+        shadow-sm
+        transition-all
+        duration-300
+        hover:-translate-x-1
+        hover:border-teal-200
+        hover:bg-teal-50
+        hover:text-[#0F766E]
+        hover:shadow-md
+        active:scale-95
+    "
+                    >
+                        <span
+                            className="
+            flex
+            h-8
+            w-8
+            items-center
+            justify-center
+            rounded-xl
+            bg-slate-50
+            transition-all
+            duration-300
+            group-hover:bg-white
+            group-hover:shadow-sm
+        "
+                        >
+                            <ArrowLeft
+                                size={16}
+                                className="transition-transform duration-300 group-hover:-translate-x-0.5"
+                            />
+                        </span>
+
+                        <span>
+                            Back to Student Dashboard
+                        </span>
+                    </button>
+
+                    <div
+                        className="
+                            hidden
+                            items-center
+                            gap-2
+                            rounded-full
+                            border
+                            border-teal-100
+                            bg-teal-50
+                            px-3
+                            py-2
+                            text-[11px]
+                            font-black
+                            text-[#0F766E]
+                            sm:flex
+                        "
+                    >
+                        <span className="relative flex h-2 w-2">
+                            <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-[#14B8A6] opacity-60" />
+                            <span className="relative inline-flex h-2 w-2 rounded-full bg-[#14B8A6]" />
+                        </span>
+
+                        Live Opportunities
+                    </div>
+                </div>
+
+                {/* =================================================
                     SECTION HEADER
                 ================================================= */}
 
-                <div className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white p-5 shadow-sm md:p-6">
+                <div
+                    className="
+                        group
+                        relative
+                        overflow-hidden
+                        rounded-3xl
+                        border
+                        border-slate-200
+                        bg-white
+                        p-5
+                        shadow-sm
+                        transition-all
+                        duration-500
+                        hover:-translate-y-1
+                        hover:border-teal-200
+                        hover:shadow-xl
+                        md:p-6
+                    "
+                >
 
-                    {/* Background decorations */}
+                    <div className="absolute -right-16 -top-20 h-48 w-48 rounded-full bg-[#14B8A6]/10 transition-transform duration-700 group-hover:scale-125" />
 
-                    <div className="absolute -right-16 -top-20 h-48 w-48 rounded-full bg-[#14B8A6]/10" />
-
-                    <div className="absolute -bottom-20 right-32 h-40 w-40 rounded-full bg-indigo-100/40" />
+                    <div className="absolute -bottom-20 right-32 h-40 w-40 rounded-full bg-indigo-100/40 transition-transform duration-700 group-hover:scale-125" />
 
                     <div className="relative flex flex-col justify-between gap-5 md:flex-row md:items-center">
 
                         <div className="min-w-0">
 
-                            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-teal-100 bg-teal-50 px-3 py-1.5 text-xs font-bold text-[#0F766E]">
+                            <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-teal-100 bg-teal-50 px-3 py-1.5 text-xs font-bold text-[#0F766E] transition-all duration-300 group-hover:scale-105">
                                 <Sparkles size={14} />
                                 REAL-WORLD OPPORTUNITIES
                             </div>
@@ -385,7 +535,22 @@ export default function RealWorldProblems() {
 
                         <div className="grid shrink-0 grid-cols-2 gap-3">
 
-                            <div className="rounded-2xl border border-slate-200 bg-slate-50 px-5 py-4 text-center">
+                            <div
+                                className="
+                                    rounded-2xl
+                                    border
+                                    border-slate-200
+                                    bg-slate-50
+                                    px-5
+                                    py-4
+                                    text-center
+                                    transition-all
+                                    duration-300
+                                    hover:-translate-y-1
+                                    hover:bg-white
+                                    hover:shadow-md
+                                "
+                            >
                                 <p className="text-2xl font-black text-[#1E1B4B]">
                                     {problems.length}
                                 </p>
@@ -395,14 +560,23 @@ export default function RealWorldProblems() {
                                 </p>
                             </div>
 
-                            <div className="rounded-2xl border border-teal-100 bg-teal-50 px-5 py-4 text-center">
+                            <div
+                                className="
+                                    rounded-2xl
+                                    border
+                                    border-teal-100
+                                    bg-teal-50
+                                    px-5
+                                    py-4
+                                    text-center
+                                    transition-all
+                                    duration-300
+                                    hover:-translate-y-1
+                                    hover:shadow-md
+                                "
+                            >
                                 <p className="text-2xl font-black text-[#0F766E]">
-                                    {problems.reduce(
-                                        (total, problem) =>
-                                            total +
-                                            (problem.likes?.length || 0),
-                                        0
-                                    )}
+                                    {totalEngagement}
                                 </p>
 
                                 <p className="text-[11px] font-semibold text-teal-700">
@@ -422,16 +596,13 @@ export default function RealWorldProblems() {
                 {problems.length === 0 ? (
                     <EmptyProblems />
                 ) : (
-                    /* =================================================
-                       2 COLUMN PROBLEM GRID
-                    ================================================= */
-
                     <div className="grid grid-cols-1 gap-5 xl:grid-cols-2">
 
                         {problems.map((problem) => (
                             <ProblemCard
                                 key={problem._id}
                                 problem={problem}
+                                onView={handleView}
                                 onLike={handleLike}
                                 onSave={handleSave}
                                 onShare={handleShare}
@@ -479,11 +650,28 @@ export default function RealWorldProblems() {
 
 function EmptyProblems() {
     return (
-        <div className="relative overflow-hidden rounded-3xl border border-slate-200 bg-white px-6 py-14 text-center shadow-sm">
+        <div
+            className="
+                relative
+                overflow-hidden
+                rounded-3xl
+                border
+                border-slate-200
+                bg-white
+                px-6
+                py-14
+                text-center
+                shadow-sm
+                transition-all
+                duration-300
+                hover:-translate-y-1
+                hover:shadow-xl
+            "
+        >
 
             <div className="absolute left-0 right-0 top-0 h-1 bg-gradient-to-r from-[#1E1B4B] via-[#14B8A6] to-[#1E1B4B]" />
 
-            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-teal-50 to-indigo-50">
+            <div className="mx-auto flex h-20 w-20 items-center justify-center rounded-3xl bg-gradient-to-br from-teal-50 to-indigo-50 transition-transform duration-500 hover:rotate-6 hover:scale-110">
                 <Lightbulb className="h-9 w-9 text-[#14B8A6]" />
             </div>
 
@@ -507,6 +695,7 @@ function EmptyProblems() {
 
 function ProblemCard({
     problem,
+    onView,
     onLike,
     onSave,
     onShare,
@@ -519,6 +708,38 @@ function ProblemCard({
 
     const stakeholder =
         problem.stakeholderId || {};
+
+    // =====================================================
+    // RECORD VIEW WHEN CARD ENTERS VIEWPORT
+    // =====================================================
+
+    useEffect(() => {
+        const cardId = `problem-card-${problem._id}`;
+        const cardElement = document.getElementById(cardId);
+
+        if (!cardElement) return;
+
+        const observer = new IntersectionObserver(
+            (entries) => {
+                const entry = entries[0];
+
+                if (entry.isIntersecting) {
+                    onView(problem._id);
+
+                    observer.disconnect();
+                }
+            },
+            {
+                threshold: 0.35,
+            }
+        );
+
+        observer.observe(cardElement);
+
+        return () => {
+            observer.disconnect();
+        };
+    }, [problem._id, onView]);
 
     // =====================================================
     // COMMENT
@@ -570,8 +791,10 @@ function ProblemCard({
 
     return (
         <article
+            id={`problem-card-${problem._id}`}
             className="
                 group
+                relative
                 flex
                 h-full
                 flex-col
@@ -582,38 +805,51 @@ function ProblemCard({
                 bg-white
                 shadow-sm
                 transition-all
-                duration-300
-                hover:-translate-y-1
+                duration-500
+                hover:-translate-y-2
+                hover:scale-[1.01]
                 hover:border-teal-200
-                hover:shadow-xl
+                hover:shadow-2xl
+                active:scale-[0.995]
             "
         >
 
-            {/* =================================================
-                TOP COLOR STRIP
-            ================================================= */}
+            {/* Animated glow */}
 
-            <div className="h-1 bg-gradient-to-r from-[#1E1B4B] via-[#14B8A6] to-[#6366F1]" />
+            <div
+                className="
+                    pointer-events-none
+                    absolute
+                    -inset-px
+                    rounded-[26px]
+                    bg-gradient-to-r
+                    from-[#14B8A6]/0
+                    via-[#14B8A6]/10
+                    to-indigo-500/0
+                    opacity-0
+                    transition-opacity
+                    duration-500
+                    group-hover:opacity-100
+                "
+            />
 
-            {/* =================================================
-                CARD BODY
-            ================================================= */}
+            {/* TOP COLOR STRIP */}
 
-            <div className="flex flex-1 flex-col p-5">
+            <div className="relative h-1 bg-gradient-to-r from-[#1E1B4B] via-[#14B8A6] to-[#6366F1] transition-all duration-500 group-hover:h-1.5" />
 
-                {/* =================================================
-                    HEADER
-                ================================================= */}
+            {/* CARD BODY */}
+
+            <div className="relative flex flex-1 flex-col p-5">
+
+                {/* HEADER */}
 
                 <div className="flex items-start justify-between gap-3">
 
                     <div className="flex min-w-0 items-center gap-3">
 
-                        {/* AVATAR */}
-
                         <div className="relative shrink-0">
 
-                            <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-[#1E1B4B] to-[#14B8A6] p-[2px]">
+                            <div className="flex h-11 w-11 items-center justify-center overflow-hidden rounded-xl bg-gradient-to-br from-[#1E1B4B] to-[#14B8A6] p-[2px] transition-transform duration-500 group-hover:rotate-3 group-hover:scale-110">
 
                                 <div className="flex h-full w-full items-center justify-center overflow-hidden rounded-[10px] bg-[#1E1B4B]">
 
@@ -643,8 +879,6 @@ function ProblemCard({
 
                         </div>
 
-                        {/* ORGANIZATION */}
-
                         <div className="min-w-0">
 
                             <p className="truncate text-sm font-black text-[#1E1B4B]">
@@ -670,18 +904,14 @@ function ProblemCard({
 
                     </div>
 
-                    {/* PROBLEM BADGE */}
-
-                    <div className="flex shrink-0 items-center gap-1.5 rounded-full border border-indigo-100 bg-indigo-50 px-2.5 py-1.5 text-[10px] font-black text-indigo-600">
+                    <div className="flex shrink-0 items-center gap-1.5 rounded-full border border-indigo-100 bg-indigo-50 px-2.5 py-1.5 text-[10px] font-black text-indigo-600 transition-all duration-300 group-hover:scale-105">
                         <Lightbulb size={12} />
                         PROBLEM
                     </div>
 
                 </div>
 
-                {/* =================================================
-                    TITLE
-                ================================================= */}
+                {/* TITLE */}
 
                 <div className="mt-5">
 
@@ -698,8 +928,9 @@ function ProblemCard({
                                 shrink-0
                                 text-slate-300
                                 transition-all
-                                group-hover:-translate-y-0.5
-                                group-hover:translate-x-0.5
+                                duration-300
+                                group-hover:-translate-y-1
+                                group-hover:translate-x-1
                                 group-hover:text-[#14B8A6]
                             "
                         />
@@ -712,13 +943,9 @@ function ProblemCard({
 
                 </div>
 
-                {/* =================================================
-                    2 × 2 INFO BOXES
-                ================================================= */}
+                {/* INFO BOXES */}
 
                 <div className="mt-5 grid grid-cols-2 gap-2.5">
-
-                    {/* PROBLEM */}
 
                     <InfoBox
                         icon={Lightbulb}
@@ -730,8 +957,6 @@ function ProblemCard({
                         type="purple"
                     />
 
-                    {/* LOCATION */}
-
                     <InfoBox
                         icon={MapPin}
                         title="Location"
@@ -742,16 +967,12 @@ function ProblemCard({
                         type="teal"
                     />
 
-                    {/* DEADLINE */}
-
                     <InfoBox
                         icon={Clock3}
                         title="Deadline"
                         value={formatDate(problem.deadline)}
                         type="orange"
                     />
-
-                    {/* ORGANIZATION */}
 
                     <InfoBox
                         icon={BriefcaseBusiness}
@@ -766,15 +987,11 @@ function ProblemCard({
 
                 </div>
 
-                {/* =================================================
-                    SKILLS + TECHNOLOGIES
-                ================================================= */}
+                {/* SKILLS + TECHNOLOGIES */}
 
                 <div className="mt-4 grid grid-cols-2 gap-3">
 
-                    {/* SKILLS */}
-
-                    <div className="min-w-0 rounded-2xl border border-slate-100 bg-slate-50 p-3">
+                    <div className="min-w-0 rounded-2xl border border-slate-100 bg-slate-50 p-3 transition-all duration-300 hover:-translate-y-1 hover:bg-white hover:shadow-md">
 
                         <div className="mb-2 flex items-center gap-1.5">
                             <Code2
@@ -795,7 +1012,7 @@ function ProblemCard({
                                     (skill, index) => (
                                         <span
                                             key={`${skill}-${index}`}
-                                            className="rounded-lg border border-teal-100 bg-white px-2 py-1 text-[10px] font-bold text-teal-700"
+                                            className="rounded-lg border border-teal-100 bg-white px-2 py-1 text-[10px] font-bold text-teal-700 transition-all hover:-translate-y-0.5 hover:shadow-sm"
                                         >
                                             {skill}
                                         </span>
@@ -818,9 +1035,7 @@ function ProblemCard({
 
                     </div>
 
-                    {/* TECHNOLOGIES */}
-
-                    <div className="min-w-0 rounded-2xl border border-slate-100 bg-slate-50 p-3">
+                    <div className="min-w-0 rounded-2xl border border-slate-100 bg-slate-50 p-3 transition-all duration-300 hover:-translate-y-1 hover:bg-white hover:shadow-md">
 
                         <div className="mb-2 flex items-center gap-1.5">
                             <BriefcaseBusiness
@@ -844,7 +1059,7 @@ function ProblemCard({
                                     ) => (
                                         <span
                                             key={`${technology}-${index}`}
-                                            className="rounded-lg border border-indigo-100 bg-white px-2 py-1 text-[10px] font-bold text-indigo-700"
+                                            className="rounded-lg border border-indigo-100 bg-white px-2 py-1 text-[10px] font-bold text-indigo-700 transition-all hover:-translate-y-0.5 hover:shadow-sm"
                                         >
                                             {technology}
                                         </span>
@@ -869,9 +1084,7 @@ function ProblemCard({
 
                 </div>
 
-                {/* =================================================
-                    INTEREST BUTTON
-                ================================================= */}
+                {/* INTEREST BUTTON */}
 
                 <button
                     type="button"
@@ -891,9 +1104,10 @@ function ProblemCard({
                         font-black
                         transition-all
                         duration-300
+                        active:scale-[0.97]
                         ${isInterested
                             ? "cursor-not-allowed border border-green-100 bg-green-50 text-green-600"
-                            : "bg-gradient-to-r from-[#14B8A6] to-[#0F766E] text-white hover:-translate-y-0.5 hover:shadow-lg hover:shadow-teal-500/20"
+                            : "bg-gradient-to-r from-[#14B8A6] to-[#0F766E] text-white hover:-translate-y-1 hover:shadow-lg hover:shadow-teal-500/20"
                         }
                     `}
                 >
@@ -907,6 +1121,7 @@ function ProblemCard({
                     {!isInterested && (
                         <ArrowUpRight
                             size={15}
+                            className="transition-transform duration-300 group-hover:translate-x-1 group-hover:-translate-y-1"
                         />
                     )}
 
@@ -914,9 +1129,7 @@ function ProblemCard({
 
             </div>
 
-            {/* =================================================
-                ACTION BAR
-            ================================================= */}
+            {/* ACTION BAR */}
 
             <div className="border-t border-slate-100 bg-slate-50/70 px-4 py-3">
 
@@ -938,13 +1151,16 @@ function ProblemCard({
                             py-2
                             text-xs
                             font-bold
-                            transition
+                            transition-all
+                            duration-200
+                            active:scale-90
                             ${problem.liked
                                 ? "bg-red-50 text-red-500"
-                                : "text-slate-500 hover:bg-red-50 hover:text-red-500"
+                                : "text-slate-500 hover:bg-red-50 hover:text-red-500 hover:-translate-y-0.5"
                             }
                         `}
                     >
+
                         <Heart
                             size={16}
                             fill={
@@ -955,6 +1171,7 @@ function ProblemCard({
                         />
 
                         {problem.likes?.length || 0}
+
                     </button>
 
                     {/* COMMENTS */}
@@ -966,8 +1183,9 @@ function ProblemCard({
                                 (prev) => !prev
                             )
                         }
-                        className="flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold text-slate-500 transition hover:bg-blue-50 hover:text-blue-600"
+                        className="flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold text-slate-500 transition-all duration-200 hover:-translate-y-0.5 hover:bg-blue-50 hover:text-blue-600 active:scale-90"
                     >
+
                         <MessageCircle size={16} />
 
                         {problem.comments?.length || 0}
@@ -979,6 +1197,7 @@ function ProblemCard({
                                 : ""
                                 }`}
                         />
+
                     </button>
 
                     {/* SAVE */}
@@ -997,13 +1216,16 @@ function ProblemCard({
                             py-2
                             text-xs
                             font-bold
-                            transition
+                            transition-all
+                            duration-200
+                            active:scale-90
                             ${problem.saved
                                 ? "bg-amber-50 text-amber-600"
-                                : "text-slate-500 hover:bg-amber-50 hover:text-amber-600"
+                                : "text-slate-500 hover:bg-amber-50 hover:text-amber-600 hover:-translate-y-0.5"
                             }
                         `}
                     >
+
                         <Bookmark
                             size={16}
                             fill={
@@ -1018,6 +1240,7 @@ function ProblemCard({
                                 ? "Saved"
                                 : "Save"}
                         </span>
+
                     </button>
 
                     {/* SHARE */}
@@ -1027,13 +1250,15 @@ function ProblemCard({
                         onClick={() =>
                             onShare(problem._id)
                         }
-                        className="flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold text-slate-500 transition hover:bg-teal-50 hover:text-[#14B8A6]"
+                        className="flex items-center gap-1.5 rounded-xl px-3 py-2 text-xs font-bold text-slate-500 transition-all duration-200 hover:-translate-y-0.5 hover:bg-teal-50 hover:text-[#14B8A6] active:scale-90"
                     >
+
                         <Share2 size={16} />
 
                         <span className="hidden sm:inline">
                             Share
                         </span>
+
                     </button>
 
                     {/* CONTACT */}
@@ -1043,8 +1268,9 @@ function ProblemCard({
                             href={gmailLink}
                             target="_blank"
                             rel="noopener noreferrer"
-                            className="ml-auto flex items-center gap-1.5 rounded-xl bg-[#1E1B4B] px-3 py-2 text-xs font-bold text-white transition hover:bg-[#312E81] hover:shadow-md"
+                            className="ml-auto flex items-center gap-1.5 rounded-xl bg-[#1E1B4B] px-3 py-2 text-xs font-bold text-white transition-all duration-200 hover:-translate-y-0.5 hover:bg-[#312E81] hover:shadow-md active:scale-90"
                         >
+
                             <Mail size={15} />
 
                             <span className="hidden sm:inline">
@@ -1052,6 +1278,7 @@ function ProblemCard({
                             </span>
 
                             <ExternalLink size={12} />
+
                         </a>
                     )}
 
@@ -1059,14 +1286,10 @@ function ProblemCard({
 
             </div>
 
-            {/* =================================================
-                COMMENTS SECTION
-            ================================================= */}
+            {/* COMMENTS */}
 
             {showComments && (
                 <div className="border-t border-slate-100 bg-white px-4 py-4">
-
-                    {/* EXISTING COMMENTS */}
 
                     {problem.comments?.length > 0 ? (
                         <div className="mb-4 space-y-2.5">
@@ -1145,8 +1368,6 @@ function ProblemCard({
                         </p>
                     )}
 
-                    {/* COMMENT INPUT */}
-
                     <form
                         onSubmit={
                             handleSubmitComment
@@ -1170,7 +1391,7 @@ function ProblemCard({
                         <button
                             type="submit"
                             disabled={!comment.trim()}
-                            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#14B8A6] text-white transition hover:bg-[#0F766E] disabled:cursor-not-allowed disabled:opacity-40"
+                            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#14B8A6] text-white transition-all hover:bg-[#0F766E] hover:scale-105 active:scale-90 disabled:cursor-not-allowed disabled:opacity-40"
                         >
                             <Send size={15} />
                         </button>
@@ -1225,14 +1446,18 @@ function InfoBox({
     return (
         <div
             className={`
+                group/info
                 min-w-0
                 rounded-2xl
                 border
                 p-3
                 ${style.box}
                 transition-all
-                duration-200
-                hover:-translate-y-0.5
+                duration-300
+                hover:-translate-y-1
+                hover:scale-[1.02]
+                hover:shadow-md
+                active:scale-[0.98]
             `}
         >
 
@@ -1249,6 +1474,10 @@ function InfoBox({
                         rounded-lg
                         border
                         shadow-sm
+                        transition-all
+                        duration-300
+                        group-hover/info:rotate-6
+                        group-hover/info:scale-110
                         ${style.icon}
                     `}
                 >
@@ -1293,18 +1522,24 @@ function InterestModal({
     return (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
 
-            {/* BACKDROP */}
-
             <div
                 className="absolute inset-0 bg-slate-950/60 backdrop-blur-sm"
                 onClick={onClose}
             />
 
-            {/* MODAL */}
-
-            <div className="relative max-h-[90vh] w-full max-w-lg overflow-y-auto rounded-[28px] bg-white shadow-2xl">
-
-                {/* HEADER */}
+            <div
+                className="
+                    relative
+                    max-h-[90vh]
+                    w-full
+                    max-w-lg
+                    overflow-y-auto
+                    rounded-[28px]
+                    bg-white
+                    shadow-2xl
+                    animate-[fadeIn_.25s_ease-out]
+                "
+            >
 
                 <div className="relative overflow-hidden bg-gradient-to-br from-[#1E1B4B] via-[#312E81] to-[#14B8A6] px-6 py-6 text-white">
 
@@ -1333,7 +1568,7 @@ function InterestModal({
                             type="button"
                             disabled={loading}
                             onClick={onClose}
-                            className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 transition hover:bg-white/20"
+                            className="flex h-9 w-9 items-center justify-center rounded-xl bg-white/10 transition hover:bg-white/20 active:scale-90"
                         >
                             <X size={18} />
                         </button>
@@ -1342,11 +1577,7 @@ function InterestModal({
 
                 </div>
 
-                {/* BODY */}
-
                 <div className="p-6">
-
-                    {/* PROBLEM PREVIEW */}
 
                     <div className="rounded-2xl border border-slate-100 bg-slate-50 p-4">
 
@@ -1374,8 +1605,6 @@ function InterestModal({
                         </p>
 
                     </div>
-
-                    {/* MESSAGE */}
 
                     <div className="mt-5">
 
@@ -1405,8 +1634,6 @@ function InterestModal({
 
                     </div>
 
-                    {/* INFO */}
-
                     <div className="mt-4 flex gap-3 rounded-2xl border border-teal-100 bg-teal-50 p-4">
 
                         <CheckCircle
@@ -1422,15 +1649,13 @@ function InterestModal({
 
                     </div>
 
-                    {/* BUTTONS */}
-
                     <div className="mt-5 flex gap-3">
 
                         <button
                             type="button"
                             disabled={loading}
                             onClick={onClose}
-                            className="flex-1 rounded-xl border border-slate-200 px-5 py-3 text-sm font-bold text-slate-600 transition hover:bg-slate-50"
+                            className="flex-1 rounded-xl border border-slate-200 px-5 py-3 text-sm font-bold text-slate-600 transition hover:bg-slate-50 active:scale-95"
                         >
                             Cancel
                         </button>
@@ -1439,7 +1664,7 @@ function InterestModal({
                             type="button"
                             disabled={loading}
                             onClick={onSubmit}
-                            className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#14B8A6] to-[#0F766E] px-5 py-3 text-sm font-bold text-white transition hover:shadow-lg disabled:opacity-50"
+                            className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-gradient-to-r from-[#14B8A6] to-[#0F766E] px-5 py-3 text-sm font-bold text-white transition hover:-translate-y-0.5 hover:shadow-lg active:scale-95 disabled:opacity-50"
                         >
 
                             {loading ? (

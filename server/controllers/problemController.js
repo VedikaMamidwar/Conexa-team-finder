@@ -564,3 +564,63 @@ export const shareProblem = async (req, res) => {
         });
     }
 };
+
+
+// =====================================================
+// VIEW PROBLEM
+// STUDENTS + STAKEHOLDERS
+// ONE VIEW PER USER
+// =====================================================
+
+export const viewProblem = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const userId = req.user.id;
+
+        const problem = await ProblemPost.findById(id);
+
+        if (!problem) {
+            return res.status(404).json({
+                success: false,
+                message: "Problem not found",
+            });
+        }
+
+        // =================================================
+        // CHECK IF USER ALREADY VIEWED THIS PROBLEM
+        // =================================================
+
+        const alreadyViewed = problem.viewedBy.some(
+            (viewedId) =>
+                viewedId.toString() === userId.toString()
+        );
+
+        // =================================================
+        // COUNT ONLY FIRST VIEW
+        // =================================================
+
+        if (!alreadyViewed) {
+            problem.viewedBy.push(userId);
+            problem.views += 1;
+
+            await problem.save();
+        }
+
+        return res.status(200).json({
+            success: true,
+            views: problem.views,
+            viewed: !alreadyViewed,
+            message: alreadyViewed
+                ? "Problem already viewed"
+                : "Problem view recorded",
+        });
+
+    } catch (error) {
+        console.error("View problem error:", error);
+
+        return res.status(500).json({
+            success: false,
+            message: "Failed to record problem view",
+        });
+    }
+};

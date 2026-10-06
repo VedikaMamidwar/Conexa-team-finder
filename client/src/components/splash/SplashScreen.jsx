@@ -12,6 +12,7 @@ const languages = [
     "കൊനെക്സാ",
     "ਕੋਨੇਕਸਾ",
     "કોનેક્સા",
+    "CONEXA",
 ];
 
 export default function SplashScreen({ onComplete }) {

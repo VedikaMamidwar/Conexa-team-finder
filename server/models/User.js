@@ -2,9 +2,9 @@ import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema(
     {
-        // =========================
+        // =====================================================
         // BASIC USER INFORMATION
-        // =========================
+        // =====================================================
 
         name: {
             type: String,
@@ -25,9 +25,20 @@ const userSchema = new mongoose.Schema(
             required: true,
         },
 
-        // =========================
-        // EDUCATION
-        // =========================
+        // =====================================================
+        // ACCOUNT TYPE
+        // =====================================================
+
+        accountType: {
+            type: String,
+            enum: ["student", "stakeholder"],
+            default: "student",
+            index: true,
+        },
+
+        // =====================================================
+        // STUDENT INFORMATION
+        // =====================================================
 
         college: {
             type: String,
@@ -44,15 +55,16 @@ const userSchema = new mongoose.Schema(
         year: {
             type: String,
             default: "",
+            trim: true,
         },
 
-        // =========================
-        // PROFILE INFORMATION
-        // =========================
+        // =====================================================
+        // GENERAL PROFILE
+        // =====================================================
 
         role: {
             type: String,
-            default: "MERN Developer",
+            default: "",
             trim: true,
         },
 
@@ -70,22 +82,18 @@ const userSchema = new mongoose.Schema(
 
         availability: {
             type: String,
-            enum: ["Available", "Looking for Team", "Busy"],
             default: "Available",
+            trim: true,
         },
-
-        // =========================
-        // SKILLS
-        // =========================
 
         skills: {
             type: [String],
             default: [],
         },
 
-        // =========================
+        // =====================================================
         // SOCIAL LINKS
-        // =========================
+        // =====================================================
 
         github: {
             type: String,
@@ -105,48 +113,80 @@ const userSchema = new mongoose.Schema(
             trim: true,
         },
 
-        // =========================
-        // PROFILE PHOTO
-        // =========================
+        // =====================================================
+        // PROFILE FILES
+        // =====================================================
 
         photo: {
             type: String,
             default: "",
         },
 
-        // =========================
-        // RESUME
-        // =========================
-
         resume: {
-            name: {
-                type: String,
-                default: "",
-            },
-
-            size: {
-                type: Number,
-                default: 0,
-            },
-
-            type: {
-                type: String,
-                default: "",
-            },
-
-            data: {
-                type: String,
-                default: "",
-            },
+            type: String,
+            default: "",
         },
 
-        // =========================
-        // PROFILE COMPLETION
-        // =========================
+        // =====================================================
+        // STAKEHOLDER INFORMATION
+        // =====================================================
+
+        organizationName: {
+            type: String,
+            default: "",
+            trim: true,
+        },
+
+        organizationType: {
+            type: String,
+            default: "",
+            trim: true,
+        },
+
+        organizationDescription: {
+            type: String,
+            default: "",
+            trim: true,
+        },
+
+        website: {
+            type: String,
+            default: "",
+            trim: true,
+        },
+
+        organizationLogo: {
+            type: String,
+            default: "",
+        },
+
+        stakeholderRole: {
+            type: String,
+            default: "",
+            trim: true,
+        },
+
+        // =====================================================
+        // PROFILE STATUS
+        // =====================================================
 
         profileCompleted: {
             type: Boolean,
             default: false,
+        },
+
+        // =====================================================
+        // PASSWORD RESET
+        // =====================================================
+
+        resetOtpHash: {
+            type: String,
+            default: "",
+        },
+
+        resetOtpExpires: {
+            type: Date,
+            default: null,
         },
     },
     {
@@ -154,4 +194,6 @@ const userSchema = new mongoose.Schema(
     }
 );
 
-export default mongoose.model("User", userSchema);
+const User = mongoose.model("User", userSchema);
+
+export default User;

@@ -123,6 +123,43 @@ export default function StudentResponses() {
     };
 
     // =====================================================
+    // OPEN GMAIL
+    // =====================================================
+
+    const openGmail = (student) => {
+        if (!student?.email) {
+            return;
+        }
+
+        const subject = problem?.title
+            ? `Regarding your interest in: ${problem.title}`
+            : "Regarding your interest in CONEXA";
+
+        const body = `Hi ${student.name || "Student"},
+
+Thank you for showing interest in our problem on CONEXA.
+
+I would like to discuss your profile, skills, and possible collaboration further.
+
+Please let me know a suitable time to connect.
+
+Regards,
+CONEXA Stakeholder`;
+
+        const gmailUrl =
+            `https://mail.google.com/mail/?view=cm&fs=1` +
+            `&to=${encodeURIComponent(student.email)}` +
+            `&su=${encodeURIComponent(subject)}` +
+            `&body=${encodeURIComponent(body)}`;
+
+        window.open(
+            gmailUrl,
+            "_blank",
+            "noopener,noreferrer"
+        );
+    };
+
+    // =====================================================
     // LOADING
     // =====================================================
 
@@ -157,7 +194,6 @@ export default function StudentResponses() {
 
             </header>
 
-
             {/* =================================================
                 MAIN
             ================================================= */}
@@ -188,7 +224,6 @@ export default function StudentResponses() {
 
                 </div>
 
-
                 {/* ERROR */}
 
                 {error && (
@@ -196,7 +231,6 @@ export default function StudentResponses() {
                         {error}
                     </div>
                 )}
-
 
                 {/* EMPTY */}
 
@@ -220,7 +254,6 @@ export default function StudentResponses() {
 
                         </div>
                     )}
-
 
                 {/* RESPONSE LIST */}
 
@@ -289,7 +322,6 @@ export default function StudentResponses() {
 
                                     </div>
 
-
                                     {/* STATUS */}
 
                                     <StatusBadge
@@ -299,7 +331,6 @@ export default function StudentResponses() {
                                     />
 
                                 </div>
-
 
                                 {/* STUDENT DETAILS */}
 
@@ -339,7 +370,6 @@ export default function StudentResponses() {
 
                                 </div>
 
-
                                 {/* SKILLS */}
 
                                 {student.skills?.length >
@@ -374,7 +404,6 @@ export default function StudentResponses() {
                                         </div>
                                     )}
 
-
                                 {/* STUDENT MESSAGE */}
 
                                 {response.message && (
@@ -393,10 +422,11 @@ export default function StudentResponses() {
                                     </div>
                                 )}
 
-
                                 {/* ACTIONS */}
 
                                 <div className="flex flex-wrap items-center gap-3 mt-6 pt-5 border-t border-slate-100">
+
+                                    {/* ACCEPT / REJECT */}
 
                                     {response.status ===
                                         "pending" && (
@@ -440,16 +470,24 @@ export default function StudentResponses() {
                                             </>
                                         )}
 
+                                    {/* GMAIL CONTACT */}
 
                                     {student.email && (
-                                        <a
-                                            href={`mailto:${student.email}`}
+                                        <button
+                                            type="button"
+                                            onClick={() =>
+                                                openGmail(
+                                                    student
+                                                )
+                                            }
                                             className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-slate-300 text-slate-600 font-semibold hover:bg-slate-50 transition"
                                         >
                                             <Mail className="w-4 h-4" />
-                                            Contact
-                                        </a>
+                                            Contact via Gmail
+                                        </button>
                                     )}
+
+                                    {/* LINKEDIN */}
 
                                     {student.linkedin && (
                                         <a
@@ -479,7 +517,6 @@ export default function StudentResponses() {
     );
 }
 
-
 // =====================================================
 // INFO BOX
 // =====================================================
@@ -504,7 +541,6 @@ function InfoBox({
         </div>
     );
 }
-
 
 // =====================================================
 // STATUS BADGE

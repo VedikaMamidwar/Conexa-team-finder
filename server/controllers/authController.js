@@ -1,19 +1,48 @@
 import User from "../models/User.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import crypto from "crypto";
 import { OAuth2Client } from "google-auth-library";
 
-// =====================================================
+import { sendOTPEmail } from "../utils/sendEmail.js";
+
+// ======================================================
 // GOOGLE CLIENT
-// =====================================================
+// ======================================================
 
 const googleClient = new OAuth2Client(
     process.env.GOOGLE_CLIENT_ID
 );
 
-// =====================================================
-// REGISTER STUDENT
-// =====================================================
+// ======================================================
+// HELPER
+// ======================================================
+
+const createRandomPasswordHash = async () => {
+    const randomPassword = crypto
+        .randomBytes(32)
+        .toString("hex");
+
+    return await bcrypt.hash(
+        randomPassword,
+        10
+    );
+};
+
+const ensureUserPassword = async (user) => {
+    if (!user.password) {
+        user.password =
+            await createRandomPasswordHash();
+
+        return true;
+    }
+
+    return false;
+};
+
+// ======================================================
+// REGISTER
+// ======================================================
 
 export const register = async (req, res) => {
     try {
@@ -21,337 +50,515 @@ export const register = async (req, res) => {
             name,
             email,
             password,
+            confirmPassword,
+            accountType,
             college,
             branch,
             year,
+            organizationName,
+            organizationType,
+            organizationDescription,
+            website,
+            stakeholderRole,
         } = req.body;
 
         if (!name || !email || !password) {
             return res.status(400).json({
                 success: false,
-                message: "Name, Email and Password are required",
+                message:
+                    "Name, email and password are required.",
             });
         }
 
-        const existingUser = await User.findOne({ email });
+        const normalizedAccountType =
+            accountType === "stakeholder"
+                ? "stakeholder"
+                : "student";
+
+        if (
+            confirmPassword !== undefined &&
+            password !== confirmPassword
+        ) {
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Passwords do not match.",
+            });
+        }
+
+        const normalizedEmail =
+            email.trim().toLowerCase();
+
+        const existingUser =
+            await User.findOne({
+                email: normalizedEmail,
+            });
 
         if (existingUser) {
             return res.status(400).json({
                 success: false,
-                message: "Email already registered",
+                message:
+                    "An account with this email already exists.",
             });
         }
 
-        const hashedPassword = await bcrypt.hash(password, 10);
+        const hashedPassword =
+            await bcrypt.hash(
+                password,
+                10
+            );
 
         const user = await User.create({
-            name,
-            email,
+            name: name.trim(),
+            email: normalizedEmail,
             password: hashedPassword,
-            college: college || "",
-            branch: branch || "",
-            year: year || "",
+
+            accountType:
+                normalizedAccountType,
+
+            college:
+                normalizedAccountType === "student"
+                    ? college || ""
+                    : "",
+
+            branch:
+                normalizedAccountType === "student"
+                    ? branch || ""
+                    : "",
+
+            year:
+                normalizedAccountType === "student"
+                    ? year || ""
+                    : "",
+
+            organizationName:
+                normalizedAccountType === "stakeholder"
+                    ? organizationName || ""
+                    : "",
+
+            organizationType:
+                normalizedAccountType === "stakeholder"
+                    ? organizationType || ""
+                    : "",
+
+            organizationDescription:
+                normalizedAccountType === "stakeholder"
+                    ? organizationDescription || ""
+                    : "",
+
+            website:
+                normalizedAccountType === "stakeholder"
+                    ? website || ""
+                    : "",
+
+            stakeholderRole:
+                normalizedAccountType === "stakeholder"
+                    ? stakeholderRole || ""
+                    : "",
         });
 
         const token = jwt.sign(
-            { id: user._id },
+            {
+                id: user._id,
+                email: user.email,
+                accountType:
+                    user.accountType,
+            },
             process.env.JWT_SECRET,
-            { expiresIn: "7d" }
+            {
+                expiresIn: "7d",
+            }
         );
 
         return res.status(201).json({
             success: true,
-            message: "Registration Successful",
+            message:
+                "Registration successful.",
+
             token,
 
             user: {
                 id: user._id,
                 name: user.name,
                 email: user.email,
+                accountType:
+                    user.accountType,
+
                 college: user.college,
                 branch: user.branch,
                 year: user.year,
 
-                role: user.role,
-                location: user.location,
-                bio: user.bio,
-                availability: user.availability,
-                skills: user.skills,
+                organizationName:
+                    user.organizationName,
 
-                github: user.github,
-                linkedin: user.linkedin,
-                portfolio: user.portfolio,
+                organizationType:
+                    user.organizationType,
 
-                photo: user.photo,
-                resume: user.resume,
+                organizationDescription:
+                    user.organizationDescription,
 
-                profileCompleted: user.profileCompleted,
+                website:
+                    user.website,
+
+                stakeholderRole:
+                    user.stakeholderRole,
+
+                profileCompleted:
+                    user.profileCompleted,
             },
         });
-
     } catch (error) {
-        console.error("Register Error:", error);
+        console.error(
+            "Register Error:",
+            error
+        );
 
         return res.status(500).json({
             success: false,
-            message: "Server Error",
-            error: error.message,
+            message:
+                "Registration failed.",
         });
     }
 };
 
-// =====================================================
-// LOGIN STUDENT
-// =====================================================
+// ======================================================
+// LOGIN
+// ======================================================
 
 export const login = async (req, res) => {
     try {
-        const { email, password } = req.body;
+        const {
+            email,
+            password,
+            accountType,
+        } = req.body;
 
         if (!email || !password) {
             return res.status(400).json({
                 success: false,
-                message: "Email and password are required",
+                message:
+                    "Email and password are required.",
             });
         }
 
-        const user = await User.findOne({ email });
+        const normalizedAccountType =
+            accountType === "stakeholder"
+                ? "stakeholder"
+                : "student";
+
+        const normalizedEmail =
+            email.trim().toLowerCase();
+
+        const user =
+            await User.findOne({
+                email: normalizedEmail,
+            });
 
         if (!user) {
-            return res.status(400).json({
+            return res.status(401).json({
                 success: false,
-                message: "Invalid Email or Password",
+                message:
+                    "Invalid email or password.",
             });
         }
 
-        const isMatch = await bcrypt.compare(
-            password,
-            user.password
-        );
+        const storedAccountType =
+            user.accountType ||
+            "student";
 
-        if (!isMatch) {
-            return res.status(400).json({
+        if (
+            storedAccountType !==
+            normalizedAccountType
+        ) {
+            return res.status(403).json({
                 success: false,
-                message: "Invalid Email or Password",
+                message:
+                    `This account is registered as ${storedAccountType ===
+                        "stakeholder"
+                        ? "Stakeholder"
+                        : "Student"
+                    }. Please select the correct account type.`,
+            });
+        }
+
+        if (!user.password) {
+            return res.status(401).json({
+                success: false,
+                message:
+                    "This account was created using Google. Please use Google Login or reset your password.",
+            });
+        }
+
+        const passwordMatch =
+            await bcrypt.compare(
+                password,
+                user.password
+            );
+
+        if (!passwordMatch) {
+            return res.status(401).json({
+                success: false,
+                message:
+                    "Invalid email or password.",
             });
         }
 
         const token = jwt.sign(
-            { id: user._id },
+            {
+                id: user._id,
+                email: user.email,
+                accountType:
+                    storedAccountType,
+            },
             process.env.JWT_SECRET,
-            { expiresIn: "7d" }
+            {
+                expiresIn: "7d",
+            }
         );
 
         return res.status(200).json({
             success: true,
-            message: "Login Successful",
+            message:
+                "Login successful.",
+
             token,
 
             user: {
                 id: user._id,
                 name: user.name,
                 email: user.email,
+                accountType:
+                    storedAccountType,
+
                 college: user.college,
                 branch: user.branch,
                 year: user.year,
 
-                role: user.role,
-                location: user.location,
-                bio: user.bio,
-                availability: user.availability,
-                skills: user.skills,
+                organizationName:
+                    user.organizationName,
 
-                github: user.github,
-                linkedin: user.linkedin,
-                portfolio: user.portfolio,
+                organizationType:
+                    user.organizationType,
 
-                photo: user.photo,
-                resume: user.resume,
+                organizationDescription:
+                    user.organizationDescription,
 
-                profileCompleted: user.profileCompleted,
+                website:
+                    user.website,
+
+                stakeholderRole:
+                    user.stakeholderRole,
+
+                profileCompleted:
+                    user.profileCompleted,
             },
         });
-
     } catch (error) {
-        console.error("Login Error:", error);
+        console.error(
+            "Login Error:",
+            error
+        );
 
         return res.status(500).json({
             success: false,
-            message: "Server Error",
-            error: error.message,
+            message:
+                "Login failed.",
         });
     }
 };
 
-// =====================================================
+// ======================================================
 // GOOGLE LOGIN
-// =====================================================
+// ======================================================
 
 export const googleLogin = async (req, res) => {
     try {
         const { credential } = req.body;
 
-        // ---------------------------------------------
-        // Check Google credential
-        // ---------------------------------------------
-
         if (!credential) {
             return res.status(400).json({
                 success: false,
-                message: "Google credential is required",
+                message:
+                    "Google credential is required.",
             });
         }
 
-        // ---------------------------------------------
-        // Verify Google credential
-        // ---------------------------------------------
+        if (!process.env.GOOGLE_CLIENT_ID) {
+            return res.status(500).json({
+                success: false,
+                message:
+                    "Google Client ID is not configured.",
+            });
+        }
 
-        const ticket = await googleClient.verifyIdToken({
-            idToken: credential,
-            audience: process.env.GOOGLE_CLIENT_ID,
-        });
+        const ticket =
+            await googleClient.verifyIdToken({
+                idToken: credential,
+                audience:
+                    process.env.GOOGLE_CLIENT_ID,
+            });
 
-        const payload = ticket.getPayload();
+        const payload =
+            ticket.getPayload();
 
         if (!payload) {
-            return res.status(400).json({
+            return res.status(401).json({
                 success: false,
-                message: "Invalid Google credential",
+                message:
+                    "Invalid Google credential.",
             });
         }
 
-        // ---------------------------------------------
-        // Get Google user information
-        // ---------------------------------------------
-
         const {
-            sub: googleId,
             email,
             name,
             picture,
-            email_verified,
         } = payload;
 
-        // ---------------------------------------------
-        // Verify Google email
-        // ---------------------------------------------
-
-        if (!email || !email_verified) {
+        if (!email) {
             return res.status(400).json({
                 success: false,
-                message: "Google email is not verified",
+                message:
+                    "Google account email not available.",
             });
         }
 
-        // ---------------------------------------------
-        // Find existing Conexa user
-        // ---------------------------------------------
+        const normalizedEmail =
+            email.trim().toLowerCase();
 
-        let user = await User.findOne({ email });
-
-        // ---------------------------------------------
-        // Create new user if not found
-        // ---------------------------------------------
+        let user = await User.findOne({
+            email: normalizedEmail,
+        });
 
         if (!user) {
-            const randomPassword = await bcrypt.hash(
-                `google_${googleId}_${Date.now()}`,
-                10
-            );
+            const hashedPassword =
+                await createRandomPasswordHash();
 
             user = await User.create({
-                name: name || "Google User",
-                email,
-                password: randomPassword,
+                name:
+                    name ||
+                    "CONEXA User",
 
-                photo: picture || "",
+                email:
+                    normalizedEmail,
+
+                password:
+                    hashedPassword,
+
+                accountType:
+                    "student",
 
                 college: "",
                 branch: "",
                 year: "",
-
-                profileCompleted: false,
             });
+        } else {
+            const passwordFixed =
+                await ensureUserPassword(user);
+
+            if (passwordFixed) {
+                await user.save();
+            }
         }
 
-        // ---------------------------------------------
-        // Update Google profile picture
-        // ---------------------------------------------
-
-        else if (picture && !user.photo) {
-            user.photo = picture;
-            await user.save();
-        }
-
-        // ---------------------------------------------
-        // Create Conexa JWT
-        // ---------------------------------------------
+        const storedAccountType =
+            user.accountType ||
+            "student";
 
         const token = jwt.sign(
-            { id: user._id },
+            {
+                id: user._id,
+                email: user.email,
+                accountType:
+                    storedAccountType,
+            },
             process.env.JWT_SECRET,
-            { expiresIn: "7d" }
+            {
+                expiresIn: "7d",
+            }
         );
-
-        // ---------------------------------------------
-        // Send response
-        // ---------------------------------------------
 
         return res.status(200).json({
             success: true,
-            message: "Google Login Successful",
+            message:
+                "Google login successful.",
+
             token,
 
             user: {
                 id: user._id,
                 name: user.name,
                 email: user.email,
+                accountType:
+                    storedAccountType,
 
                 college: user.college,
                 branch: user.branch,
                 year: user.year,
 
-                role: user.role,
-                location: user.location,
-                bio: user.bio,
-                availability: user.availability,
-                skills: user.skills,
+                organizationName:
+                    user.organizationName,
 
-                github: user.github,
-                linkedin: user.linkedin,
-                portfolio: user.portfolio,
+                organizationType:
+                    user.organizationType,
 
-                photo: user.photo,
-                resume: user.resume,
+                organizationDescription:
+                    user.organizationDescription,
 
-                profileCompleted: user.profileCompleted,
+                website:
+                    user.website,
+
+                stakeholderRole:
+                    user.stakeholderRole,
+
+                picture:
+                    picture || "",
             },
         });
-
     } catch (error) {
-        console.error("Google Login Error:", error);
+        console.error(
+            "Google Login Error:",
+            error
+        );
 
-        return res.status(500).json({
+        return res.status(401).json({
             success: false,
-            message: "Google login failed",
-            error: error.message,
+            message:
+                "Google authentication failed.",
         });
     }
 };
 
-// =====================================================
-// GET LOGGED-IN USER PROFILE
-// =====================================================
+// ======================================================
+// GET PROFILE
+// ======================================================
 
 export const getProfile = async (req, res) => {
     try {
-        const user = await User.findById(req.user.id)
-            .select("-password");
+        const userId =
+            req.user?.id ||
+            req.user?._id;
+
+        if (!userId) {
+            return res.status(401).json({
+                success: false,
+                message:
+                    "Authentication required.",
+            });
+        }
+
+        const user =
+            await User.findById(
+                userId
+            ).select(
+                "-password -resetOtpHash"
+            );
 
         if (!user) {
             return res.status(404).json({
                 success: false,
-                message: "User not found",
+                message:
+                    "User not found.",
             });
         }
 
@@ -359,136 +566,532 @@ export const getProfile = async (req, res) => {
             success: true,
             user,
         });
-
     } catch (error) {
-        console.error("Get Profile Error:", error);
+        console.error(
+            "Get Profile Error:",
+            error
+        );
 
         return res.status(500).json({
             success: false,
-            message: "Server Error",
-            error: error.message,
+            message:
+                "Unable to fetch profile.",
         });
     }
 };
 
-// =====================================================
+// ======================================================
 // UPDATE PROFILE
-// =====================================================
+// ======================================================
 
-export const updateProfile = async (req, res) => {
+export const updateProfile = async (
+    req,
+    res
+) => {
     try {
-        const userId = req.user.id;
+        const userId =
+            req.user?.id ||
+            req.user?._id;
 
-        const {
-            name,
-            email,
-            college,
-            branch,
-            year,
-            role,
-            location,
-            bio,
-            availability,
-            skills,
-            github,
-            linkedin,
-            portfolio,
-            photo,
-            resume,
-        } = req.body;
-
-        // ---------------------------------------------
-        // Check duplicate email
-        // ---------------------------------------------
-
-        if (email) {
-            const existingUser = await User.findOne({
-                email,
-                _id: { $ne: userId },
+        if (!userId) {
+            return res.status(401).json({
+                success: false,
+                message:
+                    "Authentication required.",
             });
-
-            if (existingUser) {
-                return res.status(400).json({
-                    success: false,
-                    message:
-                        "Email already registered by another user",
-                });
-            }
         }
 
-        // ---------------------------------------------
-        // Prepare update data
-        // ---------------------------------------------
+        // IMPORTANT:
+        // Use findByIdAndUpdate directly so invalid
+        // resume/photo objects already stored on an
+        // old user document are not cast during save.
+        const allowedFields = [
+            "name",
+            "college",
+            "branch",
+            "year",
+            "role",
+            "location",
+            "bio",
+            "availability",
+            "skills",
+            "github",
+            "linkedin",
+            "portfolio",
+            "organizationName",
+            "organizationType",
+            "organizationDescription",
+            "website",
+            "organizationLogo",
+            "stakeholderRole",
+            "profileCompleted",
+        ];
 
-        const updateData = {
-            name,
-            email,
-            college,
-            branch,
-            year,
-            role,
-            location,
-            bio,
-            availability,
+        const updateData = {};
 
-            skills: Array.isArray(skills)
-                ? skills
-                : [],
-
-            github,
-            linkedin,
-            portfolio,
-            photo,
-            resume,
-
-            profileCompleted: true,
-        };
-
-        // Remove undefined values
-        Object.keys(updateData).forEach((key) => {
-            if (updateData[key] === undefined) {
-                delete updateData[key];
+        allowedFields.forEach(
+            (field) => {
+                if (
+                    req.body[field] !==
+                    undefined
+                ) {
+                    updateData[field] =
+                        req.body[field];
+                }
             }
-        });
+        );
 
-        // ---------------------------------------------
-        // Update user
-        // ---------------------------------------------
+        // Never update email/password/resume/photo
+        // from stakeholder profile form.
 
         const updatedUser =
             await User.findByIdAndUpdate(
                 userId,
-                updateData,
+                {
+                    $set: updateData,
+                },
                 {
                     new: true,
                     runValidators: true,
                 }
-            ).select("-password");
+            ).select(
+                "-password -resetOtpHash"
+            );
 
         if (!updatedUser) {
             return res.status(404).json({
                 success: false,
-                message: "User not found",
+                message:
+                    "User not found.",
             });
         }
 
-        // ---------------------------------------------
-        // Response
-        // ---------------------------------------------
-
         return res.status(200).json({
             success: true,
-            message: "Profile updated successfully",
+            message:
+                "Profile updated successfully.",
             user: updatedUser,
         });
-
     } catch (error) {
-        console.error("Update Profile Error:", error);
+        console.error(
+            "Update Profile Error:",
+            error
+        );
 
         return res.status(500).json({
             success: false,
-            message: "Failed to update profile",
-            error: error.message,
+            message:
+                error.message ||
+                "Unable to update profile.",
+        });
+    }
+};
+
+// ======================================================
+// FORGOT PASSWORD - SEND OTP
+// ======================================================
+
+export const forgotPassword = async (
+    req,
+    res
+) => {
+    try {
+        const { email } = req.body;
+
+        if (!email) {
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Email is required.",
+            });
+        }
+
+        const normalizedEmail =
+            email.trim().toLowerCase();
+
+        const user =
+            await User.findOne({
+                email: normalizedEmail,
+            });
+
+        if (!user) {
+            return res.status(200).json({
+                success: true,
+                message:
+                    "If this email is registered, an OTP has been sent.",
+            });
+        }
+
+        await ensureUserPassword(user);
+
+        const otp =
+            crypto
+                .randomInt(
+                    100000,
+                    1000000
+                )
+                .toString();
+
+        const otpHash =
+            await bcrypt.hash(
+                otp,
+                10
+            );
+
+        user.resetOtpHash =
+            otpHash;
+
+        user.resetOtpExpires =
+            new Date(
+                Date.now() +
+                10 * 60 * 1000
+            );
+
+        await user.save();
+
+        await sendOTPEmail(
+            normalizedEmail,
+            otp
+        );
+
+        return res.status(200).json({
+            success: true,
+            message:
+                "If this email is registered, an OTP has been sent.",
+        });
+    } catch (error) {
+        console.error(
+            "Forgot Password Error:",
+            error
+        );
+
+        return res.status(500).json({
+            success: false,
+            message:
+                "Unable to process password reset request.",
+        });
+    }
+};
+
+// ======================================================
+// VERIFY OTP
+// ======================================================
+
+export const verifyOtp = async (
+    req,
+    res
+) => {
+    try {
+        const {
+            email,
+            otp,
+        } = req.body;
+
+        if (!email || !otp) {
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Email and OTP are required.",
+            });
+        }
+
+        const normalizedEmail =
+            email.trim().toLowerCase();
+
+        const user =
+            await User.findOne({
+                email: normalizedEmail,
+            });
+
+        if (!user) {
+            return res.status(400).json({
+                success: false,
+                message: "Invalid OTP.",
+            });
+        }
+
+        if (
+            !user.resetOtpHash ||
+            !user.resetOtpExpires
+        ) {
+            return res.status(400).json({
+                success: false,
+                message:
+                    "OTP is invalid or has expired.",
+            });
+        }
+
+        if (
+            new Date() >
+            new Date(
+                user.resetOtpExpires
+            )
+        ) {
+            user.resetOtpHash = "";
+            user.resetOtpExpires =
+                null;
+
+            await ensureUserPassword(
+                user
+            );
+
+            await user.save();
+
+            return res.status(400).json({
+                success: false,
+                message:
+                    "OTP has expired. Please request a new OTP.",
+            });
+        }
+
+        const otpMatch =
+            await bcrypt.compare(
+                otp.toString(),
+                user.resetOtpHash
+            );
+
+        if (!otpMatch) {
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Invalid OTP.",
+            });
+        }
+
+        const resetToken =
+            jwt.sign(
+                {
+                    id: user._id,
+                    purpose:
+                        "password-reset",
+                },
+                process.env.JWT_SECRET,
+                {
+                    expiresIn: "10m",
+                }
+            );
+
+        user.resetOtpHash = "";
+        user.resetOtpExpires =
+            null;
+
+        await ensureUserPassword(
+            user
+        );
+
+        await user.save();
+
+        return res.status(200).json({
+            success: true,
+            message:
+                "OTP verified successfully.",
+            resetToken,
+        });
+    } catch (error) {
+        console.error(
+            "Verify OTP Error:",
+            error
+        );
+
+        return res.status(500).json({
+            success: false,
+            message:
+                "Unable to verify OTP.",
+        });
+    }
+};
+
+// ======================================================
+// RESEND OTP
+// ======================================================
+
+export const resendOtp = async (
+    req,
+    res
+) => {
+    try {
+        const { email } = req.body;
+
+        if (!email) {
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Email is required.",
+            });
+        }
+
+        const normalizedEmail =
+            email.trim().toLowerCase();
+
+        const user =
+            await User.findOne({
+                email: normalizedEmail,
+            });
+
+        if (!user) {
+            return res.status(200).json({
+                success: true,
+                message:
+                    "If this email is registered, an OTP has been sent.",
+            });
+        }
+
+        await ensureUserPassword(user);
+
+        const otp =
+            crypto
+                .randomInt(
+                    100000,
+                    1000000
+                )
+                .toString();
+
+        const otpHash =
+            await bcrypt.hash(
+                otp,
+                10
+            );
+
+        user.resetOtpHash =
+            otpHash;
+
+        user.resetOtpExpires =
+            new Date(
+                Date.now() +
+                10 * 60 * 1000
+            );
+
+        await user.save();
+
+        await sendOTPEmail(
+            normalizedEmail,
+            otp
+        );
+
+        return res.status(200).json({
+            success: true,
+            message:
+                "If this email is registered, an OTP has been sent.",
+        });
+    } catch (error) {
+        console.error(
+            "Resend OTP Error:",
+            error
+        );
+
+        return res.status(500).json({
+            success: false,
+            message:
+                "Unable to resend OTP.",
+        });
+    }
+};
+
+// ======================================================
+// RESET PASSWORD
+// ======================================================
+
+export const resetPassword = async (
+    req,
+    res
+) => {
+    try {
+        const {
+            resetToken,
+            password,
+            confirmPassword,
+        } = req.body;
+
+        if (!resetToken || !password) {
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Reset token and password are required.",
+            });
+        }
+
+        if (
+            confirmPassword !== undefined &&
+            password !==
+            confirmPassword
+        ) {
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Passwords do not match.",
+            });
+        }
+
+        let decoded;
+
+        try {
+            decoded =
+                jwt.verify(
+                    resetToken,
+                    process.env.JWT_SECRET
+                );
+        } catch (error) {
+            return res.status(401).json({
+                success: false,
+                message:
+                    "Reset session has expired. Please request a new OTP.",
+            });
+        }
+
+        if (
+            decoded.purpose !==
+            "password-reset"
+        ) {
+            return res.status(401).json({
+                success: false,
+                message:
+                    "Invalid password reset token.",
+            });
+        }
+
+        const user =
+            await User.findById(
+                decoded.id
+            );
+
+        if (!user) {
+            return res.status(404).json({
+                success: false,
+                message:
+                    "User not found.",
+            });
+        }
+
+        const hashedPassword =
+            await bcrypt.hash(
+                password,
+                10
+            );
+
+        user.password =
+            hashedPassword;
+
+        user.resetOtpHash = "";
+        user.resetOtpExpires =
+            null;
+
+        await user.save();
+
+        return res.status(200).json({
+            success: true,
+            message:
+                "Password reset successfully.",
+        });
+    } catch (error) {
+        console.error(
+            "Reset Password Error:",
+            error
+        );
+
+        return res.status(500).json({
+            success: false,
+            message:
+                "Unable to reset password.",
         });
     }
 };

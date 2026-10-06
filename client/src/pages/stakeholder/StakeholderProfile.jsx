@@ -3,29 +3,26 @@ import axios from "axios";
 import {
     ArrowLeft,
     Building2,
+    Globe,
+    Loader2,
     Mail,
     MapPin,
-    Globe,
-
     Save,
     User,
-    Camera,
-    CheckCircle2,
-    BriefcaseBusiness,
-    FileText,
-    Sparkles,
+    Briefcase,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "../../context/AuthContext";
 
 const API_URL = "http://localhost:5000/api";
 
-export default function StakeholderProfile() {
+const StakeholderProfile = () => {
     const navigate = useNavigate();
     const { user } = useAuth();
 
-    const [loading, setLoading] = useState(false);
-    const [saved, setSaved] = useState(false);
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
+    const [message, setMessage] = useState("");
     const [error, setError] = useState("");
 
     const [formData, setFormData] = useState({
@@ -40,36 +37,95 @@ export default function StakeholderProfile() {
     });
 
     // =====================================================
-    // LOAD USER DATA
+    // LOAD PROFILE FROM DATABASE
     // =====================================================
 
     useEffect(() => {
-        const storedUser = JSON.parse(
-            localStorage.getItem("user") || "null"
-        );
+        const loadProfile = async () => {
+            try {
+                setLoading(true);
+                setError("");
 
-        const currentUser = user || storedUser;
+                const token = localStorage.getItem("token");
 
-        if (currentUser) {
-            setFormData((prev) => ({
-                ...prev,
-                name: currentUser.name || "",
-                email: currentUser.email || "",
-                organizationName:
-                    currentUser.organizationName || "",
-                location:
-                    currentUser.location || "",
-                description:
-                    currentUser.description || "",
-                website:
-                    currentUser.website || "",
-                linkedin:
-                    currentUser.linkedin || "",
-                role:
-                    currentUser.role || "",
-            }));
-        }
-    }, [user]);
+                if (!token) {
+                    navigate("/login");
+                    return;
+                }
+
+                const response = await axios.get(
+                    `${API_URL}/auth/profile`,
+                    {
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                        },
+                    }
+                );
+
+                const currentUser = response.data?.user;
+
+                if (!currentUser) {
+                    throw new Error(
+                        "User profile not found"
+                    );
+                }
+
+                setFormData({
+                    name: currentUser.name || "",
+                    email: currentUser.email || "",
+
+                    organizationName:
+                        currentUser.organizationName || "",
+
+                    location:
+                        currentUser.location || "",
+
+                    description:
+                        currentUser.organizationDescription ||
+                        "",
+
+                    website:
+                        currentUser.website || "",
+
+                    linkedin:
+                        currentUser.linkedin || "",
+
+                    role:
+                        currentUser.stakeholderRole ||
+                        currentUser.role ||
+                        "",
+                });
+
+                // Store latest user data
+                localStorage.setItem(
+                    "user",
+                    JSON.stringify(currentUser)
+                );
+            } catch (err) {
+                console.error(
+                    "Load stakeholder profile error:",
+                    err
+                );
+
+                if (err.response?.status === 401) {
+                    localStorage.removeItem("token");
+                    localStorage.removeItem("user");
+
+                    navigate("/login");
+                    return;
+                }
+
+                setError(
+                    err.response?.data?.message ||
+                    "Failed to load profile"
+                );
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        loadProfile();
+    }, [navigate]);
 
     // =====================================================
     // INPUT CHANGE
@@ -83,7 +139,7 @@ export default function StakeholderProfile() {
             [name]: value,
         }));
 
-        setSaved(false);
+        setMessage("");
         setError("");
     };
 
@@ -95,76 +151,147 @@ export default function StakeholderProfile() {
         e.preventDefault();
 
         try {
-            setLoading(true);
+            setSaving(true);
+            setMessage("");
             setError("");
-            setSaved(false);
 
-            const token = localStorage.getItem("token");
+            const token =
+                localStorage.getItem("token");
 
-            /*
-             * NOTE:
-             * This endpoint will be added to backend next:
-             *
-             * PUT /api/stakeholder/profile
-             */
+            if (!token) {
+                navigate("/login");
+                return;
+            }
+
+            const payload = {
+                name: formData.name.trim(),
+
+                location:
+                    formData.location.trim(),
+
+                organizationName:
+                    formData.organizationName.trim(),
+
+                organizationDescription:
+                    formData.description.trim(),
+
+                website:
+                    formData.website.trim(),
+
+                linkedin:
+                    formData.linkedin.trim(),
+
+                stakeholderRole:
+                    formData.role.trim(),
+
+                profileCompleted: true,
+            };
 
             const response = await axios.put(
-                `${API_URL}/stakeholder/profile`,
-                formData,
+                `${API_URL}/auth/profile`,
+                payload,
                 {
                     headers: {
                         Authorization: `Bearer ${token}`,
+                        "Content-Type":
+                            "application/json",
                     },
                 }
             );
 
             const updatedUser =
-                response.data?.user ||
-                response.data?.data;
+                response.data?.user;
 
             if (updatedUser) {
                 localStorage.setItem(
                     "user",
                     JSON.stringify(updatedUser)
                 );
+
+                setFormData({
+                    name:
+                        updatedUser.name || "",
+
+                    email:
+                        updatedUser.email || "",
+
+                    organizationName:
+                        updatedUser.organizationName ||
+                        "",
+
+                    location:
+                        updatedUser.location || "",
+
+                    description:
+                        updatedUser.organizationDescription ||
+                        "",
+
+                    website:
+                        updatedUser.website || "",
+
+                    linkedin:
+                        updatedUser.linkedin || "",
+
+                    role:
+                        updatedUser.stakeholderRole ||
+                        updatedUser.role ||
+                        "",
+                });
             }
 
-            setSaved(true);
-
+            setMessage(
+                "Profile saved successfully!"
+            );
         } catch (err) {
             console.error(
-                "Stakeholder profile update error:",
+                "Save stakeholder profile error:",
                 err
             );
 
             setError(
                 err.response?.data?.message ||
-                "Failed to update profile."
+                "Failed to save profile"
             );
         } finally {
-            setLoading(false);
+            setSaving(false);
         }
     };
 
     // =====================================================
-    // PROFILE INITIAL
+    // LOADING
     // =====================================================
 
-    const initial =
-        formData.name
-            ?.charAt(0)
-            ?.toUpperCase() || "S";
+    if (loading) {
+        return (
+            <div className="min-h-screen bg-slate-50 flex items-center justify-center">
+                <div className="flex items-center gap-3 text-slate-600">
+                    <Loader2
+                        size={24}
+                        className="animate-spin"
+                    />
+
+                    <span>
+                        Loading profile...
+                    </span>
+                </div>
+            </div>
+        );
+    }
+
+    // =====================================================
+    // UI
+    // =====================================================
 
     return (
-        <div className="min-h-screen bg-[#F8FAFC]">
+        <div className="min-h-screen bg-slate-50 px-4 py-8 md:px-8">
 
-            {/* =====================================================
-                HEADER
-            ===================================================== */}
+            <div className="max-w-5xl mx-auto">
 
-            <header className="border-b border-slate-200 bg-white">
+                {/* =================================================
+                    HEADER
+                ================================================= */}
 
-                <div className="mx-auto flex max-w-[1200px] items-center justify-between px-5 py-5 sm:px-6">
+                <div className="flex items-center justify-between mb-8">
 
                     <button
                         type="button"
@@ -173,281 +300,176 @@ export default function StakeholderProfile() {
                                 "/stakeholder-dashboard"
                             )
                         }
-                        className="inline-flex items-center gap-2 text-sm font-bold text-slate-500 transition hover:text-[#14B8A6]"
+                        className="flex items-center gap-2 text-slate-600 hover:text-slate-900 transition"
                     >
-                        <ArrowLeft size={18} />
+                        <ArrowLeft size={20} />
+
                         Back to Dashboard
                     </button>
 
-                    <div className="hidden items-center gap-2 sm:flex">
+                    <div className="flex items-center gap-2">
 
-                        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-teal-50">
-                            <BriefcaseBusiness
-                                size={18}
-                                className="text-[#14B8A6]"
-                            />
+                        <Building2
+                            size={24}
+                            className="text-teal-600"
+                        />
+
+                        <h1 className="text-xl md:text-2xl font-bold text-slate-900">
+                            Manage Profile
+                        </h1>
+
+                    </div>
+
+                </div>
+
+                {/* =================================================
+                    MAIN CARD
+                ================================================= */}
+
+                <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
+
+                    {/* TOP SECTION */}
+
+                    <div className="bg-gradient-to-r from-indigo-950 to-teal-600 px-6 md:px-10 py-8 text-white">
+
+                        <div className="flex items-center gap-4">
+
+                            <div className="w-16 h-16 rounded-full bg-white/20 flex items-center justify-center">
+                                <Building2 size={32} />
+                            </div>
+
+                            <div>
+
+                                <h2 className="text-2xl font-bold">
+                                    Stakeholder Profile
+                                </h2>
+
+                                <p className="text-white/80 mt-1">
+                                    Manage your organization information
+                                </p>
+
+                            </div>
+
                         </div>
 
-                        <span className="text-sm font-black text-[#1E1B4B]">
-                            Stakeholder Profile
-                        </span>
-
                     </div>
 
-                </div>
+                    {/* =================================================
+                        FORM
+                    ================================================= */}
 
-            </header>
+                    <form
+                        onSubmit={handleSubmit}
+                        className="p-6 md:p-10 space-y-8"
+                    >
 
+                        {/* SUCCESS MESSAGE */}
 
-            {/* =====================================================
-                MAIN
-            ===================================================== */}
+                        {message && (
+                            <div className="rounded-xl bg-green-50 border border-green-200 text-green-700 px-4 py-3">
+                                {message}
+                            </div>
+                        )}
 
-            <main className="mx-auto max-w-[1200px] px-5 py-8 sm:px-6">
+                        {/* ERROR MESSAGE */}
 
-                {/* PAGE TITLE */}
-
-                <div className="mb-8">
-
-                    <div className="mb-3 inline-flex items-center gap-2 rounded-full border border-teal-100 bg-teal-50 px-3 py-1.5 text-xs font-bold text-teal-700">
-
-                        <Sparkles size={14} />
-
-                        PROFILE MANAGEMENT
-
-                    </div>
-
-                    <h1 className="text-3xl font-black tracking-tight text-[#1E1B4B] sm:text-4xl">
-                        Your Stakeholder Profile
-                    </h1>
-
-                    <p className="mt-2 max-w-2xl text-sm leading-6 text-slate-500 sm:text-base">
-                        Build a trusted profile so students can
-                        understand your organization and the
-                        opportunities you provide.
-                    </p>
-
-                </div>
-
-
-                {/* ERROR */}
-
-                {error && (
-                    <div className="mb-6 rounded-2xl border border-red-200 bg-red-50 p-4 text-sm font-semibold text-red-600">
-                        {error}
-                    </div>
-                )}
-
-
-                {/* SUCCESS */}
-
-                {saved && (
-                    <div className="mb-6 flex items-center gap-3 rounded-2xl border border-green-200 bg-green-50 p-4 text-sm font-semibold text-green-700">
-
-                        <CheckCircle2 size={18} />
-
-                        Profile updated successfully.
-
-                    </div>
-                )}
-
-
-                <form onSubmit={handleSubmit}>
-
-                    <div className="grid grid-cols-1 gap-6 lg:grid-cols-12">
+                        {error && (
+                            <div className="rounded-xl bg-red-50 border border-red-200 text-red-700 px-4 py-3">
+                                {error}
+                            </div>
+                        )}
 
                         {/* =================================================
-                            LEFT PROFILE CARD
+                            BASIC INFORMATION
                         ================================================= */}
 
-                        <section className="lg:col-span-4">
+                        <div>
 
-                            <div className="overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-sm">
+                            <h3 className="text-lg font-bold text-slate-900 mb-5">
+                                Basic Information
+                            </h3>
 
-                                {/* COVER */}
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
 
-                                <div className="relative h-28 bg-gradient-to-br from-[#1E1B4B] via-[#312E81] to-[#14B8A6]">
+                                {/* NAME */}
 
-                                    <div className="absolute -right-10 -top-10 h-32 w-32 rounded-full bg-white/10" />
+                                <div>
 
-                                    <div className="absolute -bottom-12 left-1/2 h-28 w-28 -translate-x-1/2 rounded-full bg-teal-300/10" />
+                                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                                        Full Name
+                                    </label>
 
-                                </div>
+                                    <div className="relative">
 
-
-                                {/* PROFILE */}
-
-                                <div className="relative px-6 pb-6">
-
-                                    <div className="-mt-12 flex justify-center">
-
-                                        <div className="relative">
-
-                                            <div className="flex h-24 w-24 items-center justify-center rounded-3xl border-4 border-white bg-[#1E1B4B] text-3xl font-black text-white shadow-lg">
-
-                                                {initial}
-
-                                            </div>
-
-                                            <button
-                                                type="button"
-                                                className="absolute -bottom-1 -right-1 flex h-9 w-9 items-center justify-center rounded-xl border-2 border-white bg-[#14B8A6] text-white shadow-md transition hover:bg-teal-700"
-                                                title="Change profile image"
-                                            >
-                                                <Camera size={16} />
-                                            </button>
-
-                                        </div>
-
-                                    </div>
-
-
-                                    <div className="mt-4 text-center">
-
-                                        <h2 className="text-xl font-black text-[#1E1B4B]">
-                                            {formData.name ||
-                                                "Stakeholder"}
-                                        </h2>
-
-                                        <p className="mt-1 text-sm text-slate-500">
-                                            {formData.role ||
-                                                "Stakeholder"}
-                                        </p>
-
-                                    </div>
-
-
-                                    {/* VERIFIED */}
-
-                                    <div className="mt-5 flex items-center justify-center gap-2 rounded-xl bg-teal-50 px-4 py-3 text-sm font-bold text-teal-700">
-
-                                        <CheckCircle2 size={17} />
-
-                                        Verified Stakeholder
-
-                                    </div>
-
-
-                                    {/* INFO */}
-
-                                    <div className="mt-5 space-y-3">
-
-                                        <ProfileInfo
-                                            icon={Mail}
-                                            value={
-                                                formData.email ||
-                                                "No email"
-                                            }
-                                        />
-
-                                        <ProfileInfo
-                                            icon={MapPin}
-                                            value={
-                                                formData.location ||
-                                                "Location not added"
-                                            }
-                                        />
-
-                                        <ProfileInfo
-                                            icon={Building2}
-                                            value={
-                                                formData.organizationName ||
-                                                "Organization not added"
-                                            }
-                                        />
-
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-
-                            {/* PROFILE TIP */}
-
-                            <div className="mt-5 rounded-3xl border border-teal-100 bg-teal-50 p-5">
-
-                                <div className="flex items-start gap-3">
-
-                                    <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm">
-
-                                        <Sparkles
+                                        <User
                                             size={18}
-                                            className="text-[#14B8A6]"
+                                            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
                                         />
 
-                                    </div>
-
-                                    <div>
-
-                                        <h3 className="text-sm font-black text-[#1E1B4B]">
-                                            Build trust
-                                        </h3>
-
-                                        <p className="mt-1 text-xs leading-5 text-slate-600">
-                                            A complete organization
-                                            profile helps students
-                                            decide whether your
-                                            opportunities are right
-                                            for them.
-                                        </p>
-
-                                    </div>
-
-                                </div>
-
-                            </div>
-
-                        </section>
-
-
-                        {/* =================================================
-                            RIGHT FORM
-                        ================================================= */}
-
-                        <section className="lg:col-span-8">
-
-                            <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm sm:p-7">
-
-                                {/* BASIC INFORMATION */}
-
-                                <div className="mb-7">
-
-                                    <SectionHeader
-                                        icon={User}
-                                        title="Basic Information"
-                                        description="Your personal stakeholder details"
-                                    />
-
-                                    <div className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2">
-
-                                        <InputField
-                                            label="Full Name"
+                                        <input
+                                            type="text"
                                             name="name"
-                                            value={formData.name}
+                                            value={
+                                                formData.name
+                                            }
                                             onChange={
                                                 handleChange
                                             }
-                                            placeholder="Your name"
-                                            icon={User}
+                                            placeholder="Enter your name"
+                                            className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
+                                            required
                                         />
 
-                                        <InputField
-                                            label="Email"
-                                            name="email"
+                                    </div>
+
+                                </div>
+
+                                {/* EMAIL */}
+
+                                <div>
+
+                                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                                        Email
+                                    </label>
+
+                                    <div className="relative">
+
+                                        <Mail
+                                            size={18}
+                                            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                                        />
+
+                                        <input
                                             type="email"
+                                            name="email"
                                             value={
                                                 formData.email
                                             }
-                                            onChange={
-                                                handleChange
-                                            }
-                                            placeholder="you@example.com"
-                                            icon={Mail}
+                                            readOnly
+                                            className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl bg-slate-100 text-slate-500 cursor-not-allowed"
                                         />
 
-                                        <InputField
-                                            label="Role"
+                                    </div>
+
+                                </div>
+
+                                {/* ROLE */}
+
+                                <div>
+
+                                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                                        Stakeholder Role
+                                    </label>
+
+                                    <div className="relative">
+
+                                        <Briefcase
+                                            size={18}
+                                            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                                        />
+
+                                        <input
+                                            type="text"
                                             name="role"
                                             value={
                                                 formData.role
@@ -455,14 +477,31 @@ export default function StakeholderProfile() {
                                             onChange={
                                                 handleChange
                                             }
-                                            placeholder="Founder / HR / Manager"
-                                            icon={
-                                                BriefcaseBusiness
-                                            }
+                                            placeholder="e.g. Founder, HR Manager"
+                                            className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                                         />
 
-                                        <InputField
-                                            label="Location"
+                                    </div>
+
+                                </div>
+
+                                {/* LOCATION */}
+
+                                <div>
+
+                                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                                        Location
+                                    </label>
+
+                                    <div className="relative">
+
+                                        <MapPin
+                                            size={18}
+                                            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                                        />
+
+                                        <input
+                                            type="text"
                                             name="location"
                                             value={
                                                 formData.location
@@ -470,32 +509,47 @@ export default function StakeholderProfile() {
                                             onChange={
                                                 handleChange
                                             }
-                                            placeholder="Pune, Maharashtra"
-                                            icon={MapPin}
+                                            placeholder="City, State"
+                                            className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                                         />
 
                                     </div>
 
                                 </div>
 
+                            </div>
 
-                                <div className="my-7 h-px bg-slate-100" />
+                        </div>
 
+                        {/* =================================================
+                            ORGANIZATION INFORMATION
+                        ================================================= */}
 
-                                {/* ORGANIZATION */}
+                        <div>
 
-                                <div className="mb-7">
+                            <h3 className="text-lg font-bold text-slate-900 mb-5">
+                                Organization Information
+                            </h3>
 
-                                    <SectionHeader
-                                        icon={Building2}
-                                        title="Organization"
-                                        description="Tell students about your organization"
-                                    />
+                            <div className="space-y-5">
 
-                                    <div className="mt-5 space-y-5">
+                                {/* ORGANIZATION NAME */}
 
-                                        <InputField
-                                            label="Organization Name"
+                                <div>
+
+                                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                                        Organization Name
+                                    </label>
+
+                                    <div className="relative">
+
+                                        <Building2
+                                            size={18}
+                                            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                                        />
+
+                                        <input
+                                            type="text"
                                             name="organizationName"
                                             value={
                                                 formData.organizationName
@@ -503,47 +557,71 @@ export default function StakeholderProfile() {
                                             onChange={
                                                 handleChange
                                             }
-                                            placeholder="Your organization name"
-                                            icon={Building2}
-                                        />
-
-                                        <TextAreaField
-                                            label="About Organization"
-                                            name="description"
-                                            value={
-                                                formData.description
-                                            }
-                                            onChange={
-                                                handleChange
-                                            }
-                                            placeholder="Describe your organization, work, mission and the type of opportunities you provide..."
-                                            icon={FileText}
+                                            placeholder="Enter organization name"
+                                            className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                                         />
 
                                     </div>
 
                                 </div>
 
-
-                                <div className="my-7 h-px bg-slate-100" />
-
-
-                                {/* ONLINE PRESENCE */}
+                                {/* DESCRIPTION */}
 
                                 <div>
 
-                                    <SectionHeader
-                                        icon={Globe}
-                                        title="Online Presence"
-                                        description="Help students learn more about you"
+                                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                                        Organization Description
+                                    </label>
+
+                                    <textarea
+                                        name="description"
+                                        value={
+                                            formData.description
+                                        }
+                                        onChange={
+                                            handleChange
+                                        }
+                                        placeholder="Tell students about your organization..."
+                                        rows={5}
+                                        className="w-full px-4 py-3 border border-slate-300 rounded-xl outline-none resize-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                                     />
 
-                                    <div className="mt-5 grid grid-cols-1 gap-5 sm:grid-cols-2">
+                                </div>
 
-                                        <InputField
-                                            label="Website"
-                                            name="website"
+                            </div>
+
+                        </div>
+
+                        {/* =================================================
+                            ONLINE PRESENCE
+                        ================================================= */}
+
+                        <div>
+
+                            <h3 className="text-lg font-bold text-slate-900 mb-5">
+                                Online Presence
+                            </h3>
+
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
+
+                                {/* WEBSITE */}
+
+                                <div>
+
+                                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                                        Website
+                                    </label>
+
+                                    <div className="relative">
+
+                                        <Globe
+                                            size={18}
+                                            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                                        />
+
+                                        <input
                                             type="url"
+                                            name="website"
                                             value={
                                                 formData.website
                                             }
@@ -551,13 +629,31 @@ export default function StakeholderProfile() {
                                                 handleChange
                                             }
                                             placeholder="https://example.com"
-                                            icon={Globe}
+                                            className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                                         />
 
-                                        <InputField
-                                            label="LinkedIn"
-                                            name="linkedin"
+                                    </div>
+
+                                </div>
+
+                                {/* LINKEDIN */}
+
+                                <div>
+
+                                    <label className="block text-sm font-medium text-slate-700 mb-2">
+                                        LinkedIn
+                                    </label>
+
+                                    <div className="relative">
+
+                                        <Globe
+                                            size={18}
+                                            className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400"
+                                        />
+
+                                        <input
                                             type="url"
+                                            name="linkedin"
                                             value={
                                                 formData.linkedin
                                             }
@@ -565,210 +661,66 @@ export default function StakeholderProfile() {
                                                 handleChange
                                             }
                                             placeholder="https://linkedin.com/company/..."
-                                            icon={Linkedin}
+                                            className="w-full pl-10 pr-4 py-3 border border-slate-300 rounded-xl outline-none focus:ring-2 focus:ring-teal-500 focus:border-teal-500"
                                         />
 
                                     </div>
 
                                 </div>
 
-
-                                {/* SAVE */}
-
-                                <div className="mt-8 flex flex-col-reverse gap-3 border-t border-slate-100 pt-6 sm:flex-row sm:justify-end">
-
-                                    <button
-                                        type="button"
-                                        onClick={() =>
-                                            navigate(
-                                                "/stakeholder-dashboard"
-                                            )
-                                        }
-                                        className="rounded-xl border border-slate-200 px-5 py-3 text-sm font-bold text-slate-600 transition hover:bg-slate-50"
-                                    >
-                                        Cancel
-                                    </button>
-
-                                    <button
-                                        type="submit"
-                                        disabled={loading}
-                                        className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#14B8A6] px-6 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-teal-700 disabled:cursor-not-allowed disabled:opacity-60"
-                                    >
-                                        <Save size={17} />
-
-                                        {loading
-                                            ? "Saving..."
-                                            : "Save Profile"}
-                                    </button>
-
-                                </div>
-
                             </div>
 
-                        </section>
+                        </div>
 
-                    </div>
+                        {/* =================================================
+                            ACTIONS
+                        ================================================= */}
 
-                </form>
+                        <div className="flex flex-col sm:flex-row justify-end gap-3 pt-4 border-t border-slate-200">
 
-            </main>
+                            <button
+                                type="button"
+                                onClick={() =>
+                                    navigate(
+                                        "/stakeholder-dashboard"
+                                    )
+                                }
+                                className="px-6 py-3 rounded-xl border border-slate-300 text-slate-700 font-medium hover:bg-slate-50 transition"
+                            >
+                                Cancel
+                            </button>
 
-        </div>
-    );
-}
+                            <button
+                                type="submit"
+                                disabled={saving}
+                                className="flex items-center justify-center gap-2 px-6 py-3 rounded-xl bg-teal-600 text-white font-semibold hover:bg-teal-700 transition disabled:opacity-60 disabled:cursor-not-allowed"
+                            >
+                                {saving ? (
+                                    <>
+                                        <Loader2
+                                            size={18}
+                                            className="animate-spin"
+                                        />
+                                        Saving...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Save size={18} />
+                                        Save Profile
+                                    </>
+                                )}
+                            </button>
 
+                        </div>
 
-/* =========================================================
-   SECTION HEADER
-========================================================= */
+                    </form>
 
-function SectionHeader({
-    icon: Icon,
-    title,
-    description,
-}) {
-    return (
-        <div className="flex items-center gap-3">
-
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-teal-50">
-
-                <Icon
-                    size={19}
-                    className="text-[#14B8A6]"
-                />
-
-            </div>
-
-            <div>
-
-                <h2 className="text-lg font-black text-[#1E1B4B]">
-                    {title}
-                </h2>
-
-                <p className="text-xs text-slate-500">
-                    {description}
-                </p>
-
-            </div>
-
-        </div>
-    );
-}
-
-
-/* =========================================================
-   INPUT FIELD
-========================================================= */
-
-function InputField({
-    label,
-    name,
-    type = "text",
-    value,
-    onChange,
-    placeholder,
-    icon: Icon,
-}) {
-    return (
-        <div>
-
-            <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-slate-500">
-                {label}
-            </label>
-
-            <div className="relative">
-
-                {Icon && (
-                    <Icon
-                        size={17}
-                        className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400"
-                    />
-                )}
-
-                <input
-                    type={type}
-                    name={name}
-                    value={value}
-                    onChange={onChange}
-                    placeholder={placeholder}
-                    className="w-full rounded-xl border border-slate-200 bg-slate-50 py-3 pl-10 pr-4 text-sm font-medium text-[#1E1B4B] outline-none transition placeholder:text-slate-400 focus:border-[#14B8A6] focus:bg-white focus:ring-4 focus:ring-teal-50"
-                />
+                </div>
 
             </div>
 
         </div>
     );
-}
+};
 
-
-/* =========================================================
-   TEXTAREA
-========================================================= */
-
-function TextAreaField({
-    label,
-    name,
-    value,
-    onChange,
-    placeholder,
-    icon: Icon,
-}) {
-    return (
-        <div>
-
-            <label className="mb-2 block text-xs font-bold uppercase tracking-wide text-slate-500">
-                {label}
-            </label>
-
-            <div className="relative">
-
-                {Icon && (
-                    <Icon
-                        size={17}
-                        className="absolute left-3.5 top-3.5 text-slate-400"
-                    />
-                )}
-
-                <textarea
-                    name={name}
-                    value={value}
-                    onChange={onChange}
-                    placeholder={placeholder}
-                    rows={5}
-                    className="w-full resize-none rounded-xl border border-slate-200 bg-slate-50 py-3 pl-10 pr-4 text-sm font-medium leading-6 text-[#1E1B4B] outline-none transition placeholder:text-slate-400 focus:border-[#14B8A6] focus:bg-white focus:ring-4 focus:ring-teal-50"
-                />
-
-            </div>
-
-        </div>
-    );
-}
-
-
-/* =========================================================
-   PROFILE INFO
-========================================================= */
-
-function ProfileInfo({
-    icon: Icon,
-    value,
-}) {
-    return (
-        <div className="flex items-center gap-3 rounded-xl bg-slate-50 p-3">
-
-            <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-white">
-
-                <Icon
-                    size={15}
-                    className="text-[#14B8A6]"
-                />
-
-            </div>
-
-            <p className="min-w-0 truncate text-xs font-semibold text-slate-600">
-                {value}
-            </p>
-
-        </div>
-    );
-}
+export default StakeholderProfile;

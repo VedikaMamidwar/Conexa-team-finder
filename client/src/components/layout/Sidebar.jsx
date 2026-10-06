@@ -1,5 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from "../../context/AuthContext";
 
 import {
     LayoutDashboard,
@@ -14,13 +15,19 @@ import {
     ChevronRight,
     MessageCircle,
     CalendarDays,
+    Building2,
+    Lightbulb,
+    ClipboardList,
 } from "lucide-react";
+
+// =====================================================
+// MAIN MENU
+// =====================================================
 
 const mainMenu = [
     {
         title: "Dashboard",
         icon: LayoutDashboard,
-        path: "/dashboard",
     },
     {
         title: "Find Teammates",
@@ -50,7 +57,11 @@ const mainMenu = [
     },
 ];
 
-const workspaceMenu = [
+// =====================================================
+// STUDENT WORKSPACE MENU
+// =====================================================
+
+const studentWorkspaceMenu = [
     {
         title: "My Projects",
         icon: FolderKanban,
@@ -73,25 +84,110 @@ const workspaceMenu = [
         icon: BarChart3,
         path: "/analytics",
     },
+    {
+        title: "Real-World Problems",
+        icon: Lightbulb,
+        path: "/real-world-problems",
+        badge: "NEW",
+    },
 ];
+
+// =====================================================
+// STAKEHOLDER WORKSPACE MENU
+// =====================================================
+
+const stakeholderWorkspaceMenu = [
+    {
+        title: "My Problems",
+        icon: ClipboardList,
+        path: "/stakeholder/problems",
+    },
+    {
+        title: "Student Responses",
+        icon: UserCheck,
+        path: "/stakeholder/problems",
+    },
+    {
+        title: "Analytics",
+        icon: BarChart3,
+        path: "/analytics",
+    },
+];
+
+// =====================================================
+// SIDEBAR
+// =====================================================
 
 export default function Sidebar({
     sidebarOpen,
     setSidebarOpen,
 }) {
     const location = useLocation();
+    const { user } = useAuth();
+
+    // =====================================================
+    // CHECK USER TYPE
+    // =====================================================
+
+    const isStakeholder =
+        user?.accountType === "stakeholder" ||
+        user?.role === "stakeholder";
+
+    const isStudent = !isStakeholder;
+
+    // =====================================================
+    // ROLE-BASED DASHBOARD
+    // =====================================================
+
+    const dashboardPath = isStakeholder
+        ? "/stakeholder-dashboard"
+        : "/dashboard";
+
+    // =====================================================
+    // ROLE-BASED WORKSPACE
+    // =====================================================
+
+    const workspaceMenu = isStakeholder
+        ? stakeholderWorkspaceMenu
+        : studentWorkspaceMenu;
+
+    // =====================================================
+    // ACTIVE ROUTE
+    // =====================================================
 
     const isActive = (path) => {
-        if (path === "/dashboard") {
-            return location.pathname === "/dashboard";
+        if (!path) return false;
+
+        if (
+            path === "/dashboard" ||
+            path === "/stakeholder-dashboard"
+        ) {
+            return location.pathname === path;
         }
 
         return location.pathname.startsWith(path);
     };
 
+    // =====================================================
+    // MAIN MENU WITH ROLE DASHBOARD
+    // =====================================================
+
+    const roleBasedMainMenu = mainMenu.map((item) => {
+        if (item.title === "Dashboard") {
+            return {
+                ...item,
+                path: dashboardPath,
+            };
+        }
+
+        return item;
+    });
+
     return (
         <>
-            {/* ================= MOBILE OVERLAY ================= */}
+            {/* =====================================================
+                MOBILE OVERLAY
+            ===================================================== */}
 
             <AnimatePresence>
                 {sidebarOpen && (
@@ -113,7 +209,9 @@ export default function Sidebar({
                 )}
             </AnimatePresence>
 
-            {/* ================= SIDEBAR ================= */}
+            {/* =====================================================
+                SIDEBAR
+            ===================================================== */}
 
             <motion.aside
                 initial={false}
@@ -143,14 +241,16 @@ export default function Sidebar({
 
                     max-lg:w-[264px]
                     max-lg:transition-transform
+
                     ${sidebarOpen
                         ? "max-lg:translate-x-0"
                         : "max-lg:-translate-x-full"
                     }
                 `}
             >
-
-                {/* ================= LOGO HEADER ================= */}
+                {/* =====================================================
+                    LOGO HEADER
+                ===================================================== */}
 
                 <div
                     className={`
@@ -161,23 +261,28 @@ export default function Sidebar({
                         items-center
                         border-b
                         border-slate-100
+
                         ${sidebarOpen
                             ? "px-4"
                             : "justify-center px-2"
                         }
                     `}
                 >
+                    {/* LOGO LINK */}
 
                     <Link
-                        to="/dashboard"
+                        to={dashboardPath}
                         className={`
                             flex
                             items-center
                             min-w-0
-                            ${sidebarOpen ? "gap-3" : ""}
+
+                            ${sidebarOpen
+                                ? "gap-3"
+                                : ""
+                            }
                         `}
                     >
-
                         {/* LOGO */}
 
                         <motion.div
@@ -281,10 +386,11 @@ export default function Sidebar({
                                 </motion.div>
                             )}
                         </AnimatePresence>
-
                     </Link>
 
-                    {/* COLLAPSE BUTTON */}
+                    {/* =====================================================
+                        COLLAPSE BUTTON
+                    ===================================================== */}
 
                     <AnimatePresence initial={false}>
                         {sidebarOpen && (
@@ -326,7 +432,9 @@ export default function Sidebar({
                         )}
                     </AnimatePresence>
 
-                    {/* EXPAND BUTTON */}
+                    {/* =====================================================
+                        EXPAND BUTTON
+                    ===================================================== */}
 
                     {!sidebarOpen && (
                         <motion.button
@@ -366,10 +474,11 @@ export default function Sidebar({
                             <ChevronRight size={15} />
                         </motion.button>
                     )}
-
                 </div>
 
-                {/* ================= NAVIGATION ================= */}
+                {/* =====================================================
+                    NAVIGATION
+                ===================================================== */}
 
                 <nav
                     className="
@@ -383,8 +492,9 @@ export default function Sidebar({
                         scrollbar-track-transparent
                     "
                 >
-
-                    {/* MAIN */}
+                    {/* =====================================================
+                        MAIN
+                    ===================================================== */}
 
                     <SectionTitle
                         title="Main"
@@ -392,7 +502,7 @@ export default function Sidebar({
                     />
 
                     <div className="space-y-1.5">
-                        {mainMenu.map((item) => (
+                        {roleBasedMainMenu.map((item) => (
                             <SidebarItem
                                 key={item.title}
                                 item={item}
@@ -402,7 +512,9 @@ export default function Sidebar({
                         ))}
                     </div>
 
-                    {/* DIVIDER */}
+                    {/* =====================================================
+                        DIVIDER
+                    ===================================================== */}
 
                     <div
                         className="
@@ -413,7 +525,9 @@ export default function Sidebar({
                         "
                     />
 
-                    {/* WORKSPACE */}
+                    {/* =====================================================
+                        WORKSPACE
+                    ===================================================== */}
 
                     <SectionTitle
                         title="Workspace"
@@ -423,33 +537,40 @@ export default function Sidebar({
                     <div className="space-y-1.5">
                         {workspaceMenu.map((item) => (
                             <SidebarItem
-                                key={item.title}
+                                key={`${isStakeholder ? "stakeholder" : "student"}-${item.title}`}
                                 item={item}
                                 active={isActive(item.path)}
                                 sidebarOpen={sidebarOpen}
                             />
                         ))}
                     </div>
-
                 </nav>
 
-                {/* ================= BOTTOM CARD ================= */}
+                {/* =====================================================
+                    BOTTOM ROLE CARD
+                ===================================================== */}
 
                 <div
                     className={`
                         shrink-0
+
                         ${sidebarOpen
                             ? "px-3 pb-4"
                             : "px-2 pb-4"
                         }
                     `}
                 >
-
-                    <AnimatePresence initial={false} mode="wait">
-
+                    <AnimatePresence
+                        initial={false}
+                        mode="wait"
+                    >
                         {sidebarOpen ? (
                             <motion.div
-                                key="open-card"
+                                key={
+                                    isStakeholder
+                                        ? "stakeholder-open-card"
+                                        : "student-open-card"
+                                }
                                 initial={{
                                     opacity: 0,
                                     y: 10,
@@ -478,8 +599,7 @@ export default function Sidebar({
                                     shadow-lg
                                 "
                             >
-
-                                {/* Decorative circle */}
+                                {/* Decorative Circle */}
 
                                 <div
                                     className="
@@ -492,6 +612,8 @@ export default function Sidebar({
                                         bg-white/5
                                     "
                                 />
+
+                                {/* Icon */}
 
                                 <div
                                     className="
@@ -508,12 +630,22 @@ export default function Sidebar({
                                         mb-3
                                     "
                                 >
-                                    <Sparkles size={17} />
+                                    {isStakeholder ? (
+                                        <Building2 size={17} />
+                                    ) : (
+                                        <Lightbulb size={17} />
+                                    )}
                                 </div>
 
+                                {/* TITLE */}
+
                                 <p className="relative text-sm font-bold">
-                                    Find your team
+                                    {isStakeholder
+                                        ? "Stakeholder Workspace"
+                                        : "Real-World Problems"}
                                 </p>
+
+                                {/* DESCRIPTION */}
 
                                 <p
                                     className="
@@ -524,12 +656,19 @@ export default function Sidebar({
                                         text-white/60
                                     "
                                 >
-                                    Connect with students who
-                                    match your skills.
+                                    {isStakeholder
+                                        ? "Create problems and connect with talented students."
+                                        : "Explore real-world challenges posted by stakeholders."}
                                 </p>
 
+                                {/* BUTTON */}
+
                                 <Link
-                                    to="/find-teammates"
+                                    to={
+                                        isStakeholder
+                                            ? "/stakeholder-dashboard"
+                                            : "/real-world-problems"
+                                    }
                                     className="
                                         relative
                                         inline-flex
@@ -547,16 +686,22 @@ export default function Sidebar({
                                         transition-all
                                     "
                                 >
-                                    Explore
+                                    {isStakeholder
+                                        ? "Open Workspace"
+                                        : "Explore Problems"}
+
                                     <span className="ml-1">
                                         →
                                     </span>
                                 </Link>
-
                             </motion.div>
                         ) : (
                             <motion.div
-                                key="closed-card"
+                                key={
+                                    isStakeholder
+                                        ? "stakeholder-closed-card"
+                                        : "student-closed-card"
+                                }
                                 initial={{
                                     opacity: 0,
                                     scale: 0.9,
@@ -571,8 +716,16 @@ export default function Sidebar({
                                 "
                             >
                                 <Link
-                                    to="/find-teammates"
-                                    title="Find your team"
+                                    to={
+                                        isStakeholder
+                                            ? "/stakeholder-dashboard"
+                                            : "/real-world-problems"
+                                    }
+                                    title={
+                                        isStakeholder
+                                            ? "Stakeholder Workspace"
+                                            : "Real-World Problems"
+                                    }
                                     className="
                                         flex
                                         w-12
@@ -589,20 +742,20 @@ export default function Sidebar({
                                         transition-all
                                     "
                                 >
-                                    <Sparkles size={19} />
+                                    {isStakeholder ? (
+                                        <Building2 size={19} />
+                                    ) : (
+                                        <Lightbulb size={19} />
+                                    )}
                                 </Link>
                             </motion.div>
                         )}
-
                     </AnimatePresence>
-
                 </div>
-
             </motion.aside>
         </>
     );
 }
-
 
 /* =====================================================
    SECTION TITLE
@@ -651,7 +804,6 @@ function SectionTitle({
     );
 }
 
-
 /* =====================================================
    SIDEBAR ITEM
 ===================================================== */
@@ -666,10 +818,13 @@ function SidebarItem({
     return (
         <Link
             to={item.path}
-            title={!sidebarOpen ? item.title : undefined}
+            title={
+                !sidebarOpen
+                    ? item.title
+                    : undefined
+            }
             className="block"
         >
-
             <motion.div
                 whileHover={{
                     x: sidebarOpen ? 3 : 0,
@@ -702,8 +857,9 @@ function SidebarItem({
                     }
                 `}
             >
-
-                {/* ACTIVE LINE */}
+                {/* =====================================================
+                    ACTIVE LINE
+                ===================================================== */}
 
                 <motion.span
                     initial={false}
@@ -728,25 +884,29 @@ function SidebarItem({
                     "
                 />
 
-                {/* LEFT */}
+                {/* =====================================================
+                    LEFT
+                ===================================================== */}
 
                 <div
                     className={`
                         flex
                         items-center
                         min-w-0
+
                         ${sidebarOpen
                             ? "gap-3"
                             : "justify-center"
                         }
                     `}
                 >
-
-                    {/* ICON BOX */}
+                    {/* ICON */}
 
                     <motion.div
                         animate={{
-                            scale: active ? 1 : 0.96,
+                            scale: active
+                                ? 1
+                                : 0.96,
                         }}
                         className={`
                             relative
@@ -767,8 +927,6 @@ function SidebarItem({
                         `}
                     >
                         <Icon size={18} />
-
-                        {/* Active dot */}
 
                         {active && (
                             <span
@@ -822,50 +980,52 @@ function SidebarItem({
                             </motion.span>
                         )}
                     </AnimatePresence>
-
                 </div>
 
-                {/* BADGE */}
+                {/* =====================================================
+                    BADGE
+                ===================================================== */}
 
                 <AnimatePresence initial={false}>
-                    {sidebarOpen && item.badge && (
-                        <motion.span
-                            initial={{
-                                opacity: 0,
-                                scale: 0.8,
-                            }}
-                            animate={{
-                                opacity: 1,
-                                scale: 1,
-                            }}
-                            exit={{
-                                opacity: 0,
-                                scale: 0.8,
-                            }}
-                            className={`
-                                shrink-0
-                                text-[8px]
-                                font-black
-                                tracking-wide
-                                px-2
-                                py-1
-                                rounded-full
+                    {sidebarOpen &&
+                        item.badge && (
+                            <motion.span
+                                initial={{
+                                    opacity: 0,
+                                    scale: 0.8,
+                                }}
+                                animate={{
+                                    opacity: 1,
+                                    scale: 1,
+                                }}
+                                exit={{
+                                    opacity: 0,
+                                    scale: 0.8,
+                                }}
+                                className={`
+                                    shrink-0
+                                    text-[8px]
+                                    font-black
+                                    tracking-wide
+                                    px-2
+                                    py-1
+                                    rounded-full
 
-                                ${item.badge === "LIVE"
-                                    ? "bg-[#14B8A6]/10 text-[#14B8A6]"
-                                    : item.badge === "NEW"
-                                        ? "bg-[#1E1B4B]/10 text-[#1E1B4B]"
-                                        : "bg-slate-100 text-slate-500"
-                                }
-                            `}
-                        >
-                            {item.badge}
-                        </motion.span>
-                    )}
+                                    ${item.badge ===
+                                        "LIVE"
+                                        ? "bg-[#14B8A6]/10 text-[#14B8A6]"
+                                        : item.badge ===
+                                            "NEW"
+                                            ? "bg-[#1E1B4B]/10 text-[#1E1B4B]"
+                                            : "bg-slate-100 text-slate-500"
+                                    }
+                                `}
+                            >
+                                {item.badge}
+                            </motion.span>
+                        )}
                 </AnimatePresence>
-
             </motion.div>
-
         </Link>
     );
 }

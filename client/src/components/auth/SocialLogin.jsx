@@ -1,12 +1,17 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { FcGoogle } from "react-icons/fc";
-import { FaGithub } from "react-icons/fa";
 import { useNavigate } from "react-router-dom";
+
+import { useAuth } from "../../context/AuthContext";
 
 const API_URL = "http://localhost:5000/api";
 
 export default function SocialLogin() {
     const navigate = useNavigate();
+    const { setUser } = useAuth();
+
+    const googleButtonRef = useRef(null);
+    const googleInitialized = useRef(false);
 
     const [googleReady, setGoogleReady] = useState(false);
     const [loading, setLoading] = useState(false);
@@ -19,135 +24,224 @@ export default function SocialLogin() {
             console.error(
                 "VITE_GOOGLE_CLIENT_ID is missing from .env"
             );
-            return;
-        }
 
-        // Google Identity Services script
-        if (window.google) {
-            setGoogleReady(true);
-            return;
-        }
-
-        const script = document.createElement("script");
-
-        script.src = "https://accounts.google.com/gsi/client";
-        script.async = true;
-        script.defer = true;
-
-        script.onload = () => {
-            setGoogleReady(true);
-        };
-
-        script.onerror = () => {
-            setError("Failed to load Google Login.");
-        };
-
-        document.body.appendChild(script);
-
-        return () => {
-            if (document.body.contains(script)) {
-                document.body.removeChild(script);
-            }
-        };
-    }, []);
-
-    const handleGoogleLogin = () => {
-        setError("");
-
-        const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
-
-        if (!clientId) {
             setError("Google Client ID is missing.");
             return;
         }
 
-        if (!googleReady || !window.google) {
-            setError("Google Login is still loading. Try again.");
+        const handleGoogleResponse = async (response) => {
+            try {
+                setLoading(true);
+                setError("");
+
+                if (!response?.credential) {
+                    throw new Error(
+                        "Google did not return a credential."
+                    );
+                }
+
+                const result = await fetch(
+                    `${API_URL}/auth/google`,
+                    {
+                        method: "POST",
+                        headers: {
+                            "Content-Type": "application/json",
+                        },
+                        body: JSON.stringify({
+                            credential: response.credential,
+                        }),
+                    }
+                );
+
+                const data = await result.json();
+
+                if (!result.ok) {
+                    throw new Error(
+                        data.message ||
+                        "Google login failed."
+                    );
+                }
+
+                if (!data.token || !data.user) {
+                    throw new Error(
+                        "Invalid response from server."
+                    );
+                }
+
+                // =====================================================
+                // SAVE JWT
+                // =====================================================
+
+                localStorage.setItem(
+                    "token",
+                    data.token
+                );
+
+                // =====================================================
+                // SAVE USER
+                // =====================================================
+
+                localStorage.setItem(
+                    "user",
+                    JSON.stringify(data.user)
+                );
+
+                // =====================================================
+                // UPDATE AUTH CONTEXT
+                // =====================================================
+
+                setUser(data.user);
+
+                // =====================================================
+                // ACCOUNT TYPE BASED REDIRECT
+                // =====================================================
+
+                if (
+                    data.user.accountType ===
+                    "stakeholder"
+                ) {
+                    navigate(
+                        "/stakeholder-dashboard",
+                        {
+                            replace: true,
+                        }
+                    );
+                } else {
+                    navigate(
+                        "/dashboard",
+                        {
+                            replace: true,
+                        }
+                    );
+                }
+            } catch (err) {
+                console.error(
+                    "Google login error:",
+                    err
+                );
+
+                setError(
+                    err.message ||
+                    "Google login failed."
+                );
+            } finally {
+                setLoading(false);
+            }
+        };
+
+        const initializeGoogle = () => {
+            if (
+                !window.google ||
+                !window.google.accounts ||
+                !window.google.accounts.id
+            ) {
+                return;
+            }
+
+            // Prevent multiple initialize calls
+            if (googleInitialized.current) {
+                return;
+            }
+
+            googleInitialized.current = true;
+
+            window.google.accounts.id.initialize({
+                client_id: clientId,
+                callback: handleGoogleResponse,
+            });
+
+            setGoogleReady(true);
+
+            // Render Google's official button
+            if (googleButtonRef.current) {
+                googleButtonRef.current.innerHTML = "";
+
+                window.google.accounts.id.renderButton(
+                    googleButtonRef.current,
+                    {
+                        theme: "outline",
+                        size: "large",
+                        width: 350,
+                        text: "continue_with",
+                        shape: "rectangular",
+                    }
+                );
+            }
+        };
+
+        // =====================================================
+        // GOOGLE ALREADY LOADED
+        // =====================================================
+
+        if (window.google?.accounts?.id) {
+            initializeGoogle();
             return;
         }
 
-        setLoading(true);
+        // =====================================================
+        // CHECK EXISTING GOOGLE SCRIPT
+        // =====================================================
 
-        window.google.accounts.id.initialize({
-            client_id: clientId,
+        const existingScript =
+            document.querySelector(
+                'script[src="https://accounts.google.com/gsi/client"]'
+            );
 
-            callback: async (response) => {
-                try {
-                    const googleCredential = response.credential;
+        if (existingScript) {
+            existingScript.addEventListener(
+                "load",
+                initializeGoogle
+            );
 
-                    const result = await fetch(
-                        `${API_URL}/auth/google`,
-                        {
-                            method: "POST",
+            return () => {
+                existingScript.removeEventListener(
+                    "load",
+                    initializeGoogle
+                );
+            };
+        }
 
-                            headers: {
-                                "Content-Type": "application/json",
-                            },
+        // =====================================================
+        // LOAD GOOGLE IDENTITY SERVICES
+        // =====================================================
 
-                            body: JSON.stringify({
-                                credential: googleCredential,
-                            }),
-                        }
-                    );
+        const script = document.createElement("script");
 
-                    const data = await result.json();
+        script.src =
+            "https://accounts.google.com/gsi/client";
 
-                    if (!result.ok) {
-                        throw new Error(
-                            data.message || "Google login failed."
-                        );
-                    }
+        script.async = true;
+        script.defer = true;
 
-                    // Store JWT
-                    localStorage.setItem(
-                        "token",
-                        data.token
-                    );
+        script.onload = initializeGoogle;
 
-                    // Store user
-                    if (data.user) {
-                        localStorage.setItem(
-                            "user",
-                            JSON.stringify(data.user)
-                        );
-                    }
+        script.onerror = () => {
+            console.error(
+                "Failed to load Google Identity Services."
+            );
 
-                    // Go to dashboard
-                    navigate("/dashboard");
+            setError(
+                "Failed to load Google Login."
+            );
+        };
 
-                } catch (err) {
-                    console.error(
-                        "Google login error:",
-                        err
-                    );
+        document.head.appendChild(script);
 
-                    setError(
-                        err.message ||
-                        "Google login failed."
-                    );
-                } finally {
-                    setLoading(false);
-                }
-            },
-        });
-
-        // Open Google popup
-        window.google.accounts.id.prompt();
-    };
-
-    const handleGithubLogin = () => {
-        alert("GitHub login will be added next.");
-    };
+        // Do not remove the script on unmount.
+        // Login and Register both use SocialLogin.
+    }, [navigate, setUser]);
 
     return (
         <div className="w-full">
 
-            {/* Divider */}
+            {/* =====================================================
+                DIVIDER
+            ===================================================== */}
 
             <div className="relative my-8">
 
                 <div className="absolute inset-0 flex items-center">
-                    <div className="w-full border-t border-slate-300"></div>
+                    <div className="w-full border-t border-slate-300" />
                 </div>
 
                 <div className="relative flex justify-center">
@@ -158,8 +252,9 @@ export default function SocialLogin() {
 
             </div>
 
-
-            {/* Error */}
+            {/* =====================================================
+                ERROR
+            ===================================================== */}
 
             {error && (
                 <div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600">
@@ -167,42 +262,75 @@ export default function SocialLogin() {
                 </div>
             )}
 
+            {/* =====================================================
+                GOOGLE LOGIN ONLY
+            ===================================================== */}
 
-            {/* Buttons */}
+            <div className="flex justify-center">
 
-            <div className="grid grid-cols-2 gap-4">
+                <div className="relative w-full max-w-[350px] h-14 overflow-hidden rounded-xl">
 
-                {/* Google */}
+                    {/* =================================================
+                        OUR UI
+                    ================================================= */}
 
-                <button
-                    type="button"
-                    onClick={handleGoogleLogin}
-                    disabled={loading}
-                    className="flex items-center justify-center gap-3 h-14 rounded-xl border border-slate-300 bg-white hover:border-[#14B8A6] hover:shadow-md transition-all duration-300 disabled:cursor-not-allowed disabled:opacity-60"
-                >
-                    <FcGoogle size={24} />
+                    <button
+                        type="button"
+                        disabled={
+                            loading ||
+                            !googleReady
+                        }
+                        className="
+                            absolute
+                            inset-0
+                            z-10
+                            flex
+                            items-center
+                            justify-center
+                            gap-3
+                            h-14
+                            w-full
+                            rounded-xl
+                            border
+                            border-slate-300
+                            bg-white
+                            hover:border-[#14B8A6]
+                            hover:shadow-md
+                            transition-all
+                            duration-300
+                            disabled:cursor-not-allowed
+                            disabled:opacity-60
+                            pointer-events-none
+                        "
+                    >
 
-                    <span className="font-semibold text-slate-700">
-                        {loading ? "Connecting..." : "Google"}
-                    </span>
+                        <FcGoogle size={24} />
 
-                </button>
+                        <span className="font-semibold text-slate-700">
+                            {loading
+                                ? "Connecting..."
+                                : "Continue with Google"}
+                        </span>
 
+                    </button>
 
-                {/* GitHub */}
+                    {/* =================================================
+                        ACTUAL GOOGLE BUTTON
+                    ================================================= */}
 
-                <button
-                    type="button"
-                    onClick={handleGithubLogin}
-                    className="flex items-center justify-center gap-3 h-14 rounded-xl border border-slate-300 bg-white hover:border-[#1E1B4B] hover:bg-[#1E1B4B] hover:text-white transition-all duration-300"
-                >
-                    <FaGithub size={22} />
+                    <div
+                        ref={googleButtonRef}
+                        className="
+                            absolute
+                            inset-0
+                            z-20
+                            opacity-0
+                            w-full
+                            h-full
+                        "
+                    />
 
-                    <span className="font-semibold">
-                        GitHub
-                    </span>
-
-                </button>
+                </div>
 
             </div>
 

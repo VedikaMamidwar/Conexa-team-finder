@@ -1,44 +1,101 @@
 import { useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { Mail, ArrowLeft } from "lucide-react";
 
 import AuthLayout from "../../components/auth/AuthLayout";
 import LeftBanner from "../../components/auth/LeftBanner";
 import AuthInput from "../../components/auth/AuthInput";
 
+import {
+    forgotPassword,
+} from "../../services/authService";
+
 export default function ForgotPassword() {
+    const navigate = useNavigate();
+
     const [email, setEmail] = useState("");
     const [sent, setSent] = useState(false);
     const [error, setError] = useState("");
+    const [loading, setLoading] = useState(false);
 
-    const handleSubmit = (e) => {
+    const handleSubmit = async (e) => {
         e.preventDefault();
 
         if (!email.trim()) {
-            setError("Email is required.");
+            setError(
+                "Email is required."
+            );
             return;
         }
 
-        if (!/\S+@\S+\.\S+/.test(email)) {
-            setError("Enter a valid email.");
+        if (
+            !/\S+@\S+\.\S+/.test(
+                email
+            )
+        ) {
+            setError(
+                "Enter a valid email."
+            );
             return;
         }
 
-        setError("");
+        try {
+            setLoading(true);
+            setError("");
 
-        // Backend API Later
-        console.log(email);
+            const normalizedEmail =
+                email.trim().toLowerCase();
 
-        setSent(true);
+            const data =
+                await forgotPassword(
+                    normalizedEmail
+                );
+
+            if (!data.success) {
+                throw new Error(
+                    data.message ||
+                    "Unable to send OTP."
+                );
+            }
+
+            // Save email for Verify OTP page
+            sessionStorage.setItem(
+                "resetEmail",
+                normalizedEmail
+            );
+
+            setEmail(
+                normalizedEmail
+            );
+
+            setSent(true);
+        } catch (err) {
+            console.error(
+                "Forgot password error:",
+                err
+            );
+
+            setError(
+                err.response?.data
+                    ?.message ||
+                err.message ||
+                "Unable to send OTP."
+            );
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
-        <AuthLayout left={<LeftBanner />}>
+        <AuthLayout
+            left={<LeftBanner />}
+        >
 
             <div className="bg-white rounded-3xl shadow-xl border border-slate-200 p-8">
 
                 {!sent ? (
                     <>
+
                         <div className="text-center">
 
                             <h2 className="text-3xl font-black text-[#1E1B4B]">
@@ -63,19 +120,27 @@ export default function ForgotPassword() {
                                 icon={Mail}
                                 placeholder="you@example.com"
                                 value={email}
-                                onChange={(e) => setEmail(e.target.value)}
+                                onChange={(e) =>
+                                    setEmail(
+                                        e.target.value
+                                    )
+                                }
                                 error={error}
                                 required
                             />
 
                             <button
                                 type="submit"
-                                className="w-full h-14 rounded-xl bg-[#1E1B4B] text-white font-semibold hover:bg-[#312E81] transition"
+                                disabled={loading}
+                                className="w-full h-14 rounded-xl bg-[#1E1B4B] text-white font-semibold hover:bg-[#312E81] transition disabled:opacity-60 disabled:cursor-not-allowed"
                             >
-                                Send OTP
+                                {loading
+                                    ? "Sending OTP..."
+                                    : "Send OTP"}
                             </button>
 
                         </form>
+
                     </>
                 ) : (
                     <div className="text-center">
@@ -105,12 +170,16 @@ export default function ForgotPassword() {
 
                         </p>
 
-                        <Link
-                            to="/verify-otp"
+                        <button
+                            onClick={() =>
+                                navigate(
+                                    "/verify-otp"
+                                )
+                            }
                             className="mt-8 inline-flex justify-center items-center w-full h-14 rounded-xl bg-[#14B8A6] text-white font-semibold hover:bg-[#0F9E8F] transition"
                         >
                             Verify OTP
-                        </Link>
+                        </button>
 
                     </div>
                 )}
@@ -120,7 +189,9 @@ export default function ForgotPassword() {
                     className="mt-8 flex items-center justify-center gap-2 text-slate-600 hover:text-[#1E1B4B]"
                 >
 
-                    <ArrowLeft size={18} />
+                    <ArrowLeft
+                        size={18}
+                    />
 
                     Back to Login
 
