@@ -1,4 +1,5 @@
-﻿import { useMemo, useRef, useState } from "react";
+﻿
+import { useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   ArrowLeft,
@@ -21,46 +22,76 @@ import {
 
 /* =========================================================
    CONEXA COLOR SYSTEM
-=========================================================
+   ========================================================= */
 
-Primary Navy       #1E1B4B
-Secondary Indigo   #312E81
-Accent Teal        #14B8A6
-Accent Light       #2DD4BF
-White              #FFFFFF
-Light Background   #F8FAFC
-Main Text          #0F172A
-Secondary Text     #64748B
-Border             #E2E8F0
 
-========================================================= */
+const GitHubIcon = ({ size = 18, className = "" }) => (
+  <svg
+    width={size}
+    height={size}
+    viewBox="0 0 24 24"
+    fill="currentColor"
+    className={className}
+    aria-hidden="true"
+  >
+    <path d="M12 .5C5.73.5.75 5.48.75 11.75c0 4.97 3.22 9.2 7.69 10.69.56.1.77-.24.77-.54v-1.91c-3.13.68-3.79-1.5-3.79-1.5-.51-1.3-1.25-1.65-1.25-1.65-1.02-.7.08-.69.08-.69 1.13.08 1.72 1.16 1.72 1.16 1 1.72 2.63 1.22 3.27.93.1-.72.39-1.22.71-1.5-2.5-.28-5.13-1.25-5.13-5.56 0-1.23.44-2.23 1.16-3.02-.12-.28-.5-1.43.11-2.98 0 0 .95-.3 3.1 1.15a10.8 10.8 0 0 1 5.64 0c2.15-1.46 3.1-1.15 3.1-1.15.61 1.55.23 2.7.11 2.98.72.79 1.16 1.79 1.16 3.02 0 4.32-2.64 5.28-5.15 5.56.4.35.75 1.04.75 2.1v3.11c0 .3.2.65.78.54a11.26 11.26 0 0 0 7.68-10.69C23.25 5.48 18.27.5 12 .5Z" />
+  </svg>
+);
+const COLORS = {
+  navy: "#1E1B4B",
+  indigo: "#312E81",
+  teal: "#0F766E",
+  accent: "#14B8A6",
+  accentLight: "#CCFBF1",
+  background: "#F8FAFC",
+  white: "#FFFFFF",
+  text: "#0F172A",
+  muted: "#64748B",
+  lightMuted: "#94A3B8",
+  border: "#E2E8F0",
+  softBorder: "#CBD5E1",
+};
 
 const STORAGE_KEY = "conexa_projects";
 
+const PROJECT_TYPES = [
+  "All",
+  "Personal Project",
+  "Team Project",
+  "College Project",
+  "Hackathon Project",
+  "Open Source",
+];
+
+const STATUS_OPTIONS = ["All", "In Progress", "Completed", "On Hold"];
+
+const SORT_OPTIONS = [
+  { value: "newest", label: "Newest first" },
+  { value: "oldest", label: "Oldest first" },
+  { value: "progress", label: "Highest progress" },
+  { value: "name", label: "Name A–Z" },
+];
+
 /* =========================================================
    DEFAULT PROJECTS
-========================================================= */
+   ========================================================= */
 
 const DEFAULT_PROJECTS = [
   {
-    id: "wanderlust",
+    id: "wanderlust-default",
     name: "WanderLust",
     category: "Full Stack",
     status: "Completed",
-    year: 2026,
+    year: "2026",
     role: "Full Stack Developer",
     type: "Personal Project",
     progress: 100,
-
     shortDescription:
-      "A full-stack travel and accommodation platform for discovering, creating and managing stays.",
-
+      "A full-stack travel platform for discovering and sharing memorable destinations.",
     description:
-      "WanderLust is a full-stack travel and accommodation platform designed to provide users with a complete experience for discovering, creating, managing and reviewing accommodation listings. The application includes secure authentication, image uploads, interactive maps, reviews and ratings, CRUD operations and persistent MongoDB storage.",
-
+      "WanderLust is a full-stack travel platform where users can discover destinations, create listings, share experiences, and interact with travel content through a modern web interface.",
     contribution:
-      "Designed and implemented the complete full-stack application including frontend views, backend APIs, authentication, database integration, image uploads and CRUD functionality.",
-
+      "Designed and developed the full application including authentication, backend APIs, database integration, image uploads, responsive UI, and deployment.",
     stack: [
       "Node.js",
       "Express.js",
@@ -72,49 +103,35 @@ const DEFAULT_PROJECTS = [
       "Cloudinary",
       "Multer",
     ],
-
     features: [
       "User authentication",
-      "Accommodation listings",
-      "CRUD operations",
-      "Image uploads",
-      "Interactive maps",
-      "Reviews and ratings",
-      "MongoDB persistence",
+      "Create and manage listings",
+      "Image upload and cloud storage",
+      "Review and rating system",
       "Responsive interface",
-      "Session management",
+      "Protected routes",
     ],
-
     github: "https://github.com/Tenali04/Wanderlust",
     live: "https://wanderlust-l51x.onrender.com",
-    githubProfile: "https://github.com/Tenali04",
-
-    gradient:
-      "from-[#1E1B4B] via-[#312E81] to-[#14B8A6]",
-
-    image: null,
-    isCustom: false,
+    profile: "https://github.com/Tenali04",
+    gradient: "from-[#1E1B4B] via-[#312E81] to-[#0F766E]",
+    custom: false,
   },
-
   {
-    id: "conexa",
+    id: "conexa-default",
     name: "CONEXA",
     category: "Collaborative",
     status: "In Progress",
-    year: 2026,
+    year: "2026",
     role: "Frontend Developer",
     type: "Team Project",
     progress: 75,
-
     shortDescription:
-      "A student collaboration platform for discovering teammates, building teams and managing projects.",
-
+      "A student collaboration platform for finding teammates, building projects, and showcasing work.",
     description:
-      "CONEXA is a student-focused collaboration platform that helps students discover teammates based on skills and interests, build teams, manage projects and collaborate through a centralized dashboard. The platform brings student profiles, team management, project collaboration, requests, notifications and teammate discovery into one application.",
-
+      "CONEXA is a collaborative platform designed to help students discover compatible teammates, build project teams, manage projects, and showcase their technical work in one place.",
     contribution:
-      "Developed frontend pages including teammate discovery, team-building interfaces, project screens, responsive layouts, navigation and reusable UI components.",
-
+      "Worked on frontend development, teammate discovery, project showcase functionality, responsive interfaces, and integration of student-focused project features.",
     stack: [
       "React",
       "Vite",
@@ -123,38 +140,25 @@ const DEFAULT_PROJECTS = [
       "Express.js",
       "MongoDB",
     ],
-
     features: [
-      "Find teammates",
-      "Team Builder",
-      "My Team management",
+      "Find compatible teammates",
       "Student profiles",
-      "Project collaboration",
+      "Project showcase",
+      "Team collaboration",
+      "Project management",
       "Responsive dashboard",
-      "Notifications",
-      "Team requests",
-      "Skill-based discovery",
     ],
-
-    github:
-      "https://github.com/VedikaMamidwar/Conexa-team-finder.git",
-
+    github: "https://github.com/VedikaMamidwar/Conexa-team-finder.git",
     live: null,
-
-    githubProfile:
-      "https://github.com/Tenali04",
-
-    gradient:
-      "from-[#1E1B4B] via-[#312E81] to-[#14B8A6]",
-
-    image: null,
-    isCustom: false,
+    profile: "https://github.com/Tenali04",
+    gradient: "from-[#1E1B4B] via-[#312E81] to-[#0F766E]",
+    custom: false,
   },
 ];
 
 /* =========================================================
    TECHNOLOGY GROUPS
-========================================================= */
+   ========================================================= */
 
 const TECHNOLOGY_GROUPS = {
   "Programming Languages": [
@@ -168,7 +172,6 @@ const TECHNOLOGY_GROUPS = {
     "Go",
     "PHP",
   ],
-
   Frontend: [
     "React",
     "Next.js",
@@ -180,7 +183,6 @@ const TECHNOLOGY_GROUPS = {
     "Bootstrap",
     "EJS",
   ],
-
   Backend: [
     "Node.js",
     "Express.js",
@@ -189,7 +191,6 @@ const TECHNOLOGY_GROUPS = {
     "Spring Boot",
     "REST API",
   ],
-
   Database: [
     "MongoDB",
     "Mongoose",
@@ -199,7 +200,6 @@ const TECHNOLOGY_GROUPS = {
     "Redis",
     "SQLite",
   ],
-
   "Tools & Platforms": [
     "Git",
     "GitHub",
@@ -215,14 +215,14 @@ const TECHNOLOGY_GROUPS = {
 };
 
 /* =========================================================
-   EMPTY FORM
-========================================================= */
+   HELPERS
+   ========================================================= */
 
 const createEmptyForm = () => ({
   name: "",
-  category: "",
+  category: "Web Development",
   status: "In Progress",
-  year: new Date().getFullYear(),
+  year: new Date().getFullYear().toString(),
   role: "",
   type: "Personal Project",
   progress: 0,
@@ -233,652 +233,612 @@ const createEmptyForm = () => ({
   features: "",
   github: "",
   live: "",
-  image: null,
+  image: "",
 });
-
-/* =========================================================
-   READ LOCAL STORAGE
-========================================================= */
 
 const readStoredProjects = () => {
   try {
-    const stored = localStorage.getItem(STORAGE_KEY);
+    const saved = localStorage.getItem(STORAGE_KEY);
 
-    if (!stored) {
-      return [];
-    }
+    if (!saved) return [];
 
-    const parsed = JSON.parse(stored);
+    const parsed = JSON.parse(saved);
 
-    if (!Array.isArray(parsed)) {
-      return [];
-    }
+    if (!Array.isArray(parsed)) return [];
 
     return parsed.map((project) => ({
       ...project,
-      isCustom: true,
+      custom: true,
     }));
-  } catch {
+  } catch (error) {
+    console.error("Unable to read saved projects:", error);
     return [];
   }
 };
 
+const saveProjects = (projects) => {
+  try {
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(projects));
+  } catch (error) {
+    console.error("Unable to save projects:", error);
+  }
+};
+
+const normalizeFeatures = (features) => {
+  if (Array.isArray(features)) return features;
+
+  if (!features) return [];
+
+  return String(features)
+    .split("\n")
+    .map((item) => item.trim())
+    .filter(Boolean);
+};
+
+const getInitials = (name = "") => {
+  return name
+    .split(" ")
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0])
+    .join("")
+    .toUpperCase();
+};
+
 /* =========================================================
    MAIN COMPONENT
-========================================================= */
+   ========================================================= */
 
-export default function MyProject() {
+export default function Projects() {
   const navigate = useNavigate();
 
-  const [customProjects, setCustomProjects] = useState(
-    () => readStoredProjects()
-  );
-
-  const [selectedProject, setSelectedProject] =
-    useState(null);
+  const [customProjects, setCustomProjects] = useState(readStoredProjects);
+  const [selectedProject, setSelectedProject] = useState(null);
 
   const [modalOpen, setModalOpen] = useState(false);
-
-  const [editingProjectId, setEditingProjectId] =
-    useState(null);
+  const [editingProjectId, setEditingProjectId] = useState(null);
 
   const [search, setSearch] = useState("");
-
-  const [statusFilter, setStatusFilter] =
-    useState("All");
+  const [statusFilter, setStatusFilter] = useState("All");
+  const [typeFilter, setTypeFilter] = useState("All");
+  const [sortBy, setSortBy] = useState("newest");
 
   const [form, setForm] = useState(createEmptyForm);
-
-  /* =======================================================
-     ALL PROJECTS
-  ======================================================= */
+  const [formError, setFormError] = useState("");
 
   const allProjects = useMemo(
     () => [...DEFAULT_PROJECTS, ...customProjects],
     [customProjects]
   );
 
-  /* =======================================================
-     FILTERED PROJECTS
-  ======================================================= */
-
   const filteredProjects = useMemo(() => {
     const query = search.trim().toLowerCase();
 
-    return allProjects.filter((project) => {
+    const filtered = allProjects.filter((project) => {
+      const features = normalizeFeatures(project.features);
+
       const searchableText = [
         project.name,
         project.category,
+        project.status,
         project.role,
         project.type,
         project.shortDescription,
         project.description,
+        project.contribution,
         ...(project.stack || []),
+        ...features,
       ]
         .join(" ")
         .toLowerCase();
 
-      const matchesSearch =
-        !query || searchableText.includes(query);
+      const matchesSearch = !query || searchableText.includes(query);
 
       const matchesStatus =
-        statusFilter === "All" ||
-        project.status === statusFilter;
+        statusFilter === "All" || project.status === statusFilter;
 
-      return matchesSearch && matchesStatus;
+      const matchesType =
+        typeFilter === "All" || project.type === typeFilter;
+
+      return matchesSearch && matchesStatus && matchesType;
+    });
+
+    return [...filtered].sort((a, b) => {
+      if (sortBy === "oldest") {
+        return Number(a.year || 0) - Number(b.year || 0);
+      }
+
+      if (sortBy === "progress") {
+        return Number(b.progress || 0) - Number(a.progress || 0);
+      }
+
+      if (sortBy === "name") {
+        return a.name.localeCompare(b.name);
+      }
+
+      return Number(b.year || 0) - Number(a.year || 0);
     });
   }, [
     allProjects,
     search,
     statusFilter,
+    typeFilter,
+    sortBy,
   ]);
 
-  /* =======================================================
-     OPEN CREATE
-  ======================================================= */
+  const stats = useMemo(() => {
+    const technologies = new Set();
+
+    allProjects.forEach((project) => {
+      (project.stack || []).forEach((technology) =>
+        technologies.add(technology)
+      );
+    });
+
+    return {
+      total: allProjects.length,
+      completed: allProjects.filter(
+        (project) => project.status === "Completed"
+      ).length,
+      inProgress: allProjects.filter(
+        (project) => project.status === "In Progress"
+      ).length,
+      technologies: technologies.size,
+    };
+  }, [allProjects]);
 
   const openCreateModal = () => {
     setEditingProjectId(null);
     setForm(createEmptyForm());
+    setFormError("");
     setModalOpen(true);
   };
-
-  /* =======================================================
-     OPEN EDIT
-  ======================================================= */
 
   const openEditModal = (project) => {
     setEditingProjectId(project.id);
 
     setForm({
       name: project.name || "",
-      category: project.category || "",
+      category: project.category || "Web Development",
       status: project.status || "In Progress",
-      year:
-        project.year ||
-        new Date().getFullYear(),
-
+      year: project.year || new Date().getFullYear().toString(),
       role: project.role || "",
-
-      type:
-        project.type ||
-        "Personal Project",
-
-      progress:
-        project.progress || 0,
-
-      shortDescription:
-        project.shortDescription || "",
-
-      description:
-        project.description || "",
-
-      contribution:
-        project.contribution || "",
-
-      stack:
-        project.stack || [],
-
-      features:
-        Array.isArray(project.features)
-          ? project.features.join(", ")
-          : "",
-
-      github:
-        project.github || "",
-
-      live:
-        project.live || "",
-
-      image:
-        project.image || null,
+      type: project.type || "Personal Project",
+      progress: Number(project.progress || 0),
+      shortDescription: project.shortDescription || "",
+      description: project.description || "",
+      contribution: project.contribution || "",
+      stack: project.stack || [],
+      features: normalizeFeatures(project.features).join("\n"),
+      github: project.github || "",
+      live: project.live || "",
+      image: project.image || "",
     });
 
+    setFormError("");
     setModalOpen(true);
   };
 
-  /* =======================================================
-     FORM UPDATE
-  ======================================================= */
+  const closeModal = () => {
+    setModalOpen(false);
+    setEditingProjectId(null);
+    setForm(createEmptyForm());
+    setFormError("");
+  };
 
-  const updateForm = (
-    field,
-    value
-  ) => {
+  const updateForm = (field, value) => {
     setForm((previous) => ({
       ...previous,
       [field]: value,
     }));
+
+    if (formError) {
+      setFormError("");
+    }
   };
 
-  /* =======================================================
-     SAVE PROJECT
-  ======================================================= */
-
-  const saveProject = (event) => {
-    event.preventDefault();
-
+  const saveProject = () => {
     if (!form.name.trim()) {
-      alert("Please enter the project name.");
-      return;
-    }
-
-    if (!form.category.trim()) {
-      alert("Please enter the project category.");
-      return;
-    }
-
-    if (!form.role.trim()) {
-      alert("Please enter your role.");
+      setFormError("Please enter a project name.");
       return;
     }
 
     if (!form.shortDescription.trim()) {
-      alert("Please add a short description.");
+      setFormError("Please add a short project description.");
       return;
     }
 
     if (!form.description.trim()) {
-      alert(
-        "Please add a detailed project description."
-      );
-      return;
-    }
-
-    if (!form.contribution.trim()) {
-      alert(
-        "Please describe your contribution."
-      );
+      setFormError("Please add a detailed project description.");
       return;
     }
 
     if (!form.stack.length) {
-      alert(
-        "Please select at least one technology."
-      );
+      setFormError("Please select at least one technology.");
       return;
     }
 
-    const existingProject =
-      allProjects.find(
-        (project) =>
-          project.id === editingProjectId
-      );
-
-    const project = {
+    const projectData = {
       id:
         editingProjectId ||
-        `project-${Date.now()}-${Math.random()
-          .toString(36)
-          .slice(2, 8)}`,
-
+        `project-${Date.now()}-${Math.random().toString(36).slice(2, 8)}`,
       name: form.name.trim(),
-
-      category:
-        form.category.trim(),
-
+      category: form.category.trim() || "Web Development",
       status: form.status,
-
-      year: Number(form.year),
-
-      role: form.role.trim(),
-
+      year: form.year,
+      role: form.role.trim() || "Developer",
       type: form.type,
-
-      progress: Math.min(
-        100,
-        Math.max(
-          0,
-          Number(form.progress) || 0
-        )
-      ),
-
-      shortDescription:
-        form.shortDescription.trim(),
-
-      description:
-        form.description.trim(),
-
+      progress: Math.min(100, Math.max(0, Number(form.progress) || 0)),
+      shortDescription: form.shortDescription.trim(),
+      description: form.description.trim(),
       contribution:
-        form.contribution.trim(),
-
-      stack: [...form.stack],
-
-      features: form.features
-        .split(",")
-        .map((item) => item.trim())
-        .filter(Boolean),
-
-      github:
-        form.github.trim() || null,
-
-      live:
-        form.live.trim() || null,
-
-      githubProfile:
-        existingProject?.githubProfile ||
-        "https://github.com/Tenali04",
-
-      gradient:
-        existingProject?.gradient ||
-        "from-[#1E1B4B] via-[#312E81] to-[#14B8A6]",
-
-      image:
-        form.image || null,
-
-      isCustom: true,
+        form.contribution.trim() || "Worked on the development of this project.",
+      stack: form.stack,
+      features: normalizeFeatures(form.features),
+      github: form.github.trim(),
+      live: form.live.trim(),
+      image: form.image || "",
+      profile: "https://github.com/Tenali04",
+      gradient: "from-[#1E1B4B] via-[#312E81] to-[#0F766E]",
+      custom: true,
     };
 
     let updatedProjects;
 
     if (editingProjectId) {
-      updatedProjects =
-        customProjects.map((item) =>
-          item.id === editingProjectId
-            ? project
-            : item
-        );
+      updatedProjects = customProjects.map((project) =>
+        project.id === editingProjectId ? projectData : project
+      );
     } else {
-      updatedProjects = [
-        ...customProjects,
-        project,
-      ];
+      updatedProjects = [...customProjects, projectData];
     }
 
     setCustomProjects(updatedProjects);
+    saveProjects(updatedProjects);
 
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify(updatedProjects)
-    );
-
-    setModalOpen(false);
-    setEditingProjectId(null);
-    setForm(createEmptyForm());
-
-    if (
-      selectedProject?.id ===
-      editingProjectId
-    ) {
-      setSelectedProject(project);
+    if (selectedProject?.id === editingProjectId) {
+      setSelectedProject(projectData);
     }
+
+    closeModal();
   };
 
-  /* =======================================================
-     DELETE PROJECT
-  ======================================================= */
-
   const deleteProject = (projectId) => {
-    const project =
-      customProjects.find(
-        (item) =>
-          item.id === projectId
-      );
-
-    if (!project) {
-      return;
-    }
-
-    const confirmed =
-      window.confirm(
-        `Are you sure you want to delete "${project.name}"?`
-      );
-
-    if (!confirmed) {
-      return;
-    }
-
-    const updatedProjects =
-      customProjects.filter(
-        (item) =>
-          item.id !== projectId
-      );
-
-    setCustomProjects(updatedProjects);
-
-    localStorage.setItem(
-      STORAGE_KEY,
-      JSON.stringify(updatedProjects)
+    const project = customProjects.find(
+      (item) => item.id === projectId
     );
 
-    if (
-      selectedProject?.id ===
-      projectId
-    ) {
+    if (!project) return;
+
+    const confirmed = window.confirm(
+      `Delete "${project.name}" from your projects?`
+    );
+
+    if (!confirmed) return;
+
+    const updatedProjects = customProjects.filter(
+      (item) => item.id !== projectId
+    );
+
+    setCustomProjects(updatedProjects);
+    saveProjects(updatedProjects);
+
+    if (selectedProject?.id === projectId) {
       setSelectedProject(null);
     }
   };
 
-  /* =======================================================
-     DETAILS VIEW
-  ======================================================= */
+  const clearFilters = () => {
+    setSearch("");
+    setStatusFilter("All");
+    setTypeFilter("All");
+    setSortBy("newest");
+  };
 
   if (selectedProject) {
     return (
       <ProjectDetails
         project={selectedProject}
-        onBack={() =>
-          setSelectedProject(null)
+        onBack={() => setSelectedProject(null)}
+        onEdit={
+          selectedProject.custom
+            ? () => openEditModal(selectedProject)
+            : undefined
         }
-        onDashboard={() =>
-          navigate("/dashboard")
+        onDelete={
+          selectedProject.custom
+            ? () => deleteProject(selectedProject.id)
+            : undefined
         }
       />
     );
   }
 
-  /* =======================================================
-     MAIN PAGE
-  ======================================================= */
-
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-[#0F172A]">
-
-      {/* ===================================================
+    <div
+      className="min-h-screen bg-[#F8FAFC] text-[#0F172A]"
+      style={{ fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif" }}
+    >
+      {/* =====================================================
           HEADER
-      =================================================== */}
+      ===================================================== */}
 
-      <header className="sticky top-0 z-40 border-b border-[#E2E8F0] bg-white/95 backdrop-blur-xl">
+      <header className="sticky top-0 z-30 border-b border-[#E2E8F0] bg-white/95 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
-
           <div className="flex min-w-0 items-center gap-3">
-
-            <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-[#1E1B4B] text-white shadow-sm">
-              <BriefcaseBusiness size={21} />
-            </div>
+            <button
+              type="button"
+              onClick={() => navigate(-1)}
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#E2E8F0] bg-white text-[#312E81] transition hover:border-[#312E81] hover:bg-[#EEF2FF]"
+              aria-label="Go back"
+            >
+              <ArrowLeft size={19} />
+            </button>
 
             <div className="min-w-0">
-              <h1 className="truncate text-lg font-bold text-[#1E1B4B] sm:text-xl">
-                My Projects
-              </h1>
+              <div className="flex items-center gap-2">
+                <Layers3
+                  size={19}
+                  className="hidden text-[#0F766E] sm:block"
+                />
+                <h1 className="truncate text-lg font-bold text-[#1E1B4B] sm:text-xl">
+                  My Projects
+                </h1>
+              </div>
 
-              <p className="hidden text-xs text-[#64748B] sm:block">
-                Showcase your work, skills and
-                contributions
+              <p className="hidden text-sm text-[#64748B] sm:block">
+                Showcase your technical work and achievements
               </p>
             </div>
           </div>
 
           <div className="flex items-center gap-2">
-
-            {/* GITHUB */}
-
             <a
               href="https://github.com/Tenali04"
               target="_blank"
               rel="noreferrer"
-              className="hidden items-center gap-2 rounded-xl border border-[#E2E8F0] bg-white px-3.5 py-2.5 text-sm font-semibold text-[#64748B] transition hover:border-[#14B8A6]/40 hover:bg-[#F0FDFA] hover:text-[#0F766E] md:inline-flex"
+              className="hidden items-center gap-2 rounded-xl border border-[#E2E8F0] px-3 py-2 text-sm font-semibold text-[#312E81] transition hover:border-[#312E81] hover:bg-[#EEF2FF] sm:flex"
             >
-              <ExternalLink size={16} />
+              <GitHubIcon size={17} />
               GitHub
             </a>
 
-            {/* DASHBOARD */}
-
             <button
               type="button"
-              onClick={() =>
-                navigate("/dashboard")
-              }
-              className="hidden items-center gap-2 rounded-xl border border-[#E2E8F0] bg-white px-3.5 py-2.5 text-sm font-semibold text-[#64748B] transition hover:border-[#14B8A6]/40 hover:bg-[#F0FDFA] hover:text-[#0F766E] sm:inline-flex"
+              onClick={() => navigate("/dashboard")}
+              className="hidden rounded-xl border border-[#E2E8F0] px-3 py-2 text-sm font-semibold text-[#1E1B4B] transition hover:border-[#CBD5E1] hover:bg-[#F8FAFC] md:block"
             >
-              <ArrowLeft size={16} />
               Dashboard
             </button>
-
-            {/* ADD PROJECT */}
 
             <button
               type="button"
               onClick={openCreateModal}
-              className="inline-flex items-center gap-2 rounded-xl bg-[#312E81] px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#1E1B4B] hover:shadow-md"
+              className="flex items-center gap-2 rounded-xl bg-[#312E81] px-3.5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#1E1B4B] hover:shadow-md"
             >
-              <Plus size={17} />
-
-              <span className="hidden sm:inline">
-                Add Project
-              </span>
+              <Plus size={18} />
+              <span>Add Project</span>
             </button>
           </div>
         </div>
       </header>
 
-      {/* ===================================================
-          MAIN
-      =================================================== */}
+      <main className="mx-auto max-w-7xl px-4 py-7 sm:px-6 lg:px-8 lg:py-9">
+        {/* ===================================================
+            HERO
+        =================================================== */}
 
-      <main className="mx-auto max-w-7xl px-4 py-7 sm:px-6 sm:py-9 lg:px-8">
+        <section className="relative overflow-hidden rounded-3xl border border-[#E2E8F0] bg-white shadow-sm">
+          <div className="absolute inset-x-0 top-0 h-1.5 bg-gradient-to-r from-[#1E1B4B] via-[#312E81] to-[#0F766E]" />
 
-        {/* =================================================
-            INTRO
-        ================================================= */}
-
-        <section className="mb-7 overflow-hidden rounded-3xl border border-[#E2E8F0] bg-white shadow-sm">
-
-          <div className="relative p-6 sm:p-8">
-
-            <div className="absolute right-0 top-0 h-32 w-32 rounded-full bg-[#14B8A6]/5 blur-3xl" />
-
-            <div className="relative max-w-3xl">
-
-              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#14B8A6]/20 bg-[#F0FDFA] px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-[#0F766E]">
-                <Layers3 size={14} />
-                Portfolio
+          <div className="grid gap-7 p-6 sm:p-8 lg:grid-cols-[1fr_320px] lg:p-9">
+            <div className="max-w-3xl">
+              <div className="mb-4 inline-flex items-center gap-2 rounded-full border border-[#14B8A6]/20 bg-[#CCFBF1] px-3 py-1.5 text-xs font-bold uppercase tracking-wide text-[#0F766E]">
+                <BriefcaseBusiness size={14} />
+                Student Portfolio
               </div>
 
-              <h2 className="text-2xl font-bold tracking-tight text-[#1E1B4B] sm:text-3xl lg:text-4xl">
-                Your work, clearly presented.
+              <h2 className="text-3xl font-extrabold tracking-tight text-[#1E1B4B] sm:text-4xl">
+                Showcase what you have built.
               </h2>
 
-              <p className="mt-3 max-w-2xl text-sm leading-7 text-[#64748B] sm:text-base">
-                Keep your projects organized and
-                give teammates, recruiters and
-                collaborators a clear view of what
-                you have built, the technologies you
-                use and your contribution.
+              <p className="mt-3 max-w-2xl text-sm leading-6 text-[#64748B] sm:text-base">
+                Keep your best academic, personal, hackathon, and team
+                projects in one professional portfolio. Highlight your
+                skills, contribution, technologies, and project progress.
               </p>
 
+              <div className="mt-6 flex flex-wrap gap-3">
+                <button
+                  type="button"
+                  onClick={openCreateModal}
+                  className="inline-flex items-center gap-2 rounded-xl bg-[#1E1B4B] px-4 py-2.5 text-sm font-bold text-white transition hover:bg-[#312E81]"
+                >
+                  <Plus size={17} />
+                  Add your project
+                </button>
+
+                <a
+                  href="https://github.com/Tenali04"
+                  target="_blank"
+                  rel="noreferrer"
+                  className="inline-flex items-center gap-2 rounded-xl border border-[#CBD5E1] bg-white px-4 py-2.5 text-sm font-bold text-[#312E81] transition hover:border-[#312E81] hover:bg-[#EEF2FF]"
+                >
+                  <GitHubIcon size={17} />
+                  View GitHub
+                  <ExternalLink size={14} />
+                </a>
+              </div>
+            </div>
+
+            <div className="rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] p-4 sm:p-5">
+              <p className="text-xs font-bold uppercase tracking-wider text-[#64748B]">
+                Portfolio overview
+              </p>
+
+              <div className="mt-4 grid grid-cols-2 gap-3">
+                <StatCard
+                  value={stats.total}
+                  label="Projects"
+                  icon={<Layers3 size={17} />}
+                />
+
+                <StatCard
+                  value={stats.completed}
+                  label="Completed"
+                  icon={<CheckCircle2 size={17} />}
+                />
+
+                <StatCard
+                  value={stats.inProgress}
+                  label="In progress"
+                  icon={<BriefcaseBusiness size={17} />}
+                />
+
+                <StatCard
+                  value={stats.technologies}
+                  label="Technologies"
+                  icon={<LinkIcon size={17} />}
+                />
+              </div>
             </div>
           </div>
         </section>
 
-        {/* =================================================
+        {/* ===================================================
             FILTERS
-        ================================================= */}
+        =================================================== */}
 
-        <section className="mb-7 rounded-2xl border border-[#E2E8F0] bg-white p-4 shadow-sm sm:p-5">
-
-          <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-
-            <div className="relative w-full lg:max-w-md">
-
-              <Search
-                size={18}
-                className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#64748B]"
-              />
-
-              <input
-                type="text"
-                value={search}
-                onChange={(event) =>
-                  setSearch(
-                    event.target.value
-                  )
-                }
-                placeholder="Search projects, skills or roles..."
-                className="h-11 w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] pl-10 pr-4 text-sm text-[#0F172A] outline-none transition placeholder:text-[#94A3B8] focus:border-[#312E81] focus:bg-white focus:ring-2 focus:ring-[#312E81]/10"
-              />
-            </div>
-
-            <div className="flex items-center gap-3">
-
-              <div className="relative min-w-[150px]">
-
-                <select
-                  value={statusFilter}
-                  onChange={(event) =>
-                    setStatusFilter(
-                      event.target.value
-                    )
-                  }
-                  className="h-11 w-full appearance-none rounded-xl border border-[#E2E8F0] bg-white px-4 pr-10 text-sm font-medium text-[#0F172A] outline-none transition focus:border-[#312E81] focus:ring-2 focus:ring-[#312E81]/10"
-                >
-                  <option value="All">
-                    All Status
-                  </option>
-
-                  <option value="Completed">
-                    Completed
-                  </option>
-
-                  <option value="In Progress">
-                    In Progress
-                  </option>
-
-                  <option value="On Hold">
-                    On Hold
-                  </option>
-                </select>
-
-                <ChevronDown
-                  size={17}
-                  className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#64748B]"
-                />
-
+        <section className="mt-7 rounded-2xl border border-[#E2E8F0] bg-white p-4 shadow-sm sm:p-5">
+          <div className="flex flex-col gap-4">
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <div>
+                <h3 className="font-bold text-[#1E1B4B]">
+                  Your project portfolio
+                </h3>
+                <p className="mt-1 text-sm text-[#64748B]">
+                  Search, filter, and organize your work.
+                </p>
               </div>
 
-              <span className="hidden whitespace-nowrap text-sm font-semibold text-[#64748B] sm:block">
-                {filteredProjects.length}{" "}
-                {filteredProjects.length === 1
-                  ? "project"
-                  : "projects"}
-              </span>
+              {(search ||
+                statusFilter !== "All" ||
+                typeFilter !== "All" ||
+                sortBy !== "newest") && (
+                <button
+                  type="button"
+                  onClick={clearFilters}
+                  className="self-start text-sm font-semibold text-[#0F766E] hover:text-[#1E1B4B]"
+                >
+                  Clear filters
+                </button>
+              )}
+            </div>
 
+            <div className="grid gap-3 lg:grid-cols-[1fr_180px_190px_170px]">
+              <div className="relative">
+                <Search
+                  size={18}
+                  className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#94A3B8]"
+                />
+
+                <input
+                  type="text"
+                  value={search}
+                  onChange={(event) => setSearch(event.target.value)}
+                  placeholder="Search projects, skills, technologies..."
+                  className="h-11 w-full rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] pl-10 pr-4 text-sm text-[#0F172A] outline-none transition placeholder:text-[#94A3B8] focus:border-[#312E81] focus:bg-white focus:ring-4 focus:ring-[#312E81]/10"
+                />
+              </div>
+
+              <FilterSelect
+                value={statusFilter}
+                onChange={setStatusFilter}
+                options={STATUS_OPTIONS}
+                label="Status"
+              />
+
+              <FilterSelect
+                value={typeFilter}
+                onChange={setTypeFilter}
+                options={PROJECT_TYPES}
+                label="Project type"
+              />
+
+              <FilterSelect
+                value={sortBy}
+                onChange={setSortBy}
+                options={SORT_OPTIONS}
+                label="Sort"
+                objectOptions
+              />
             </div>
           </div>
         </section>
 
-        {/* =================================================
+        {/* ===================================================
             PROJECT GRID
-        ================================================= */}
+        =================================================== */}
 
-        {filteredProjects.length > 0 ? (
-          <section className="grid grid-cols-1 justify-items-center gap-6 sm:grid-cols-2 lg:grid-cols-3 lg:gap-7">
+        <section className="mt-7">
+          {filteredProjects.length > 0 ? (
+            <>
+              <div className="mb-4 flex items-center justify-between">
+                <p className="text-sm font-semibold text-[#64748B]">
+                  Showing{" "}
+                  <span className="text-[#1E1B4B]">
+                    {filteredProjects.length}
+                  </span>{" "}
+                  {filteredProjects.length === 1 ? "project" : "projects"}
+                </p>
+              </div>
 
-            {filteredProjects.map(
-              (project) => (
-                <ProjectCard
-                  key={project.id}
-                  project={project}
-                  onView={() =>
-                    setSelectedProject(
-                      project
-                    )
-                  }
-                  onEdit={() =>
-                    openEditModal(
-                      project
-                    )
-                  }
-                  onDelete={() =>
-                    deleteProject(
-                      project.id
-                    )
-                  }
-                />
-              )
-            )}
-
-          </section>
-        ) : (
-          <EmptyProjects
-            search={search}
-            onClear={() => {
-              setSearch("");
-              setStatusFilter("All");
-            }}
-            onAdd={openCreateModal}
-          />
-        )}
+              <div className="grid items-stretch gap-5 md:grid-cols-2 xl:grid-cols-3">
+                {filteredProjects.map((project) => (
+                  <ProjectCard
+                    key={project.id}
+                    project={project}
+                    onView={() => setSelectedProject(project)}
+                    onEdit={
+                      project.custom
+                        ? () => openEditModal(project)
+                        : undefined
+                    }
+                    onDelete={
+                      project.custom
+                        ? () => deleteProject(project.id)
+                        : undefined
+                    }
+                  />
+                ))}
+              </div>
+            </>
+          ) : (
+            <EmptyProjects
+              hasFilters={
+                Boolean(search) ||
+                statusFilter !== "All" ||
+                typeFilter !== "All"
+              }
+              onClear={clearFilters}
+              onAdd={openCreateModal}
+            />
+          )}
+        </section>
       </main>
 
-      {/* ===================================================
-          MODAL
-      =================================================== */}
+      {/* =====================================================
+          PROJECT FORM MODAL
+      ===================================================== */}
 
       {modalOpen && (
         <ProjectFormModal
           form={form}
-          updateForm={updateForm}
-          onClose={() => {
-            setModalOpen(false);
-            setEditingProjectId(null);
-            setForm(createEmptyForm());
-          }}
-          onSubmit={saveProject}
-          editing={Boolean(
-            editingProjectId
-          )}
+          error={formError}
+          editing={Boolean(editingProjectId)}
+          onChange={updateForm}
+          onClose={closeModal}
+          onSave={saveProject}
         />
       )}
     </div>
@@ -886,8 +846,68 @@ export default function MyProject() {
 }
 
 /* =========================================================
+   STAT CARD
+   ========================================================= */
+
+function StatCard({ value, label, icon }) {
+  return (
+    <div className="rounded-xl border border-[#E2E8F0] bg-white p-3">
+      <div className="flex items-center justify-between">
+        <span className="text-[#0F766E]">{icon}</span>
+        <span className="text-xl font-extrabold text-[#1E1B4B]">
+          {value}
+        </span>
+      </div>
+
+      <p className="mt-1 text-xs font-semibold text-[#64748B]">
+        {label}
+      </p>
+    </div>
+  );
+}
+
+/* =========================================================
+   FILTER SELECT
+   ========================================================= */
+
+function FilterSelect({
+  value,
+  onChange,
+  options,
+  label,
+  objectOptions = false,
+}) {
+  return (
+    <div className="relative">
+      <select
+        value={value}
+        onChange={(event) => onChange(event.target.value)}
+        aria-label={label}
+        className="h-11 w-full appearance-none rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3.5 pr-9 text-sm font-semibold text-[#1E1B4B] outline-none transition focus:border-[#312E81] focus:bg-white focus:ring-4 focus:ring-[#312E81]/10"
+      >
+        {options.map((option) => {
+          const optionValue = objectOptions ? option.value : option;
+          const optionLabel = objectOptions ? option.label : option;
+
+          return (
+            <option key={optionValue} value={optionValue}>
+              {optionLabel}
+            </option>
+          );
+        })}
+      </select>
+
+      <ChevronDown
+        size={16}
+        className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#64748B]"
+      />
+    </div>
+  );
+}
+
+/* =========================================================
    PROJECT CARD
-========================================================= */
+   ========================================================= */
 
 function ProjectCard({
   project,
@@ -895,209 +915,65 @@ function ProjectCard({
   onEdit,
   onDelete,
 }) {
+  const features = normalizeFeatures(project.features);
+
   return (
-    <article className="flex min-h-[535px] w-full max-w-[390px] flex-col overflow-hidden rounded-2xl border border-[#E2E8F0] bg-white shadow-sm transition duration-300 hover:-translate-y-1 hover:border-[#14B8A6]/30 hover:shadow-xl">
-
-      {/* IMAGE */}
-
-      <div
-        className={`relative h-48 shrink-0 overflow-hidden bg-gradient-to-br ${project.gradient}`}
-      >
+    <article className="group flex h-full flex-col overflow-hidden rounded-2xl border border-[#E2E8F0] bg-white shadow-sm transition duration-200 hover:-translate-y-1 hover:border-[#CBD5E1] hover:shadow-lg">
+      {/* Project visual */}
+      <div className="relative h-48 overflow-hidden">
         {project.image ? (
           <img
             src={project.image}
-            alt={project.name}
-            className="h-full w-full object-cover"
+            alt={`${project.name} project`}
+            className="h-full w-full object-cover transition duration-500 group-hover:scale-105"
           />
         ) : (
-          <div className="flex h-full w-full items-center justify-center">
-
-            <div className="text-center">
-
-              <div className="mx-auto mb-3 flex h-16 w-16 items-center justify-center rounded-2xl border border-white/20 bg-white/10 text-white backdrop-blur-md">
-                <BriefcaseBusiness
-                  size={30}
-                />
+          <div
+            className={`flex h-full w-full items-center justify-center bg-gradient-to-br ${project.gradient || "from-[#1E1B4B] via-[#312E81] to-[#0F766E]"}`}
+          >
+            <div className="text-center text-white">
+              <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl border border-white/20 bg-white/10 backdrop-blur">
+                <span className="text-xl font-extrabold">
+                  {getInitials(project.name)}
+                </span>
               </div>
 
-              <p className="text-sm font-semibold text-white/80">
+              <p className="mt-3 text-sm font-semibold text-white/90">
                 {project.category}
               </p>
-
             </div>
           </div>
         )}
 
-        {/* STATUS */}
-
         <div className="absolute left-4 top-4">
-          <ProjectStatus
-            status={project.status}
-          />
+          <ProjectStatus status={project.status} />
+        </div>
+
+        <div className="absolute right-4 top-4 rounded-full border border-white/20 bg-[#1E1B4B]/80 px-2.5 py-1 text-xs font-bold text-white backdrop-blur">
+          {project.year}
         </div>
       </div>
 
-      {/* BODY */}
-
+      {/* Content */}
       <div className="flex flex-1 flex-col p-5">
-
-        {/* TITLE */}
-
-        <div className="mb-3 flex items-start justify-between gap-3">
-
+        <div className="flex items-start justify-between gap-3">
           <div className="min-w-0">
-
-            <p className="mb-1 text-xs font-bold uppercase tracking-wider text-[#0F766E]">
+            <p className="text-xs font-bold uppercase tracking-wide text-[#0F766E]">
               {project.category}
             </p>
 
-            <h3 className="truncate text-xl font-bold text-[#1E1B4B]">
+            <h3 className="mt-1.5 line-clamp-1 text-xl font-extrabold text-[#1E1B4B]">
               {project.name}
             </h3>
-
           </div>
 
-          <span className="shrink-0 rounded-lg bg-[#F8FAFC] px-2.5 py-1 text-xs font-bold text-[#64748B]">
-            {project.year}
-          </span>
-
-        </div>
-
-        {/* META */}
-
-        <div className="mb-4 flex flex-wrap items-center gap-x-2 gap-y-1 text-xs font-medium text-[#64748B]">
-          <span>
-            {project.role}
-          </span>
-
-          <span>•</span>
-
-          <span>
-            {project.type}
-          </span>
-        </div>
-
-        {/* DESCRIPTION */}
-
-        <p className="mb-5 line-clamp-3 text-sm leading-6 text-[#64748B]">
-          {project.shortDescription}
-        </p>
-
-        {/* TECHNOLOGIES */}
-
-        <div className="mb-5">
-
-          <p className="mb-2 text-xs font-bold uppercase tracking-wider text-[#64748B]">
-            Technologies
-          </p>
-
-          <div className="flex flex-wrap gap-2">
-
-            {(project.stack || [])
-              .slice(0, 3)
-              .map(
-                (technology) => (
-                  <span
-                    key={technology}
-                    className="rounded-lg border border-[#14B8A6]/15 bg-[#F0FDFA] px-2.5 py-1.5 text-xs font-semibold text-[#0F766E]"
-                  >
-                    {technology}
-                  </span>
-                )
-              )}
-
-            {project.stack?.length >
-              3 && (
-              <span className="rounded-lg bg-[#F8FAFC] px-2.5 py-1.5 text-xs font-semibold text-[#64748B]">
-                +
-                {project.stack.length -
-                  3}
-              </span>
-            )}
-
-          </div>
-        </div>
-
-        {/* FEATURES PREVIEW */}
-
-        {project.features?.length > 0 && (
-          <div className="mb-5">
-
-            <p className="mb-2 text-xs font-bold uppercase tracking-wider text-[#64748B]">
-              Key Features
-            </p>
-
-            <div className="flex items-center gap-2 text-xs font-medium text-[#475569]">
-
-              <span className="flex h-5 w-5 shrink-0 items-center justify-center rounded-full bg-[#F0FDFA] text-[#0F766E]">
-                <Check size={12} />
-              </span>
-
-              <span className="line-clamp-1">
-                {project.features[0]}
-              </span>
-
-              {project.features.length >
-                1 && (
-                <span className="shrink-0 text-[#64748B]">
-                  +
-                  {project.features.length -
-                    1}
-                </span>
-              )}
-
-            </div>
-          </div>
-        )}
-
-        {/* PROGRESS */}
-
-        <div className="mt-auto">
-
-          <div className="mb-2 flex items-center justify-between text-xs font-bold">
-
-            <span className="text-[#64748B]">
-              Progress
-            </span>
-
-            <span className="text-[#312E81]">
-              {project.progress}%
-            </span>
-
-          </div>
-
-          <div className="h-2 overflow-hidden rounded-full bg-[#E2E8F0]">
-
-            <div
-              className="h-full rounded-full bg-gradient-to-r from-[#312E81] to-[#14B8A6] transition-all"
-              style={{
-                width: `${project.progress}%`,
-              }}
-            />
-
-          </div>
-        </div>
-
-        {/* ACTIONS */}
-
-        <div className="mt-5 flex gap-2 border-t border-[#E2E8F0] pt-4">
-
-          <button
-            type="button"
-            onClick={onView}
-            className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#312E81] px-4 py-2.5 text-sm font-bold text-white transition hover:bg-[#1E1B4B] hover:shadow-md"
-          >
-            View Details
-            <ChevronRight size={16} />
-          </button>
-
-          {project.isCustom && (
-            <>
+          {project.custom && (
+            <div className="flex shrink-0 items-center gap-1">
               <button
                 type="button"
                 onClick={onEdit}
-                title="Edit Project"
-                className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#E2E8F0] text-[#64748B] transition hover:border-[#14B8A6]/30 hover:bg-[#F0FDFA] hover:text-[#0F766E]"
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-[#312E81] transition hover:bg-[#EEF2FF]"
+                aria-label={`Edit ${project.name}`}
               >
                 <Pencil size={16} />
               </button>
@@ -1105,377 +981,402 @@ function ProjectCard({
               <button
                 type="button"
                 onClick={onDelete}
-                title="Delete Project"
-                className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#E2E8F0] text-[#64748B] transition hover:border-red-200 hover:bg-red-50 hover:text-red-600"
+                className="flex h-8 w-8 items-center justify-center rounded-lg text-[#0F766E] transition hover:bg-[#CCFBF1]"
+                aria-label={`Delete ${project.name}`}
               >
                 <Trash2 size={16} />
               </button>
-            </>
+            </div>
+          )}
+        </div>
+
+        <div className="mt-3 flex flex-wrap gap-2 text-xs font-semibold text-[#64748B]">
+          <span className="rounded-lg bg-[#F8FAFC] px-2.5 py-1">
+            {project.role}
+          </span>
+
+          <span className="rounded-lg bg-[#F8FAFC] px-2.5 py-1">
+            {project.type}
+          </span>
+        </div>
+
+        <p className="mt-4 line-clamp-3 min-h-[66px] text-sm leading-6 text-[#64748B]">
+          {project.shortDescription}
+        </p>
+
+        {/* Technology preview */}
+        <div className="mt-4">
+          <p className="mb-2 text-xs font-bold uppercase tracking-wide text-[#94A3B8]">
+            Technologies
+          </p>
+
+          <div className="flex min-h-[52px] flex-wrap content-start gap-1.5">
+            {(project.stack || []).slice(0, 5).map((technology) => (
+              <span
+                key={technology}
+                className="rounded-lg border border-[#E2E8F0] bg-white px-2.5 py-1 text-xs font-semibold text-[#312E81]"
+              >
+                {technology}
+              </span>
+            ))}
+
+            {project.stack?.length > 5 && (
+              <span className="rounded-lg bg-[#CCFBF1] px-2.5 py-1 text-xs font-bold text-[#0F766E]">
+                +{project.stack.length - 5}
+              </span>
+            )}
+          </div>
+        </div>
+
+        {/* Progress */}
+        <div className="mt-5">
+          <div className="mb-2 flex items-center justify-between">
+            <span className="text-xs font-bold text-[#64748B]">
+              Project progress
+            </span>
+
+            <span className="text-xs font-extrabold text-[#1E1B4B]">
+              {project.progress || 0}%
+            </span>
+          </div>
+
+          <div className="h-2 overflow-hidden rounded-full bg-[#E2E8F0]">
+            <div
+              className="h-full rounded-full bg-gradient-to-r from-[#312E81] to-[#0F766E] transition-all"
+              style={{
+                width: `${Math.min(100, Math.max(0, Number(project.progress) || 0))}%`,
+              }}
+            />
+          </div>
+        </div>
+
+        {/* Footer */}
+        <div className="mt-auto flex items-center gap-2 pt-5">
+          <button
+            type="button"
+            onClick={onView}
+            className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#312E81] px-3 py-2.5 text-sm font-bold text-white transition hover:bg-[#1E1B4B]"
+          >
+            View details
+            <ChevronRight size={16} />
+          </button>
+
+          {project.github && (
+            <a
+              href={project.github}
+              target="_blank"
+              rel="noreferrer"
+              onClick={(event) => event.stopPropagation()}
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#E2E8F0] text-[#312E81] transition hover:border-[#312E81] hover:bg-[#EEF2FF]"
+              aria-label={`Open ${project.name} GitHub`}
+            >
+              <GitHubIcon size={17} />
+            </a>
           )}
 
+          {project.live && (
+            <a
+              href={project.live}
+              target="_blank"
+              rel="noreferrer"
+              onClick={(event) => event.stopPropagation()}
+              className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-[#E2E8F0] text-[#0F766E] transition hover:border-[#0F766E] hover:bg-[#CCFBF1]"
+              aria-label={`Open ${project.name} live website`}
+            >
+              <ExternalLink size={17} />
+            </a>
+          )}
         </div>
+
+        {features.length > 0 && (
+          <p className="mt-3 text-center text-[11px] font-semibold text-[#94A3B8]">
+            {features.length} key {features.length === 1 ? "feature" : "features"}
+          </p>
+        )}
       </div>
     </article>
   );
 }
 
 /* =========================================================
-   STATUS
-========================================================= */
+   PROJECT STATUS
+   ========================================================= */
 
-function ProjectStatus({
-  status,
-}) {
-  if (status === "Completed") {
-    return (
-      <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-[#1E1B4B]/80 px-3 py-1.5 text-xs font-bold text-white backdrop-blur-md">
-        <span className="h-1.5 w-1.5 rounded-full bg-[#2DD4BF]" />
-        Completed
-      </span>
-    );
-  }
-
-  if (status === "On Hold") {
-    return (
-      <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-[#1E1B4B]/80 px-3 py-1.5 text-xs font-bold text-white backdrop-blur-md">
-        <span className="h-1.5 w-1.5 rounded-full bg-[#2DD4BF]" />
-        On Hold
-      </span>
-    );
-  }
+function ProjectStatus({ status }) {
+  const styles = {
+    Completed:
+      "border-[#14B8A6]/30 bg-[#CCFBF1] text-[#0F766E]",
+    "In Progress":
+      "border-[#312E81]/30 bg-[#EEF2FF] text-[#312E81]",
+    "On Hold":
+      "border-[#CBD5E1] bg-[#F8FAFC] text-[#64748B]",
+  };
 
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-[#1E1B4B]/80 px-3 py-1.5 text-xs font-bold text-white backdrop-blur-md">
-      <span className="h-1.5 w-1.5 rounded-full bg-[#2DD4BF]" />
-      In Progress
+    <span
+      className={`inline-flex items-center gap-1.5 rounded-full border px-2.5 py-1 text-xs font-bold backdrop-blur ${
+        styles[status] || styles["In Progress"]
+      }`}
+    >
+      <span
+        className={`h-1.5 w-1.5 rounded-full ${
+          status === "Completed"
+            ? "bg-[#14B8A6]"
+            : status === "On Hold"
+              ? "bg-[#94A3B8]"
+              : "bg-[#312E81]"
+        }`}
+      />
+
+      {status}
     </span>
   );
 }
 
 /* =========================================================
    PROJECT DETAILS
-========================================================= */
+   ========================================================= */
 
 function ProjectDetails({
   project,
   onBack,
-  onDashboard,
+  onEdit,
+  onDelete,
 }) {
+  const features = normalizeFeatures(project.features);
+
   return (
-    <div className="min-h-screen bg-[#F8FAFC] text-[#0F172A]">
-
-      {/* HEADER */}
-
-      <header className="sticky top-0 z-40 border-b border-[#E2E8F0] bg-white/95 backdrop-blur-xl">
-
+    <div
+      className="min-h-screen bg-[#F8FAFC] text-[#0F172A]"
+      style={{ fontFamily: "Inter, ui-sans-serif, system-ui, sans-serif" }}
+    >
+      <header className="sticky top-0 z-30 border-b border-[#E2E8F0] bg-white/95 backdrop-blur">
         <div className="mx-auto flex max-w-7xl items-center justify-between gap-3 px-4 py-4 sm:px-6 lg:px-8">
-
           <button
             type="button"
             onClick={onBack}
-            className="inline-flex items-center gap-2 rounded-xl border border-[#E2E8F0] bg-white px-3.5 py-2.5 text-sm font-semibold text-[#64748B] transition hover:border-[#14B8A6]/30 hover:bg-[#F0FDFA] hover:text-[#0F766E]"
+            className="flex items-center gap-2 rounded-xl border border-[#E2E8F0] bg-white px-3.5 py-2.5 text-sm font-bold text-[#312E81] transition hover:border-[#312E81] hover:bg-[#EEF2FF]"
           >
             <ArrowLeft size={17} />
-            <span>
-              My Projects
-            </span>
+            <span>Back to projects</span>
           </button>
 
           <div className="flex items-center gap-2">
+            {onEdit && (
+              <button
+                type="button"
+                onClick={onEdit}
+                className="flex items-center gap-2 rounded-xl border border-[#E2E8F0] px-3.5 py-2.5 text-sm font-bold text-[#312E81] transition hover:border-[#312E81] hover:bg-[#EEF2FF]"
+              >
+                <Pencil size={16} />
+                <span className="hidden sm:inline">Edit</span>
+              </button>
+            )}
 
-            <a
-              href={
-                project.githubProfile ||
-                "https://github.com/Tenali04"
-              }
-              target="_blank"
-              rel="noreferrer"
-              className="hidden items-center gap-2 rounded-xl border border-[#E2E8F0] bg-white px-3.5 py-2.5 text-sm font-semibold text-[#64748B] transition hover:border-[#14B8A6]/30 hover:bg-[#F0FDFA] hover:text-[#0F766E] sm:inline-flex"
-            >
-              <ExternalLink size={16} />
-              GitHub Profile
-            </a>
-
-            <button
-              type="button"
-              onClick={onDashboard}
-              className="hidden rounded-xl bg-[#312E81] px-4 py-2.5 text-sm font-semibold text-white transition hover:bg-[#1E1B4B] sm:inline-flex"
-            >
-              Dashboard
-            </button>
-
+            {onDelete && (
+              <button
+                type="button"
+                onClick={onDelete}
+                className="flex h-10 w-10 items-center justify-center rounded-xl border border-[#E2E8F0] text-[#0F766E] transition hover:border-[#0F766E] hover:bg-[#CCFBF1]"
+                aria-label="Delete project"
+              >
+                <Trash2 size={17} />
+              </button>
+            )}
           </div>
         </div>
       </header>
 
-      {/* MAIN */}
+      <main className="mx-auto max-w-7xl px-4 py-7 sm:px-6 lg:px-8 lg:py-9">
+        {/* Hero */}
+        <section className="overflow-hidden rounded-3xl border border-[#E2E8F0] bg-white shadow-sm">
+          <div className="relative min-h-[300px] overflow-hidden">
+            {project.image ? (
+              <img
+                src={project.image}
+                alt={`${project.name} project`}
+                className="absolute inset-0 h-full w-full object-cover"
+              />
+            ) : (
+              <div
+                className={`absolute inset-0 bg-gradient-to-br ${
+                  project.gradient ||
+                  "from-[#1E1B4B] via-[#312E81] to-[#0F766E]"
+                }`}
+              />
+            )}
 
-      <main className="mx-auto max-w-6xl px-4 py-7 sm:px-6 lg:px-8 lg:py-10">
+            <div className="absolute inset-0 bg-[#1E1B4B]/55" />
 
-        {/* =================================================
-            HERO
-        ================================================= */}
+            <div className="relative flex min-h-[300px] flex-col justify-end p-6 sm:p-9">
+              <div className="flex flex-wrap items-center gap-2">
+                <ProjectStatus status={project.status} />
 
-        <section
-          className={`relative overflow-hidden rounded-3xl bg-gradient-to-br ${project.gradient} shadow-xl`}
-        >
+                <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-bold text-white backdrop-blur">
+                  {project.year}
+                </span>
 
-          {project.image && (
-            <img
-              src={project.image}
-              alt={project.name}
-              className="absolute inset-0 h-full w-full object-cover opacity-20"
-            />
-          )}
+                <span className="rounded-full border border-white/20 bg-white/10 px-3 py-1 text-xs font-bold text-white backdrop-blur">
+                  {project.type}
+                </span>
+              </div>
 
-          <div className="absolute inset-0 bg-[#1E1B4B]/10" />
-
-          <div className="relative p-6 sm:p-8 lg:p-10">
-
-            {/* BADGES */}
-
-            <div className="mb-5 flex flex-wrap gap-2">
-
-              <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-bold text-white backdrop-blur-md">
+              <p className="mt-5 text-sm font-bold uppercase tracking-wider text-[#CCFBF1]">
                 {project.category}
-              </span>
+              </p>
 
-              <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-bold text-white backdrop-blur-md">
-                {project.status}
-              </span>
+              <h1 className="mt-2 text-3xl font-extrabold tracking-tight text-white sm:text-5xl">
+                {project.name}
+              </h1>
 
-              <span className="rounded-full border border-white/15 bg-white/10 px-3 py-1.5 text-xs font-bold text-white backdrop-blur-md">
-                {project.year}
-              </span>
+              <p className="mt-3 max-w-3xl text-sm leading-6 text-white/85 sm:text-base">
+                {project.shortDescription}
+              </p>
 
-            </div>
+              <div className="mt-6 flex flex-wrap gap-2">
+                {project.github && (
+                  <a
+                    href={project.github}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-2 rounded-xl bg-white px-4 py-2.5 text-sm font-bold text-[#1E1B4B] transition hover:bg-[#CCFBF1]"
+                  >
+                    <GitHubIcon size={17} />
+                    GitHub
+                    <ExternalLink size={14} />
+                  </a>
+                )}
 
-            {/* TITLE */}
-
-            <h1 className="max-w-4xl text-3xl font-bold tracking-tight text-white sm:text-4xl lg:text-5xl">
-              {project.name}
-            </h1>
-
-            <p className="mt-4 max-w-3xl text-sm leading-7 text-white/80 sm:text-base">
-              {project.shortDescription}
-            </p>
-
-            {/* META */}
-
-            <div className="mt-7 grid gap-3 sm:grid-cols-3">
-
-              <InfoItem
-                label="Role"
-                value={project.role}
-                light
-              />
-
-              <InfoItem
-                label="Project Type"
-                value={project.type}
-                light
-              />
-
-              <InfoItem
-                label="Completion"
-                value={`${project.progress}%`}
-                light
-              />
-
+                {project.live && (
+                  <a
+                    href={project.live}
+                    target="_blank"
+                    rel="noreferrer"
+                    className="inline-flex items-center gap-2 rounded-xl border border-white/25 bg-white/10 px-4 py-2.5 text-sm font-bold text-white backdrop-blur transition hover:bg-white/20"
+                  >
+                    <ExternalLink size={17} />
+                    Live project
+                  </a>
+                )}
+              </div>
             </div>
           </div>
         </section>
 
-        {/* =================================================
-            CONTENT
-        ================================================= */}
-
-        <div className="mt-7 grid gap-6 lg:grid-cols-[1fr_320px]">
-
-          {/* LEFT */}
-
+        {/* Details */}
+        <div className="mt-6 grid gap-6 lg:grid-cols-[1fr_320px]">
           <div className="space-y-6">
-
-            <DetailSection title="About This Project">
+            <DetailSection title="About the project">
               <p className="text-sm leading-7 text-[#64748B] sm:text-base">
                 {project.description}
               </p>
             </DetailSection>
 
-            <DetailSection title="My Contribution">
+            <DetailSection title="My contribution">
               <p className="text-sm leading-7 text-[#64748B] sm:text-base">
                 {project.contribution}
               </p>
             </DetailSection>
 
-            <DetailSection title="Technology Stack">
-
-              <div className="flex flex-wrap gap-2.5">
-
-                {(project.stack || []).map(
-                  (technology) => (
-                    <span
-                      key={technology}
-                      className="rounded-xl border border-[#14B8A6]/20 bg-[#F0FDFA] px-3.5 py-2 text-sm font-semibold text-[#0F766E]"
-                    >
-                      {technology}
-                    </span>
-                  )
-                )}
-
+            <DetailSection title="Technology stack">
+              <div className="flex flex-wrap gap-2">
+                {(project.stack || []).map((technology) => (
+                  <span
+                    key={technology}
+                    className="rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2 text-sm font-semibold text-[#312E81]"
+                  >
+                    {technology}
+                  </span>
+                ))}
               </div>
             </DetailSection>
 
-            {/* KEY FEATURES */}
-
-            <DetailSection title="Key Features">
-
-              {project.features?.length ? (
-
+            {features.length > 0 && (
+              <DetailSection title="Key features">
                 <div className="grid gap-3 sm:grid-cols-2">
+                  {features.map((feature) => (
+                    <div
+                      key={feature}
+                      className="flex items-start gap-3 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-3.5"
+                    >
+                      <span className="mt-0.5 flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-[#CCFBF1] text-[#0F766E]">
+                        <Check size={14} strokeWidth={3} />
+                      </span>
 
-                  {project.features.map(
-                    (feature) => (
-                      <div
-                        key={feature}
-                        className="flex items-start gap-3 rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] p-4 transition hover:border-[#14B8A6]/20 hover:bg-[#F0FDFA]/40"
-                      >
-
-                        <span className="mt-0.5 flex h-7 w-7 shrink-0 items-center justify-center rounded-full bg-[#F0FDFA] text-[#0F766E]">
-                          <Check size={14} />
-                        </span>
-
-                        <span className="text-sm font-medium leading-6 text-[#475569]">
-                          {feature}
-                        </span>
-
-                      </div>
-                    )
-                  )}
-
+                      <span className="text-sm font-semibold leading-5 text-[#1E1B4B]">
+                        {feature}
+                      </span>
+                    </div>
+                  ))}
                 </div>
-
-              ) : (
-                <p className="text-sm text-[#64748B]">
-                  No key features have been
-                  added yet.
-                </p>
-              )}
-            </DetailSection>
-
+              </DetailSection>
+            )}
           </div>
 
-          {/* RIGHT */}
-
           <aside className="space-y-6">
-
-            {/* PROGRESS */}
-
-            <DetailSection title="Project Progress">
-
-              <div className="mb-3 flex items-center justify-between">
-
-                <span className="text-sm font-semibold text-[#64748B]">
-                  Completion
-                </span>
-
-                <span className="text-lg font-bold text-[#312E81]">
-                  {project.progress}%
-                </span>
-
+            <DetailSection title="Project snapshot">
+              <div className="space-y-4">
+                <InfoItem label="Role" value={project.role} />
+                <InfoItem label="Project type" value={project.type} />
+                <InfoItem label="Category" value={project.category} />
+                <InfoItem label="Year" value={project.year} />
               </div>
-
-              <div className="h-3 overflow-hidden rounded-full bg-[#E2E8F0]">
-
-                <div
-                  className="h-full rounded-full bg-gradient-to-r from-[#312E81] to-[#14B8A6]"
-                  style={{
-                    width: `${project.progress}%`,
-                  }}
-                />
-
-              </div>
-
-              <p className="mt-3 text-xs leading-5 text-[#64748B]">
-                Current project completion based
-                on the development status.
-              </p>
-
             </DetailSection>
 
-            {/* LINKS */}
+            <DetailSection title="Project progress">
+              <div>
+                <div className="mb-3 flex items-center justify-between">
+                  <span className="text-sm font-semibold text-[#64748B]">
+                    Completion
+                  </span>
 
-            <DetailSection title="Project Links">
+                  <span className="text-lg font-extrabold text-[#1E1B4B]">
+                    {project.progress || 0}%
+                  </span>
+                </div>
 
-              <div className="space-y-3">
+                <div className="h-2.5 overflow-hidden rounded-full bg-[#E2E8F0]">
+                  <div
+                    className="h-full rounded-full bg-gradient-to-r from-[#312E81] to-[#0F766E]"
+                    style={{
+                      width: `${Math.min(
+                        100,
+                        Math.max(0, Number(project.progress) || 0)
+                      )}%`,
+                    }}
+                  />
+                </div>
+              </div>
+            </DetailSection>
 
+            <DetailSection title="Project links">
+              <div className="space-y-2">
                 {project.github && (
                   <ProjectLink
                     href={project.github}
-                    label="GitHub Repository"
-                    icon={
-                      <ExternalLink
-                        size={17}
-                      />
-                    }
+                    icon={<GitHubIcon size={17} />}
+                    label="Source code"
                   />
                 )}
 
                 {project.live && (
                   <ProjectLink
                     href={project.live}
-                    label="Live Deployment"
-                    icon={
-                      <LinkIcon
-                        size={17}
-                      />
-                    }
+                    icon={<ExternalLink size={17} />}
+                    label="Live deployment"
                   />
                 )}
 
-                {project.githubProfile && (
+                {project.profile && (
                   <ProjectLink
-                    href={
-                      project.githubProfile
-                    }
-                    label="My GitHub Profile"
-                    icon={
-                      <ExternalLink
-                        size={17}
-                      />
-                    }
+                    href={project.profile}
+                    icon={<LinkIcon size={17} />}
+                    label="Developer profile"
                   />
                 )}
-
-                {!project.live && (
-                  <div className="rounded-xl border border-dashed border-[#E2E8F0] bg-[#F8FAFC] p-4">
-                    <p className="text-xs leading-5 text-[#64748B]">
-                      A live deployment link has
-                      not been added for this
-                      project yet.
-                    </p>
-                  </div>
-                )}
-
               </div>
             </DetailSection>
-
           </aside>
-        </div>
-
-        {/* FOOTER ACTION */}
-
-        <div className="mt-8 border-t border-[#E2E8F0] pt-6">
-
-          <button
-            type="button"
-            onClick={onBack}
-            className="inline-flex items-center gap-2 rounded-xl border border-[#E2E8F0] bg-white px-4 py-3 text-sm font-bold text-[#64748B] transition hover:border-[#14B8A6]/30 hover:bg-[#F0FDFA] hover:text-[#0F766E]"
-          >
-            <ArrowLeft size={17} />
-            Back to My Projects
-          </button>
-
         </div>
       </main>
     </div>
@@ -1484,143 +1385,93 @@ function ProjectDetails({
 
 /* =========================================================
    DETAIL SECTION
-========================================================= */
+   ========================================================= */
 
-function DetailSection({
-  title,
-  children,
-}) {
+function DetailSection({ title, children }) {
   return (
     <section className="rounded-2xl border border-[#E2E8F0] bg-white p-5 shadow-sm sm:p-6">
-
-      <h2 className="mb-5 flex items-center gap-2.5 text-lg font-bold text-[#1E1B4B]">
-
-        <span className="h-5 w-1 rounded-full bg-[#14B8A6]" />
-
+      <h2 className="text-lg font-extrabold text-[#1E1B4B]">
         {title}
-
       </h2>
 
-      {children}
+      <div className="mt-4">{children}</div>
     </section>
   );
 }
 
 /* =========================================================
    INFO ITEM
-========================================================= */
+   ========================================================= */
 
-function InfoItem({
-  label,
-  value,
-  light = false,
-}) {
+function InfoItem({ label, value }) {
   return (
-    <div
-      className={`rounded-xl p-4 ${
-        light
-          ? "border border-white/10 bg-white/10"
-          : "border border-[#E2E8F0] bg-[#F8FAFC]"
-      }`}
-    >
-
-      <p
-        className={`text-xs font-semibold uppercase tracking-wide ${
-          light
-            ? "text-white/60"
-            : "text-[#64748B]"
-        }`}
-      >
+    <div>
+      <p className="text-xs font-bold uppercase tracking-wide text-[#94A3B8]">
         {label}
       </p>
 
-      <p
-        className={`mt-1.5 text-sm font-bold ${
-          light
-            ? "text-white"
-            : "text-[#1E1B4B]"
-        }`}
-      >
-        {value}
+      <p className="mt-1 text-sm font-bold text-[#1E1B4B]">
+        {value || "Not specified"}
       </p>
-
     </div>
   );
 }
 
 /* =========================================================
    PROJECT LINK
-========================================================= */
+   ========================================================= */
 
-function ProjectLink({
-  href,
-  label,
-  icon,
-}) {
+function ProjectLink({ href, icon, label }) {
   return (
     <a
       href={href}
       target="_blank"
       rel="noreferrer"
-      className="group flex items-center justify-between gap-3 rounded-xl border border-[#E2E8F0] bg-white p-3.5 transition hover:border-[#14B8A6]/30 hover:bg-[#F0FDFA]"
+      className="flex items-center justify-between rounded-xl border border-[#E2E8F0] bg-[#F8FAFC] px-3.5 py-3 text-sm font-bold text-[#312E81] transition hover:border-[#312E81] hover:bg-[#EEF2FF]"
     >
+      <span className="flex items-center gap-2.5">
+        {icon}
+        {label}
+      </span>
 
-      <div className="flex min-w-0 items-center gap-3">
-
-        <span className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-[#F0FDFA] text-[#0F766E] transition group-hover:bg-[#CCFBF1]">
-          {icon}
-        </span>
-
-        <span className="truncate text-sm font-semibold text-[#475569]">
-          {label}
-        </span>
-
-      </div>
-
-      <ChevronRight
-        size={16}
-        className="shrink-0 text-[#94A3B8] transition group-hover:text-[#0F766E]"
-      />
-
+      <ExternalLink size={14} />
     </a>
   );
 }
 
 /* =========================================================
-   EMPTY STATE
-========================================================= */
+   EMPTY PROJECTS
+   ========================================================= */
 
 function EmptyProjects({
-  search,
+  hasFilters,
   onClear,
   onAdd,
 }) {
   return (
-    <div className="rounded-2xl border border-dashed border-[#CBD5E1] bg-white px-6 py-16 text-center shadow-sm">
-
-      <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-[#F0FDFA] text-[#0F766E]">
-        <BriefcaseBusiness size={28} />
+    <div className="rounded-2xl border border-dashed border-[#CBD5E1] bg-white px-6 py-14 text-center shadow-sm">
+      <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-2xl bg-[#CCFBF1] text-[#0F766E]">
+        <Layers3 size={25} />
       </div>
 
-      <h3 className="mt-5 text-xl font-bold text-[#1E1B4B]">
-        No projects found
+      <h3 className="mt-5 text-xl font-extrabold text-[#1E1B4B]">
+        {hasFilters ? "No projects found" : "Your portfolio is empty"}
       </h3>
 
       <p className="mx-auto mt-2 max-w-md text-sm leading-6 text-[#64748B]">
-        {search
-          ? "Try changing your search or status filter."
-          : "Add your first project to start building your portfolio."}
+        {hasFilters
+          ? "Try changing your search or filters to find the project you are looking for."
+          : "Add your first project to start building a professional student portfolio."}
       </p>
 
       <div className="mt-6 flex flex-wrap justify-center gap-3">
-
-        {search && (
+        {hasFilters && (
           <button
             type="button"
             onClick={onClear}
-            className="rounded-xl border border-[#E2E8F0] bg-white px-4 py-2.5 text-sm font-bold text-[#64748B] transition hover:bg-[#F8FAFC]"
+            className="rounded-xl border border-[#E2E8F0] px-4 py-2.5 text-sm font-bold text-[#312E81] transition hover:border-[#312E81] hover:bg-[#EEF2FF]"
           >
-            Clear Filters
+            Clear filters
           </button>
         )}
 
@@ -1630,459 +1481,354 @@ function EmptyProjects({
           className="inline-flex items-center gap-2 rounded-xl bg-[#312E81] px-4 py-2.5 text-sm font-bold text-white transition hover:bg-[#1E1B4B]"
         >
           <Plus size={17} />
-          Add Project
+          Add project
         </button>
-
       </div>
     </div>
   );
 }
 
 /* =========================================================
-   PROJECT FORM MODAL
-========================================================= */
+   FORM MODAL
+   ========================================================= */
 
 function ProjectFormModal({
   form,
-  updateForm,
-  onClose,
-  onSubmit,
+  error,
   editing,
+  onChange,
+  onClose,
+  onSave,
 }) {
   return (
-    <div className="fixed inset-0 z-50 overflow-y-auto bg-[#1E1B4B]/70 p-3 backdrop-blur-sm sm:p-5">
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-[#1E1B4B]/60 p-3 backdrop-blur-sm sm:p-5">
+      <div
+        className="flex max-h-[94vh] w-full max-w-5xl flex-col overflow-hidden rounded-3xl bg-white shadow-2xl"
+        role="dialog"
+        aria-modal="true"
+        aria-labelledby="project-form-title"
+      >
+        {/* Modal header */}
+        <div className="flex items-center justify-between border-b border-[#E2E8F0] px-5 py-4 sm:px-6">
+          <div>
+            <p className="text-xs font-bold uppercase tracking-wider text-[#0F766E]">
+              Student portfolio
+            </p>
 
-      <div className="flex min-h-full items-center justify-center py-4 sm:py-8">
-
-        <div className="w-full max-w-3xl overflow-hidden rounded-3xl border border-[#E2E8F0] bg-white shadow-2xl">
-
-          {/* HEADER */}
-
-          <div className="sticky top-0 z-10 flex items-center justify-between border-b border-[#E2E8F0] bg-white px-5 py-4 sm:px-6">
-
-            <div>
-
-              <h2 className="text-xl font-bold text-[#1E1B4B]">
-                {editing
-                  ? "Edit Project"
-                  : "Add New Project"}
-              </h2>
-
-              <p className="mt-1 text-xs text-[#64748B]">
-                Add clear information about
-                your project and contribution.
-              </p>
-
-            </div>
-
-            <button
-              type="button"
-              onClick={onClose}
-              className="flex h-10 w-10 items-center justify-center rounded-xl text-[#64748B] transition hover:bg-[#F8FAFC] hover:text-[#1E1B4B]"
+            <h2
+              id="project-form-title"
+              className="mt-1 text-xl font-extrabold text-[#1E1B4B]"
             >
-              <X size={19} />
-            </button>
-
+              {editing ? "Edit project" : "Add a project"}
+            </h2>
           </div>
 
-          {/* FORM */}
+          <button
+            type="button"
+            onClick={onClose}
+            className="flex h-10 w-10 items-center justify-center rounded-xl text-[#64748B] transition hover:bg-[#F8FAFC] hover:text-[#1E1B4B]"
+            aria-label="Close project form"
+          >
+            <X size={20} />
+          </button>
+        </div>
 
-          <form onSubmit={onSubmit}>
+        {/* Modal body */}
+        <div className="overflow-y-auto px-5 py-5 sm:px-6 sm:py-6">
+          {error && (
+            <div className="mb-5 rounded-xl border border-[#14B8A6]/30 bg-[#CCFBF1] px-4 py-3 text-sm font-semibold text-[#0F766E]">
+              {error}
+            </div>
+          )}
 
-            <div className="space-y-8 p-5 sm:p-6">
-
-              {/* BASIC */}
-
-              <FormSection title="Basic Information">
-
-                <div className="grid gap-4 sm:grid-cols-2">
-
-                  <FormField
-                    label="Project Name"
-                    required
-                  >
-                    <input
-                      value={form.name}
-                      onChange={(event) =>
-                        updateForm(
-                          "name",
-                          event.target.value
-                        )
-                      }
-                      placeholder="e.g. Smart Campus"
-                      className={inputClass}
-                    />
-                  </FormField>
-
-                  <FormField
-                    label="Category"
-                    required
-                  >
-                    <input
-                      value={form.category}
-                      onChange={(event) =>
-                        updateForm(
-                          "category",
-                          event.target.value
-                        )
-                      }
-                      placeholder="e.g. Full Stack"
-                      className={inputClass}
-                    />
-                  </FormField>
-
-                  <FormField
-                    label="Your Role"
-                    required
-                  >
-                    <input
-                      value={form.role}
-                      onChange={(event) =>
-                        updateForm(
-                          "role",
-                          event.target.value
-                        )
-                      }
-                      placeholder="e.g. Frontend Developer"
-                      className={inputClass}
-                    />
-                  </FormField>
-
-                  <FormField label="Project Type">
-
-                    <select
-                      value={form.type}
-                      onChange={(event) =>
-                        updateForm(
-                          "type",
-                          event.target.value
-                        )
-                      }
-                      className={inputClass}
-                    >
-                      <option>
-                        Personal Project
-                      </option>
-
-                      <option>
-                        Team Project
-                      </option>
-
-                      <option>
-                        College Project
-                      </option>
-
-                      <option>
-                        Hackathon Project
-                      </option>
-
-                      <option>
-                        Open Source
-                      </option>
-                    </select>
-
-                  </FormField>
-
-                  <FormField label="Status">
-
-                    <select
-                      value={form.status}
-                      onChange={(event) =>
-                        updateForm(
-                          "status",
-                          event.target.value
-                        )
-                      }
-                      className={inputClass}
-                    >
-                      <option>
-                        In Progress
-                      </option>
-
-                      <option>
-                        Completed
-                      </option>
-
-                      <option>
-                        On Hold
-                      </option>
-                    </select>
-
-                  </FormField>
-
-                  <FormField label="Year">
-
-                    <input
-                      type="number"
-                      min="2000"
-                      max="2100"
-                      value={form.year}
-                      onChange={(event) =>
-                        updateForm(
-                          "year",
-                          event.target.value
-                        )
-                      }
-                      className={inputClass}
-                    />
-
-                  </FormField>
-
-                </div>
-              </FormSection>
-
-              {/* IMAGE */}
-
-              <FormSection title="Project Image">
-
-                <ImageUploader
-                  image={form.image}
-                  onChange={(image) =>
-                    updateForm(
-                      "image",
-                      image
-                    )
-                  }
-                />
-
-              </FormSection>
-
-              {/* DESCRIPTION */}
-
-              <FormSection title="Project Description">
-
-                <div className="space-y-4">
-
-                  <FormField
-                    label="Short Description"
-                    required
-                  >
-                    <textarea
-                      rows={3}
-                      value={
-                        form.shortDescription
-                      }
-                      onChange={(event) =>
-                        updateForm(
-                          "shortDescription",
-                          event.target.value
-                        )
-                      }
-                      placeholder="Write a concise summary of your project..."
-                      className={textareaClass}
-                    />
-                  </FormField>
-
-                  <FormField
-                    label="Detailed Description"
-                    required
-                  >
-                    <textarea
-                      rows={6}
-                      value={
-                        form.description
-                      }
-                      onChange={(event) =>
-                        updateForm(
-                          "description",
-                          event.target.value
-                        )
-                      }
-                      placeholder="Explain what the project does, who it is for and how it works..."
-                      className={textareaClass}
-                    />
-                  </FormField>
-
-                  <FormField
-                    label="Your Contribution"
-                    required
-                  >
-                    <textarea
-                      rows={5}
-                      value={
-                        form.contribution
-                      }
-                      onChange={(event) =>
-                        updateForm(
-                          "contribution",
-                          event.target.value
-                        )
-                      }
-                      placeholder="Describe what you personally designed, developed or contributed..."
-                      className={textareaClass}
-                    />
-                  </FormField>
-
-                </div>
-              </FormSection>
-
-              {/* TECHNOLOGIES */}
-
-              <FormSection title="Technology Stack">
-
-                <TechnologyMultiSelect
-                  value={form.stack}
-                  onChange={(stack) =>
-                    updateForm(
-                      "stack",
-                      stack
-                    )
-                  }
-                />
-
-              </FormSection>
-
-              {/* FEATURES */}
-
-              <FormSection title="Key Features">
-
-                <FormField label="Features">
-
-                  <textarea
-                    rows={4}
-                    value={form.features}
+          <div className="space-y-6">
+            <FormSection
+              number="01"
+              title="Basic information"
+              description="Tell people what this project is."
+            >
+              <div className="grid gap-4 sm:grid-cols-2">
+                <FormField label="Project name" required className="sm:col-span-2">
+                  <input
+                    type="text"
+                    value={form.name}
                     onChange={(event) =>
-                      updateForm(
-                        "features",
-                        event.target.value
-                      )
+                      onChange("name", event.target.value)
                     }
-                    placeholder="Authentication, Team Builder, Notifications, Responsive UI"
-                    className={textareaClass}
+                    placeholder="e.g. Campus Connect"
+                    className={inputClass}
                   />
-
-                  <p className="mt-2 text-xs text-[#94A3B8]">
-                    Separate each feature
-                    with a comma.
-                  </p>
-
                 </FormField>
 
-              </FormSection>
+                <FormField label="Category">
+                  <input
+                    type="text"
+                    value={form.category}
+                    onChange={(event) =>
+                      onChange("category", event.target.value)
+                    }
+                    placeholder="e.g. Full Stack"
+                    className={inputClass}
+                  />
+                </FormField>
 
-              {/* LINKS */}
+                <FormField label="Year">
+                  <input
+                    type="number"
+                    min="2000"
+                    max="2100"
+                    value={form.year}
+                    onChange={(event) =>
+                      onChange("year", event.target.value)
+                    }
+                    className={inputClass}
+                  />
+                </FormField>
 
-              <FormSection title="Project Links">
+                <FormField label="Your role">
+                  <input
+                    type="text"
+                    value={form.role}
+                    onChange={(event) =>
+                      onChange("role", event.target.value)
+                    }
+                    placeholder="e.g. Frontend Developer"
+                    className={inputClass}
+                  />
+                </FormField>
 
-                <div className="grid gap-4 sm:grid-cols-2">
+                <FormField label="Project type">
+                  <select
+                    value={form.type}
+                    onChange={(event) =>
+                      onChange("type", event.target.value)
+                    }
+                    className={inputClass}
+                  >
+                    {PROJECT_TYPES.filter((item) => item !== "All").map(
+                      (type) => (
+                        <option key={type}>{type}</option>
+                      )
+                    )}
+                  </select>
+                </FormField>
 
-                  <FormField label="GitHub Repository">
+                <FormField label="Status">
+                  <select
+                    value={form.status}
+                    onChange={(event) =>
+                      onChange("status", event.target.value)
+                    }
+                    className={inputClass}
+                  >
+                    {STATUS_OPTIONS.filter((item) => item !== "All").map(
+                      (status) => (
+                        <option key={status}>{status}</option>
+                      )
+                    )}
+                  </select>
+                </FormField>
+              </div>
+            </FormSection>
 
-                    <div className="relative">
+            <FormSection
+              number="02"
+              title="Project image"
+              description="Add an optional project image or screenshot."
+            >
+              <ImageUploader
+                value={form.image}
+                onChange={(value) => onChange("image", value)}
+              />
+            </FormSection>
 
-                      <ExternalLink
-                        size={16}
-                        className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#64748B]"
-                      />
+            <FormSection
+              number="03"
+              title="Project description"
+              description="Explain what you built and what you contributed."
+            >
+              <div className="space-y-4">
+                <FormField
+                  label="Short description"
+                  required
+                  hint="Keep this concise. It appears on the project card."
+                >
+                  <textarea
+                    value={form.shortDescription}
+                    onChange={(event) =>
+                      onChange("shortDescription", event.target.value)
+                    }
+                    rows={3}
+                    maxLength={220}
+                    placeholder="Briefly describe what your project does..."
+                    className={textareaClass}
+                  />
+                </FormField>
 
-                      <input
-                        type="url"
-                        value={form.github}
-                        onChange={(event) =>
-                          updateForm(
-                            "github",
-                            event.target.value
-                          )
-                        }
-                        placeholder="https://github.com/..."
-                        className={`${inputClass} pl-10`}
-                      />
+                <FormField label="Detailed description" required>
+                  <textarea
+                    value={form.description}
+                    onChange={(event) =>
+                      onChange("description", event.target.value)
+                    }
+                    rows={5}
+                    placeholder="Describe the purpose, users, problem solved, and how the project works..."
+                    className={textareaClass}
+                  />
+                </FormField>
 
-                    </div>
-                  </FormField>
+                <FormField label="Your contribution">
+                  <textarea
+                    value={form.contribution}
+                    onChange={(event) =>
+                      onChange("contribution", event.target.value)
+                    }
+                    rows={4}
+                    placeholder="Explain your responsibilities, features you developed, and technical work..."
+                    className={textareaClass}
+                  />
+                </FormField>
+              </div>
+            </FormSection>
 
-                  <FormField label="Live Deployment">
+            <FormSection
+              number="04"
+              title="Technology"
+              description="Select the technologies you used."
+            >
+              <TechnologyMultiSelect
+                selected={form.stack}
+                onChange={(value) => onChange("stack", value)}
+              />
+            </FormSection>
 
-                    <div className="relative">
+            <FormSection
+              number="05"
+              title="Key features"
+              description="Add the most important project features, one per line."
+            >
+              <textarea
+                value={form.features}
+                onChange={(event) =>
+                  onChange("features", event.target.value)
+                }
+                rows={5}
+                placeholder={`User authentication
+Responsive dashboard
+Project search
+Team collaboration`}
+                className={textareaClass}
+              />
+            </FormSection>
 
-                      <LinkIcon
-                        size={16}
-                        className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#64748B]"
-                      />
+            <FormSection
+              number="06"
+              title="Project links"
+              description="Help recruiters and teammates explore your work."
+            >
+              <div className="grid gap-4 sm:grid-cols-2">
+                <FormField label="GitHub repository">
+                  <div className="relative">
+                    <GitHubIcon
+                      size={17}
+                      className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#64748B]"
+                    />
 
-                      <input
-                        type="url"
-                        value={form.live}
-                        onChange={(event) =>
-                          updateForm(
-                            "live",
-                            event.target.value
-                          )
-                        }
-                        placeholder="https://your-project.com"
-                        className={`${inputClass} pl-10`}
-                      />
+                    <input
+                      type="url"
+                      value={form.github}
+                      onChange={(event) =>
+                        onChange("github", event.target.value)
+                      }
+                      placeholder="https://github.com/..."
+                      className={`${inputClass} pl-10`}
+                    />
+                  </div>
+                </FormField>
 
-                    </div>
-                  </FormField>
+                <FormField label="Live deployment">
+                  <div className="relative">
+                    <ExternalLink
+                      size={17}
+                      className="absolute left-3.5 top-1/2 -translate-y-1/2 text-[#64748B]"
+                    />
 
-                </div>
-              </FormSection>
+                    <input
+                      type="url"
+                      value={form.live}
+                      onChange={(event) =>
+                        onChange("live", event.target.value)
+                      }
+                      placeholder="https://your-project.com"
+                      className={`${inputClass} pl-10`}
+                    />
+                  </div>
+                </FormField>
+              </div>
+            </FormSection>
 
-              {/* PROGRESS */}
-
-              <FormSection title="Project Progress">
-
-                <div className="rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] p-4">
-
-                  <div className="mb-3 flex items-center justify-between">
-
-                    <span className="text-sm font-semibold text-[#64748B]">
+            <FormSection
+              number="07"
+              title="Project progress"
+              description="Show how much of the project is currently complete."
+            >
+              <div className="rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC] p-5">
+                <div className="mb-4 flex items-center justify-between">
+                  <div>
+                    <p className="text-sm font-bold text-[#1E1B4B]">
                       Completion
-                    </span>
+                    </p>
 
-                    <span className="text-sm font-bold text-[#312E81]">
-                      {form.progress}%
-                    </span>
-
+                    <p className="mt-1 text-xs text-[#64748B]">
+                      Update this whenever your project progresses.
+                    </p>
                   </div>
 
-                  <input
-                    type="range"
-                    min="0"
-                    max="100"
-                    value={form.progress}
-                    onChange={(event) =>
-                      updateForm(
-                        "progress",
-                        event.target.value
-                      )
-                    }
-                    className="w-full accent-[#312E81]"
-                  />
-
+                  <span className="rounded-xl bg-[#CCFBF1] px-3 py-1.5 text-sm font-extrabold text-[#0F766E]">
+                    {form.progress}%
+                  </span>
                 </div>
 
-              </FormSection>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  step="5"
+                  value={form.progress}
+                  onChange={(event) =>
+                    onChange("progress", Number(event.target.value))
+                  }
+                  className="w-full accent-[#312E81]"
+                />
 
-            </div>
+                <div className="mt-2 flex justify-between text-xs font-semibold text-[#94A3B8]">
+                  <span>0%</span>
+                  <span>50%</span>
+                  <span>100%</span>
+                </div>
+              </div>
+            </FormSection>
+          </div>
+        </div>
 
-            {/* FOOTER */}
+        {/* Modal footer */}
+        <div className="flex flex-col-reverse gap-2 border-t border-[#E2E8F0] bg-[#F8FAFC] px-5 py-4 sm:flex-row sm:justify-end sm:px-6">
+          <button
+            type="button"
+            onClick={onClose}
+            className="rounded-xl border border-[#E2E8F0] bg-white px-5 py-2.5 text-sm font-bold text-[#64748B] transition hover:border-[#CBD5E1] hover:text-[#1E1B4B]"
+          >
+            Cancel
+          </button>
 
-            <div className="sticky bottom-0 flex flex-col-reverse gap-3 border-t border-[#E2E8F0] bg-white px-5 py-4 sm:flex-row sm:justify-end sm:px-6">
-
-              <button
-                type="button"
-                onClick={onClose}
-                className="rounded-xl border border-[#E2E8F0] px-5 py-2.5 text-sm font-bold text-[#64748B] transition hover:bg-[#F8FAFC]"
-              >
-                Cancel
-              </button>
-
-              <button
-                type="submit"
-                className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#312E81] px-5 py-2.5 text-sm font-bold text-white transition hover:bg-[#1E1B4B] hover:shadow-md"
-              >
-                <CheckCircle2 size={17} />
-
-                {editing
-                  ? "Save Changes"
-                  : "Add Project"}
-              </button>
-
-            </div>
-
-          </form>
+          <button
+            type="button"
+            onClick={onSave}
+            className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#312E81] px-5 py-2.5 text-sm font-bold text-white transition hover:bg-[#1E1B4B]"
+          >
+            <Check size={17} />
+            {editing ? "Save changes" : "Add project"}
+          </button>
         </div>
       </div>
     </div>
@@ -2090,301 +1836,274 @@ function ProjectFormModal({
 }
 
 /* =========================================================
-   TECHNOLOGY SELECT
-========================================================= */
+   FORM SECTION
+   ========================================================= */
+
+function FormSection({
+  number,
+  title,
+  description,
+  children,
+}) {
+  return (
+    <section className="rounded-2xl border border-[#E2E8F0] bg-white">
+      <div className="border-b border-[#E2E8F0] px-4 py-4 sm:px-5">
+        <div className="flex items-start gap-3">
+          <span className="flex h-7 w-7 shrink-0 items-center justify-center rounded-lg bg-[#1E1B4B] text-xs font-extrabold text-white">
+            {number}
+          </span>
+
+          <div>
+            <h3 className="font-extrabold text-[#1E1B4B]">
+              {title}
+            </h3>
+
+            <p className="mt-0.5 text-xs leading-5 text-[#64748B]">
+              {description}
+            </p>
+          </div>
+        </div>
+      </div>
+
+      <div className="p-4 sm:p-5">{children}</div>
+    </section>
+  );
+}
+
+/* =========================================================
+   FORM FIELD
+   ========================================================= */
+
+function FormField({
+  label,
+  required = false,
+  hint,
+  children,
+  className = "",
+}) {
+  return (
+    <div className={className}>
+      <label className="mb-2 block text-sm font-bold text-[#1E1B4B]">
+        {label}
+
+        {required && (
+          <span className="ml-1 text-[#0F766E]">*</span>
+        )}
+      </label>
+
+      {children}
+
+      {hint && (
+        <p className="mt-1.5 text-xs text-[#94A3B8]">
+          {hint}
+        </p>
+      )}
+    </div>
+  );
+}
+
+const inputClass =
+  "h-11 w-full rounded-xl border border-[#E2E8F0] bg-white px-3.5 text-sm text-[#0F172A] outline-none transition placeholder:text-[#94A3B8] focus:border-[#312E81] focus:ring-4 focus:ring-[#312E81]/10";
+
+const textareaClass =
+  "w-full rounded-xl border border-[#E2E8F0] bg-white px-3.5 py-3 text-sm leading-6 text-[#0F172A] outline-none transition placeholder:text-[#94A3B8] focus:border-[#312E81] focus:ring-4 focus:ring-[#312E81]/10 resize-y";
+
+/* =========================================================
+   TECHNOLOGY MULTI SELECT
+   ========================================================= */
 
 function TechnologyMultiSelect({
-  value,
+  selected,
   onChange,
 }) {
-  const [open, setOpen] =
-    useState(false);
+  const [open, setOpen] = useState(false);
+  const [query, setQuery] = useState("");
 
-  const [search, setSearch] =
-    useState("");
+  const wrapperRef = useRef(null);
 
-  const filteredGroups =
-    Object.entries(
-      TECHNOLOGY_GROUPS
+  const technologies = Object.entries(TECHNOLOGY_GROUPS)
+    .flatMap(([group, items]) =>
+      items.map((item) => ({
+        group,
+        item,
+      }))
     )
-      .map(
-        ([group, technologies]) => [
-          group,
-          technologies.filter(
-            (technology) =>
-              technology
-                .toLowerCase()
-                .includes(
-                  search.toLowerCase()
-                )
-          ),
-        ]
-      )
-      .filter(
-        ([, technologies]) =>
-          technologies.length
-      );
+    .filter(({ item }) =>
+      item.toLowerCase().includes(query.toLowerCase())
+    );
 
-  const toggleTechnology = (
-    technology
-  ) => {
-    if (
-      value.includes(technology)
-    ) {
-      onChange(
-        value.filter(
-          (item) =>
-            item !== technology
-        )
-      );
+  const toggleTechnology = (technology) => {
+    if (selected.includes(technology)) {
+      onChange(selected.filter((item) => item !== technology));
     } else {
-      onChange([
-        ...value,
-        technology,
-      ]);
+      onChange([...selected, technology]);
     }
   };
 
   return (
-    <div className="relative">
-
+    <div ref={wrapperRef} className="relative">
       <button
         type="button"
-        onClick={() =>
-          setOpen(
-            (previous) =>
-              !previous
-          )
-        }
-        className="flex min-h-12 w-full items-center justify-between gap-3 rounded-xl border border-[#E2E8F0] bg-white px-4 py-3 text-left outline-none transition hover:border-[#14B8A6]/40 focus:border-[#312E81] focus:ring-2 focus:ring-[#312E81]/10"
+        onClick={() => setOpen((previous) => !previous)}
+        className="flex min-h-12 w-full items-center justify-between gap-3 rounded-xl border border-[#E2E8F0] bg-white px-3.5 py-2.5 text-left transition hover:border-[#CBD5E1] focus:border-[#312E81]"
       >
-
-        <div className="flex min-w-0 flex-1 flex-wrap gap-2">
-
-          {value.length ? (
-            value
-              .slice(0, 4)
-              .map(
-                (technology) => (
-                  <span
-                    key={technology}
-                    className="rounded-lg border border-[#14B8A6]/15 bg-[#F0FDFA] px-2.5 py-1 text-xs font-semibold text-[#0F766E]"
-                  >
-                    {technology}
-                  </span>
-                )
-              )
+        <div className="flex flex-wrap gap-1.5">
+          {selected.length ? (
+            selected.slice(0, 5).map((technology) => (
+              <span
+                key={technology}
+                className="rounded-lg bg-[#EEF2FF] px-2.5 py-1 text-xs font-bold text-[#312E81]"
+              >
+                {technology}
+              </span>
+            ))
           ) : (
             <span className="text-sm text-[#94A3B8]">
-              Select technologies...
+              Select technologies
             </span>
           )}
 
-          {value.length > 4 && (
-            <span className="rounded-lg bg-[#F8FAFC] px-2.5 py-1 text-xs font-semibold text-[#64748B]">
-              +{value.length - 4}
+          {selected.length > 5 && (
+            <span className="rounded-lg bg-[#CCFBF1] px-2.5 py-1 text-xs font-bold text-[#0F766E]">
+              +{selected.length - 5}
             </span>
           )}
-
         </div>
 
         <ChevronDown
-          size={18}
+          size={17}
           className={`shrink-0 text-[#64748B] transition ${
-            open
-              ? "rotate-180"
-              : ""
+            open ? "rotate-180" : ""
           }`}
         />
-
       </button>
 
       {open && (
-        <div className="absolute left-0 right-0 top-[calc(100%+8px)] z-30 max-h-[400px] overflow-hidden rounded-2xl border border-[#E2E8F0] bg-white shadow-2xl">
-
+        <div className="absolute left-0 right-0 top-[calc(100%+8px)] z-20 overflow-hidden rounded-2xl border border-[#E2E8F0] bg-white shadow-xl">
           <div className="border-b border-[#E2E8F0] p-3">
-
             <div className="relative">
-
               <Search
                 size={16}
-                className="absolute left-3 top-1/2 -translate-y-1/2 text-[#64748B]"
+                className="absolute left-3 top-1/2 -translate-y-1/2 text-[#94A3B8]"
               />
 
               <input
-                autoFocus
-                value={search}
-                onChange={(event) =>
-                  setSearch(
-                    event.target.value
-                  )
-                }
+                type="text"
+                value={query}
+                onChange={(event) => setQuery(event.target.value)}
                 placeholder="Search technologies..."
-                className="h-10 w-full rounded-lg border border-[#E2E8F0] bg-[#F8FAFC] pl-9 pr-3 text-sm outline-none focus:border-[#312E81]"
+                className={`${inputClass} pl-9`}
+                autoFocus
               />
-
             </div>
           </div>
 
-          <div className="max-h-[300px] overflow-y-auto p-3">
+          <div className="max-h-72 overflow-y-auto p-3">
+            {technologies.length > 0 ? (
+              <div className="space-y-4">
+                {Object.entries(
+                  technologies.reduce((groups, item) => {
+                    if (!groups[item.group]) {
+                      groups[item.group] = [];
+                    }
 
-            {filteredGroups.map(
-              ([group, technologies]) => (
-                <div
-                  key={group}
-                  className="mb-5 last:mb-0"
-                >
+                    groups[item.group].push(item.item);
+                    return groups;
+                  }, {})
+                ).map(([group, items]) => (
+                  <div key={group}>
+                    <p className="mb-2 px-1 text-xs font-extrabold uppercase tracking-wide text-[#94A3B8]">
+                      {group}
+                    </p>
 
-                  <p className="mb-2 px-1 text-xs font-bold uppercase tracking-wide text-[#64748B]">
-                    {group}
-                  </p>
-
-                  <div className="grid gap-1 sm:grid-cols-2">
-
-                    {technologies.map(
-                      (technology) => {
-                        const selected =
-                          value.includes(
-                            technology
-                          );
+                    <div className="grid gap-1 sm:grid-cols-2">
+                      {items.map((technology) => {
+                        const isSelected =
+                          selected.includes(technology);
 
                         return (
                           <button
-                            type="button"
                             key={technology}
+                            type="button"
                             onClick={() =>
-                              toggleTechnology(
-                                technology
-                              )
+                              toggleTechnology(technology)
                             }
-                            className={`flex items-center gap-3 rounded-lg px-3 py-2 text-left text-sm transition ${
-                              selected
-                                ? "bg-[#F0FDFA] text-[#0F766E]"
-                                : "text-[#475569] hover:bg-[#F8FAFC]"
+                            className={`flex items-center justify-between rounded-lg px-3 py-2 text-left text-sm font-semibold transition ${
+                              isSelected
+                                ? "bg-[#CCFBF1] text-[#0F766E]"
+                                : "text-[#64748B] hover:bg-[#F8FAFC] hover:text-[#1E1B4B]"
                             }`}
                           >
+                            {technology}
 
-                            <span
-                              className={`flex h-5 w-5 shrink-0 items-center justify-center rounded-md border ${
-                                selected
-                                  ? "border-[#14B8A6] bg-[#14B8A6] text-white"
-                                  : "border-[#CBD5E1] bg-white"
-                              }`}
-                            >
-                              {selected && (
-                                <Check
-                                  size={
-                                    13
-                                  }
-                                />
-                              )}
-                            </span>
-
-                            <span className="font-medium">
-                              {technology}
-                            </span>
-
+                            {isSelected && (
+                              <Check size={15} />
+                            )}
                           </button>
                         );
-                      }
-                    )}
-
+                      })}
+                    </div>
                   </div>
-                </div>
-              )
-            )}
-
-            {!filteredGroups.length && (
-              <p className="py-8 text-center text-sm text-[#64748B]">
+                ))}
+              </div>
+            ) : (
+              <p className="py-8 text-center text-sm text-[#94A3B8]">
                 No technologies found.
               </p>
             )}
-
           </div>
 
-          <div className="flex items-center justify-between border-t border-[#E2E8F0] bg-[#F8FAFC] p-3">
-
+          <div className="flex items-center justify-between border-t border-[#E2E8F0] bg-[#F8FAFC] px-3 py-2.5">
             <button
               type="button"
-              onClick={() =>
-                onChange([])
-              }
-              className="text-xs font-bold text-[#64748B] transition hover:text-[#0F766E]"
+              onClick={() => onChange([])}
+              className="text-xs font-bold text-[#0F766E] hover:text-[#1E1B4B]"
             >
-              Clear All
+              Clear all
             </button>
 
             <button
               type="button"
-              onClick={() =>
-                setOpen(false)
-              }
-              className="rounded-lg bg-[#312E81] px-4 py-2 text-xs font-bold text-white hover:bg-[#1E1B4B]"
+              onClick={() => {
+                setOpen(false);
+                setQuery("");
+              }}
+              className="rounded-lg bg-[#312E81] px-3 py-1.5 text-xs font-bold text-white hover:bg-[#1E1B4B]"
             >
               Done
             </button>
-
           </div>
         </div>
       )}
-
-      <p className="mt-2 text-xs text-[#94A3B8]">
-        {value.length}{" "}
-        {value.length === 1
-          ? "technology"
-          : "technologies"}{" "}
-        selected
-      </p>
     </div>
   );
 }
 
 /* =========================================================
    IMAGE UPLOADER
-========================================================= */
+   ========================================================= */
 
 function ImageUploader({
-  image,
+  value,
   onChange,
 }) {
   const inputRef = useRef(null);
 
-  const processFile = (
-    file
-  ) => {
-    if (!file) {
+  const handleFile = (event) => {
+    const file = event.target.files?.[0];
+
+    if (!file) return;
+
+    if (!file.type.startsWith("image/")) {
       return;
     }
 
-    const allowedTypes = [
-      "image/jpeg",
-      "image/png",
-      "image/webp",
-    ];
-
-    if (
-      !allowedTypes.includes(
-        file.type
-      )
-    ) {
-      alert(
-        "Please upload a JPG, PNG or WEBP image."
-      );
+    if (file.size > 5 * 1024 * 1024) {
+      window.alert("Please choose an image smaller than 5 MB.");
       return;
     }
 
-    if (
-      file.size >
-      5 * 1024 * 1024
-    ) {
-      alert(
-        "Image size must be less than 5MB."
-      );
-      return;
-    }
-
-    const reader =
-      new FileReader();
+    const reader = new FileReader();
 
     reader.onload = () => {
       onChange(reader.result);
@@ -2393,173 +2112,79 @@ function ImageUploader({
     reader.readAsDataURL(file);
   };
 
-  const handleDrop = (
-    event
-  ) => {
-    event.preventDefault();
-
-    const file =
-      event.dataTransfer.files?.[0];
-
-    processFile(file);
-  };
-
   return (
     <div>
-
-      {image ? (
-        <div className="overflow-hidden rounded-2xl border border-[#E2E8F0] bg-[#F8FAFC]">
-
+      {value ? (
+        <div className="overflow-hidden rounded-2xl border border-[#E2E8F0]">
           <div className="relative h-56">
-
             <img
-              src={image}
+              src={value}
               alt="Project preview"
               className="h-full w-full object-cover"
             />
 
             <button
               type="button"
-              onClick={() =>
-                onChange(null)
-              }
-              className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-lg bg-[#1E1B4B]/80 text-white backdrop-blur transition hover:bg-[#1E1B4B]"
+              onClick={() => onChange("")}
+              className="absolute right-3 top-3 flex h-9 w-9 items-center justify-center rounded-xl bg-[#1E1B4B]/85 text-white backdrop-blur transition hover:bg-[#312E81]"
+              aria-label="Remove project image"
             >
               <X size={17} />
             </button>
-
           </div>
 
-          <div className="flex items-center justify-between gap-3 p-3">
-
-            <p className="truncate text-xs font-medium text-[#64748B]">
-              Project image uploaded
+          <div className="flex items-center justify-between gap-3 bg-[#F8FAFC] p-3">
+            <p className="text-xs font-semibold text-[#64748B]">
+              Project image added
             </p>
 
             <button
               type="button"
-              onClick={() =>
-                inputRef.current?.click()
-              }
-              className="shrink-0 rounded-lg border border-[#E2E8F0] bg-white px-3 py-2 text-xs font-bold text-[#312E81] hover:bg-[#F0FDFA]"
+              onClick={() => inputRef.current?.click()}
+              className="text-xs font-bold text-[#312E81] hover:text-[#0F766E]"
             >
-              Change
+              Change image
             </button>
-
           </div>
         </div>
       ) : (
         <button
           type="button"
-          onClick={() =>
-            inputRef.current?.click()
-          }
-          onDragOver={(event) =>
-            event.preventDefault()
-          }
-          onDrop={handleDrop}
-          className="flex w-full flex-col items-center justify-center rounded-2xl border-2 border-dashed border-[#CBD5E1] bg-[#F8FAFC] px-5 py-12 text-center transition hover:border-[#14B8A6]/50 hover:bg-[#F0FDFA]/30"
+          onClick={() => inputRef.current?.click()}
+          className="flex min-h-48 w-full flex-col items-center justify-center rounded-2xl border-2 border-dashed border-[#CBD5E1] bg-[#F8FAFC] px-5 text-center transition hover:border-[#312E81] hover:bg-[#EEF2FF]"
         >
-
-          <span className="flex h-14 w-14 items-center justify-center rounded-2xl bg-[#F0FDFA] text-[#0F766E]">
-            <ImagePlus size={25} />
-          </span>
+          <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-[#CCFBF1] text-[#0F766E]">
+            <UploadCloud size={22} />
+          </div>
 
           <p className="mt-4 text-sm font-bold text-[#1E1B4B]">
             Upload project image
           </p>
 
           <p className="mt-1 text-xs text-[#64748B]">
-            Drag & drop or click to browse
+            JPG, PNG, or WebP up to 5 MB
           </p>
 
-          <span className="mt-3 inline-flex items-center gap-1.5 text-xs font-semibold text-[#0F766E]">
-            <UploadCloud size={14} />
-            JPG, PNG or WEBP • Max 5MB
+          <span className="mt-3 inline-flex items-center gap-1.5 text-xs font-bold text-[#312E81]">
+            <ImagePlus size={14} />
+            Choose image
           </span>
-
         </button>
       )}
 
       <input
         ref={inputRef}
         type="file"
-        accept="image/jpeg,image/png,image/webp"
+        accept="image/png,image/jpeg,image/webp"
+        onChange={handleFile}
         className="hidden"
-        onChange={(event) => {
-          processFile(
-            event.target.files?.[0]
-          );
-
-          event.target.value = "";
-        }}
       />
     </div>
   );
 }
 
-/* =========================================================
-   FORM SECTION
-========================================================= */
 
-function FormSection({
-  title,
-  children,
-}) {
-  return (
-    <section>
 
-      <div className="mb-4 flex items-center gap-2.5">
 
-        <div className="h-5 w-1 rounded-full bg-[#14B8A6]" />
 
-        <h3 className="text-sm font-bold uppercase tracking-wide text-[#1E1B4B]">
-          {title}
-        </h3>
 
-      </div>
-
-      {children}
-    </section>
-  );
-}
-
-/* =========================================================
-   FORM FIELD
-========================================================= */
-
-function FormField({
-  label,
-  required = false,
-  children,
-}) {
-  return (
-    <label className="block">
-
-      <span className="mb-2 block text-sm font-semibold text-[#475569]">
-
-        {label}
-
-        {required && (
-          <span className="ml-1 text-[#14B8A6]">
-            *
-          </span>
-        )}
-
-      </span>
-
-      {children}
-
-    </label>
-  );
-}
-
-/* =========================================================
-   INPUT STYLES
-========================================================= */
-
-const inputClass =
-  "h-11 w-full rounded-xl border border-[#E2E8F0] bg-white px-3.5 text-sm text-[#0F172A] outline-none transition placeholder:text-[#94A3B8] focus:border-[#312E81] focus:ring-2 focus:ring-[#312E81]/10";
-
-const textareaClass =
-  "w-full resize-y rounded-xl border border-[#E2E8F0] bg-white px-3.5 py-3 text-sm leading-6 text-[#0F172A] outline-none transition placeholder:text-[#94A3B8] focus:border-[#312E81] focus:ring-2 focus:ring-[#312E81]/10";
