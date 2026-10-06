@@ -1,3 +1,4 @@
+
 import { Routes, Route } from "react-router-dom";
 
 import Splash from "../pages/Splash";
@@ -14,14 +15,6 @@ import ResetPassword from "../pages/auth/ResetPassword";
 import CompleteProfile from "../pages/dashboard/CompleteProfile";
 import Dashboard from "../pages/dashboard/Dashboard";
 import BuildTeam from "../pages/dashboard/BuildTeam";
-
-// ================= HACKATHONS =================
-import HackathonHome from "../pages/dashboard/HackathonHome";
-import ExploreHackathons from "../pages/dashboard/ExploreHackathons";
-import HackathonDetails from "../pages/dashboard/HackathonDetails";
-import HackathonRegistration from "../pages/dashboard/HackathonRegistration";
-import CreateHackathon from "../pages/dashboard/CreateHackathon";
-import MyHackathons from "../pages/dashboard/MyHackathons";
 
 import ProtectedRoute from "./ProtectedRoute";
 
@@ -81,47 +74,6 @@ export default function AppRoutes() {
             <Route
                 path="/complete-profile"
                 element={<CompleteProfile />}
-            />
-
-
-            {/* =====================================================
-                HACKATHON ROUTES
-            ===================================================== */}
-
-            {/* Hackathon Home */}
-            <Route
-                path="/hackathons"
-                element={<HackathonHome />}
-            />
-
-            {/* Explore Hackathons */}
-            <Route
-                path="/hackathons/explore"
-                element={<ExploreHackathons />}
-            />
-
-            {/* Create Hackathon */}
-            <Route
-                path="/create-hackathon"
-                element={<CreateHackathon />}
-            />
-
-            {/* My Hackathons */}
-            <Route
-                path="/my-hackathons"
-                element={<MyHackathons />}
-            />
-
-            {/* Hackathon Registration */}
-            <Route
-                path="/hackathons/:id/register"
-                element={<HackathonRegistration />}
-            />
-
-            {/* Hackathon Details */}
-            <Route
-                path="/hackathons/:id"
-                element={<HackathonDetails />}
             />
 
 
