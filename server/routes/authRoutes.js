@@ -3,27 +3,49 @@ import express from "express";
 import {
     register,
     login,
+    googleLogin,
     getProfile,
+    updateProfile,
+    forgotPassword,
+    verifyOtp,
+    resendOtp,
+    resetPassword,
 } from "../controllers/authController.js";
 
 import authMiddleware from "../middleware/authMiddleware.js";
 
 const router = express.Router();
 
-/*
-    POST    /api/auth/register
-*/
+// ==================== AUTH ====================
+
 router.post("/register", register);
 
-/*
-    POST    /api/auth/login
-*/
 router.post("/login", login);
 
-/*
-    GET     /api/auth/profile
-    Protected Route
-*/
-router.get("/profile", authMiddleware, getProfile);
+router.post("/google", googleLogin);
+
+// ==================== PASSWORD RESET ====================
+
+router.post("/forgot-password", forgotPassword);
+
+router.post("/verify-otp", verifyOtp);
+
+router.post("/resend-otp", resendOtp);
+
+router.post("/reset-password", resetPassword);
+
+// ==================== PROTECTED ====================
+
+router.get(
+    "/profile",
+    authMiddleware,
+    getProfile
+);
+
+router.put(
+    "/profile",
+    authMiddleware,
+    updateProfile
+);
 
 export default router;

@@ -21,19 +21,26 @@ import {
 import { useAuth } from "../../context/AuthContext";
 import { FaGithub, FaLinkedin } from "react-icons/fa";
 
-const PROFILE_STORAGE_KEY = "conexaProfile";
+// =====================================================
+// API CONFIG
+// =====================================================
+
+const API_BASE_URL = "http://localhost:5000/api/profile";
+
+// =====================================================
+// DEFAULT PROFILE
+// =====================================================
 
 const getDefaultProfile = (user) => ({
     name: user?.name || "",
     role: "MERN Developer",
     email: user?.email || "",
-    college: "",
+    college: user?.college || "",
     location: "",
-    branch: "",
-    year: "",
+    branch: user?.branch || "",
+    year: user?.year || "",
 
     photo: null,
-
     resume: null,
 
     github: "",
@@ -49,72 +56,184 @@ const getDefaultProfile = (user) => ({
     profileCompleted: false,
 });
 
+// =====================================================
+// SAFE API RESPONSE
+// =====================================================
+
+const getResponseData = async (response) => {
+    const contentType =
+        response.headers.get("content-type") || "";
+
+    if (contentType.includes("application/json")) {
+        return await response.json();
+    }
+
+    const text = await response.text();
+
+    throw new Error(
+        `Server returned non-JSON response (${response.status}). ${text?.slice(0, 150) || ""
+        }`
+    );
+};
+
+// =====================================================
+// GET TOKEN
+// =====================================================
+
+const getToken = () => {
+    return (
+        localStorage.getItem("token") ||
+        localStorage.getItem("authToken") ||
+        ""
+    );
+};
+
+// =====================================================
+// PROFILE COMPONENT
+// =====================================================
+
 export default function Profile() {
     const navigate = useNavigate();
     const { user } = useAuth();
 
-    const [showEditModal, setShowEditModal] = useState(false);
-    const [selectedProject, setSelectedProject] = useState(null);
-
-    // =====================================================
-    // DEFAULT PROFILE
-    // =====================================================
-
-    const defaultProfile = useMemo(
-        () => getDefaultProfile(user),
-        [user]
+    const [profile, setProfile] = useState(
+        getDefaultProfile(user)
     );
 
+    const [editForm, setEditForm] = useState(
+        getDefaultProfile(user)
+    );
+
+    const [showEditModal, setShowEditModal] =
+        useState(false);
+
+    const [selectedProject, setSelectedProject] =
+        useState(null);
+
+    const [loading, setLoading] = useState(true);
+    const [saving, setSaving] = useState(false);
+    const [error, setError] = useState("");
+
     // =====================================================
-    // LOAD PROFILE
+    // LOAD PROFILE FROM MONGODB
     // =====================================================
 
-    const [profile, setProfile] = useState(() => {
-        try {
-            const savedProfile = localStorage.getItem(
-                PROFILE_STORAGE_KEY
-            );
+    useEffect(() => {
+        const loadProfile = async () => {
+            try {
+                setLoading(true);
+                setError("");
 
-            if (savedProfile) {
-                return {
+                const token = getToken();
+
+                if (!token) {
+                    setProfile(
+                        getDefaultProfile(user)
+                    );
+
+                    setEditForm(
+                        getDefaultProfile(user)
+                    );
+
+                    setLoading(false);
+                    return;
+                }
+
+                const response = await fetch(
+                    API_BASE_URL,
+                    {
+                        method: "GET",
+                        headers: {
+                            Authorization: `Bearer ${token}`,
+                            "Content-Type":
+                                "application/json",
+                        },
+                    }
+                );
+
+                const data =
+                    await getResponseData(response);
+
+                if (!response.ok) {
+                    throw new Error(
+                        data?.message ||
+                        data?.error ||
+                        "Unable to load profile."
+                    );
+                }
+
+                /*
+                Backend response:
+
+                {
+                    success: true,
+                    profile: {...}
+                }
+                */
+
+                const serverProfile =
+                    data?.profile ||
+                    data?.user ||
+                    data;
+
+                const finalProfile = {
                     ...getDefaultProfile(user),
-                    ...JSON.parse(savedProfile),
+                    ...serverProfile,
+
+                    name:
+                        serverProfile?.name ||
+                        user?.name ||
+                        "",
+
+                    email:
+                        serverProfile?.email ||
+                        user?.email ||
+                        "",
+
+                    college:
+                        serverProfile?.college ||
+                        user?.college ||
+                        "",
+
+                    branch:
+                        serverProfile?.branch ||
+                        user?.branch ||
+                        "",
+
+                    year:
+                        serverProfile?.year ||
+                        user?.year ||
+                        "",
+
+                    skills: Array.isArray(
+                        serverProfile?.skills
+                    )
+                        ? serverProfile.skills
+                        : [],
                 };
+
+                setProfile(finalProfile);
+                setEditForm(finalProfile);
+            } catch (err) {
+                console.error(
+                    "Profile loading error:",
+                    err
+                );
+
+                setError(
+                    err.message ||
+                    "Failed to load profile."
+                );
+            } finally {
+                setLoading(false);
             }
-        } catch (error) {
-            console.error("Profile loading error:", error);
-        }
+        };
 
-        return getDefaultProfile(user);
-    });
-
-    const [editForm, setEditForm] = useState(profile);
-
-    // =====================================================
-    // SYNC AUTH USER
-    // =====================================================
-
-    useEffect(() => {
-        const savedProfile = localStorage.getItem(
-            PROFILE_STORAGE_KEY
-        );
-
-        if (!savedProfile) {
-            setProfile((prev) => ({
-                ...prev,
-                name: user?.name || prev.name,
-                email: user?.email || prev.email,
-            }));
-        }
+        loadProfile();
     }, [user]);
-
-    useEffect(() => {
-        setEditForm(profile);
-    }, [profile]);
 
     // =====================================================
     // PROJECTS
-    // Later backend se projects fetch kar sakte hain
     // =====================================================
 
     const projects = [
@@ -124,7 +243,11 @@ export default function Profile() {
                 "Hackathon teammate finding and team building platform.",
             details:
                 "A MERN stack platform that helps students discover teammates, build teams and participate in hackathons.",
-            skills: ["React", "Node.js", "MongoDB"],
+            skills: [
+                "React",
+                "Node.js",
+                "MongoDB",
+            ],
             icon: "🚀",
         },
         {
@@ -133,7 +256,10 @@ export default function Profile() {
                 "Collaborative project developed with a student team.",
             details:
                 "A collaborative full-stack project focused on teamwork, Git workflow and building a practical web application.",
-            skills: ["Full Stack", "Git"],
+            skills: [
+                "Full Stack",
+                "Git",
+            ],
             icon: "🤝",
         },
     ];
@@ -160,20 +286,25 @@ export default function Profile() {
             profile.skills?.length > 0,
         ];
 
-        const completed = fields.filter(Boolean).length;
+        const completed =
+            fields.filter(Boolean).length;
 
         return Math.round(
             (completed / fields.length) * 100
         );
     };
 
-    const completion = calculateCompletion();
+    const completion =
+        calculateCompletion();
 
     // =====================================================
     // EDIT CHANGE
     // =====================================================
 
-    const handleEditChange = (field, value) => {
+    const handleEditChange = (
+        field,
+        value
+    ) => {
         setEditForm((prev) => ({
             ...prev,
             [field]: value,
@@ -184,25 +315,39 @@ export default function Profile() {
     // PHOTO UPLOAD
     // =====================================================
 
-    const handleEditPhotoUpload = (event) => {
-        const file = event.target.files?.[0];
+    const handleEditPhotoUpload = (
+        event
+    ) => {
+        const file =
+            event.target.files?.[0];
 
         if (!file) return;
 
         if (!file.type.startsWith("image/")) {
-            alert("Please upload an image file.");
+            alert(
+                "Please upload an image file."
+            );
             return;
         }
 
-        if (file.size > 5 * 1024 * 1024) {
-            alert("Photo must be less than 5 MB.");
+        if (
+            file.size >
+            5 * 1024 * 1024
+        ) {
+            alert(
+                "Photo must be less than 5 MB."
+            );
             return;
         }
 
-        const reader = new FileReader();
+        const reader =
+            new FileReader();
 
         reader.onloadend = () => {
-            handleEditChange("photo", reader.result);
+            handleEditChange(
+                "photo",
+                reader.result
+            );
         };
 
         reader.readAsDataURL(file);
@@ -212,120 +357,301 @@ export default function Profile() {
     // RESUME UPLOAD
     // =====================================================
 
-    const handleEditResumeUpload = (event) => {
-        const file = event.target.files?.[0];
+    const handleEditResumeUpload = (
+        event
+    ) => {
+        const file =
+            event.target.files?.[0];
 
         if (!file) return;
 
-        if (file.type !== "application/pdf") {
-            alert("Please upload PDF only.");
+        if (
+            file.type !==
+            "application/pdf"
+        ) {
+            alert(
+                "Please upload PDF only."
+            );
             return;
         }
 
-        if (file.size > 5 * 1024 * 1024) {
-            alert("Resume must be less than 5 MB.");
+        if (
+            file.size >
+            5 * 1024 * 1024
+        ) {
+            alert(
+                "Resume must be less than 5 MB."
+            );
             return;
         }
 
-        const reader = new FileReader();
+        const reader =
+            new FileReader();
 
         reader.onloadend = () => {
-            handleEditChange("resume", {
-                name: file.name,
-                size: file.size,
-                type: file.type,
-                data: reader.result,
-            });
+            handleEditChange(
+                "resume",
+                {
+                    name: file.name,
+                    size: file.size,
+                    type: file.type,
+                    data: reader.result,
+                }
+            );
         };
 
         reader.readAsDataURL(file);
     };
 
     // =====================================================
-    // SAVE PROFILE
+    // SAVE PROFILE TO MONGODB
     // =====================================================
 
-    const handleSaveProfile = () => {
-        const skills =
-            typeof editForm.skills === "string"
-                ? editForm.skills
-                    .split(",")
-                    .map((skill) => skill.trim())
-                    .filter(Boolean)
-                : editForm.skills || [];
+    const handleSaveProfile =
+        async () => {
+            try {
+                setSaving(true);
+                setError("");
 
-        const updatedProfile = {
-            ...editForm,
-            skills,
-            profileCompleted: true,
+                const token = getToken();
+
+                if (!token) {
+                    alert(
+                        "You are not logged in. Please login again."
+                    );
+
+                    navigate("/login");
+                    return;
+                }
+
+                const skills =
+                    typeof editForm.skills ===
+                        "string"
+                        ? editForm.skills
+                            .split(",")
+                            .map((skill) =>
+                                skill.trim()
+                            )
+                            .filter(Boolean)
+                        : Array.isArray(
+                            editForm.skills
+                        )
+                            ? editForm.skills
+                            : [];
+
+                const updatedProfile = {
+                    name:
+                        editForm.name?.trim() ||
+                        "",
+                    role:
+                        editForm.role ||
+                        "MERN Developer",
+                    email:
+                        editForm.email
+                            ?.trim()
+                            .toLowerCase() ||
+                        "",
+                    college:
+                        editForm.college ||
+                        "",
+                    location:
+                        editForm.location ||
+                        "",
+                    branch:
+                        editForm.branch ||
+                        "",
+                    year:
+                        editForm.year ||
+                        "",
+                    photo:
+                        editForm.photo ||
+                        null,
+                    resume:
+                        editForm.resume ||
+                        null,
+                    github:
+                        editForm.github ||
+                        "",
+                    linkedin:
+                        editForm.linkedin ||
+                        "",
+                    portfolio:
+                        editForm.portfolio ||
+                        "",
+                    availability:
+                        editForm.availability ||
+                        "Available",
+                    bio:
+                        editForm.bio ||
+                        "",
+                    skills,
+                    profileCompleted: true,
+                };
+
+                if (!updatedProfile.name) {
+                    alert(
+                        "Name is required."
+                    );
+                    setSaving(false);
+                    return;
+                }
+
+                if (!updatedProfile.email) {
+                    alert(
+                        "Email is required."
+                    );
+                    setSaving(false);
+                    return;
+                }
+
+                const response =
+                    await fetch(
+                        API_BASE_URL,
+                        {
+                            method: "PUT",
+
+                            headers: {
+                                Authorization: `Bearer ${token}`,
+                                "Content-Type":
+                                    "application/json",
+                            },
+
+                            body: JSON.stringify(
+                                updatedProfile
+                            ),
+                        }
+                    );
+
+                const data =
+                    await getResponseData(
+                        response
+                    );
+
+                if (!response.ok) {
+                    throw new Error(
+                        data?.message ||
+                        data?.error ||
+                        "Profile update failed."
+                    );
+                }
+
+                const savedProfile =
+                    data?.profile ||
+                    data?.user ||
+                    data;
+
+                const finalProfile = {
+                    ...updatedProfile,
+                    ...savedProfile,
+
+                    skills: Array.isArray(
+                        savedProfile?.skills
+                    )
+                        ? savedProfile.skills
+                        : skills,
+                };
+
+                setProfile(
+                    finalProfile
+                );
+
+                setEditForm(
+                    finalProfile
+                );
+
+                setShowEditModal(
+                    false
+                );
+
+                alert(
+                    "Profile updated successfully!"
+                );
+            } catch (err) {
+                console.error(
+                    "Profile save error:",
+                    err
+                );
+
+                setError(
+                    err.message ||
+                    "Failed to update profile."
+                );
+
+                alert(
+                    err.message ||
+                    "Failed to update profile."
+                );
+            } finally {
+                setSaving(false);
+            }
         };
-
-        setProfile(updatedProfile);
-
-        localStorage.setItem(
-            PROFILE_STORAGE_KEY,
-            JSON.stringify(updatedProfile)
-        );
-
-        setShowEditModal(false);
-
-        alert("Profile updated successfully!");
-    };
 
     // =====================================================
     // INITIALS
     // =====================================================
 
-    const initials = useMemo(() => {
-        const name = profile.name || "User";
+    const initials =
+        useMemo(() => {
+            const name =
+                profile.name ||
+                "User";
 
-        return name
-            .split(" ")
-            .filter(Boolean)
-            .map((item) => item[0])
-            .slice(0, 2)
-            .join("")
-            .toUpperCase();
-    }, [profile.name]);
+            return name
+                .split(" ")
+                .filter(Boolean)
+                .map(
+                    (item) =>
+                        item[0]
+                )
+                .slice(0, 2)
+                .join("")
+                .toUpperCase();
+        }, [profile.name]);
 
     // =====================================================
     // AVAILABILITY
     // =====================================================
 
     const availability =
-        profile.availability || "Available";
+        profile.availability ||
+        "Available";
 
     const availabilityClass =
         availability === "Busy"
             ? "bg-red-50 text-red-600"
-            : availability === "Looking for Team"
+            : availability ===
+                "Looking for Team"
                 ? "bg-blue-50 text-blue-600"
                 : "bg-green-50 text-green-600";
 
     // =====================================================
-    // OPEN EDIT
+    // OPEN EDIT MODAL
     // =====================================================
 
     const openEditModal = () => {
         setEditForm({
             ...profile,
-            skills: profile.skills || [],
+            skills:
+                profile.skills || [],
         });
 
         setShowEditModal(true);
     };
 
     // =====================================================
-    // DOWNLOAD RESUME
+    // RESUME VIEW
     // =====================================================
 
     const handleResumeView = () => {
         if (!profile.resume?.data) {
-            alert("Resume file is not available.");
+            alert(
+                "Resume file is not available."
+            );
             return;
         }
 
-        const newWindow = window.open();
+        const newWindow =
+            window.open();
 
         if (newWindow) {
             newWindow.document.write(`
@@ -333,6 +659,7 @@ export default function Profile() {
                     <head>
                         <title>${profile.resume.name}</title>
                     </head>
+
                     <body style="margin:0">
                         <iframe
                             src="${profile.resume.data}"
@@ -346,6 +673,24 @@ export default function Profile() {
         }
     };
 
+    // =====================================================
+    // LOADING
+    // =====================================================
+
+    if (loading) {
+        return (
+            <div className="flex min-h-screen items-center justify-center bg-[#F8FAFC]">
+                <div className="text-center">
+                    <div className="mx-auto h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-[#1E1B4B]" />
+
+                    <p className="mt-4 text-sm font-semibold text-slate-500">
+                        Loading profile...
+                    </p>
+                </div>
+            </div>
+        );
+    }
+
     return (
         <div className="min-h-screen bg-[#F8FAFC] text-[#1E1B4B]">
 
@@ -358,6 +703,7 @@ export default function Profile() {
                 <div className="mx-auto flex min-h-20 max-w-7xl items-center justify-between gap-4 px-4 py-4 sm:px-6 lg:px-8">
 
                     <div className="min-w-0">
+
                         <div className="flex items-center gap-3">
 
                             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-[#1E1B4B] text-lg shadow-sm">
@@ -365,6 +711,7 @@ export default function Profile() {
                             </div>
 
                             <div className="min-w-0">
+
                                 <h1 className="truncate text-lg font-bold sm:text-2xl">
                                     My Profile
                                 </h1>
@@ -372,19 +719,24 @@ export default function Profile() {
                                 <p className="hidden text-sm text-slate-500 sm:block">
                                     Manage and showcase your CONEXA profile
                                 </p>
+
                             </div>
 
                         </div>
+
                     </div>
 
                     <div className="flex shrink-0 gap-2 sm:gap-3">
 
                         <button
                             onClick={() =>
-                                navigate("/dashboard")
+                                navigate(
+                                    "/dashboard"
+                                )
                             }
                             className="group flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-2.5 text-sm font-semibold shadow-sm transition hover:border-[#1E1B4B] hover:bg-slate-50 sm:px-5"
                         >
+
                             <ArrowLeft
                                 size={16}
                                 className="transition group-hover:-translate-x-1"
@@ -393,25 +745,58 @@ export default function Profile() {
                             <span className="hidden sm:inline">
                                 Dashboard
                             </span>
+
                         </button>
 
                         <button
                             onClick={() =>
-                                navigate("/settings")
+                                navigate(
+                                    "/settings"
+                                )
                             }
                             className="flex items-center gap-2 rounded-xl bg-[#1E1B4B] px-3 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#312E81] sm:px-5"
                         >
-                            <Settings size={16} />
+
+                            <Settings
+                                size={16}
+                            />
 
                             <span className="hidden sm:inline">
                                 Settings
                             </span>
+
                         </button>
 
                     </div>
 
                 </div>
+
             </header>
+
+            {/* =====================================================
+                ERROR
+            ===================================================== */}
+
+            {error && (
+                <div className="mx-auto max-w-7xl px-4 pt-5 sm:px-6 lg:px-8">
+
+                    <div className="rounded-2xl border border-red-200 bg-red-50 p-4 text-sm text-red-600">
+
+                        <strong>
+                            Profile API Error:
+                        </strong>{" "}
+                        {error}
+
+                        <p className="mt-1 text-xs">
+                            Make sure your backend is running on
+                            localhost:5000 and the
+                            /api/profile route exists.
+                        </p>
+
+                    </div>
+
+                </div>
+            )}
 
             {/* =====================================================
                 MAIN
@@ -434,8 +819,13 @@ export default function Profile() {
                         <div className="absolute -bottom-28 left-1/3 h-64 w-64 rounded-full bg-white/5" />
 
                         <div className="absolute left-4 top-5 flex items-center gap-2 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-semibold text-white backdrop-blur-sm sm:left-6 sm:top-6">
-                            <Sparkles size={13} />
+
+                            <Sparkles
+                                size={13}
+                            />
+
                             CONEXA Profile
+
                         </div>
 
                     </div>
@@ -454,18 +844,23 @@ export default function Profile() {
 
                                     {profile.photo ? (
                                         <img
-                                            src={profile.photo}
+                                            src={
+                                                profile.photo
+                                            }
                                             alt="Profile"
                                             className="h-24 w-24 rounded-full border-[6px] border-white object-cover shadow-xl sm:h-28 sm:w-28"
                                         />
                                     ) : (
                                         <div className="flex h-24 w-24 items-center justify-center rounded-full border-[6px] border-white bg-gradient-to-br from-[#1E1B4B] to-[#3559D5] text-2xl font-black text-white shadow-xl sm:h-28 sm:w-28 sm:text-3xl">
-                                            {initials}
+                                            {
+                                                initials
+                                            }
                                         </div>
                                     )}
 
                                     <div
-                                        className={`absolute bottom-1 right-1 h-5 w-5 rounded-full border-4 border-white ${availability === "Busy"
+                                        className={`absolute bottom-1 right-1 h-5 w-5 rounded-full border-4 border-white ${availability ===
+                                                "Busy"
                                                 ? "bg-red-500"
                                                 : "bg-green-500"
                                             }`}
@@ -480,7 +875,8 @@ export default function Profile() {
                                     <div className="flex flex-wrap items-center gap-2">
 
                                         <h2 className="break-words text-2xl font-black sm:text-3xl">
-                                            {profile.name || "Your Name"}
+                                            {profile.name ||
+                                                "Your Name"}
                                         </h2>
 
                                         <span
@@ -492,23 +888,36 @@ export default function Profile() {
                                     </div>
 
                                     <p className="mt-1 font-medium text-slate-500">
-                                        {profile.role || "Add your role"}
+                                        {profile.role ||
+                                            "Add your role"}
                                     </p>
 
                                     <div className="mt-2 flex flex-col gap-1 text-xs text-slate-400 sm:flex-row sm:flex-wrap sm:gap-x-4">
 
                                         <span className="flex min-w-0 items-center gap-1">
-                                            <MapPin size={13} />
+
+                                            <MapPin
+                                                size={13}
+                                            />
+
                                             <span className="truncate">
-                                                {profile.location || "Location not added"}
+                                                {profile.location ||
+                                                    "Location not added"}
                                             </span>
+
                                         </span>
 
                                         <span className="flex min-w-0 items-center gap-1">
-                                            <Mail size={13} />
+
+                                            <Mail
+                                                size={13}
+                                            />
+
                                             <span className="truncate">
-                                                {profile.email || "Email not added"}
+                                                {profile.email ||
+                                                    "Email not added"}
                                             </span>
+
                                         </span>
 
                                     </div>
@@ -517,14 +926,21 @@ export default function Profile() {
 
                             </div>
 
-                            {/* EDIT BUTTON */}
+                            {/* EDIT */}
 
                             <button
-                                onClick={openEditModal}
+                                onClick={
+                                    openEditModal
+                                }
                                 className="flex w-full items-center justify-center gap-2 rounded-xl bg-[#1E1B4B] px-5 py-3 text-sm font-semibold text-white shadow-md transition hover:-translate-y-0.5 hover:bg-[#312E81] sm:w-fit"
                             >
-                                <Edit3 size={16} />
+
+                                <Edit3
+                                    size={16}
+                                />
+
                                 Edit Profile
+
                             </button>
 
                         </div>
@@ -560,6 +976,7 @@ export default function Profile() {
                         </div>
 
                     </div>
+
                 </section>
 
                 {/* =====================================================
@@ -579,6 +996,7 @@ export default function Profile() {
                             <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
 
                                 <div>
+
                                     <h3 className="text-xl font-bold">
                                         About Me
                                     </h3>
@@ -586,13 +1004,17 @@ export default function Profile() {
                                     <p className="mt-1 text-xs text-slate-400">
                                         A little about your journey
                                     </p>
+
                                 </div>
 
                                 <span
                                     className={`flex w-fit items-center gap-2 rounded-full px-3 py-1.5 text-xs font-semibold ${availabilityClass}`}
                                 >
+
                                     <span className="h-2 w-2 rounded-full bg-current" />
+
                                     {availability}
+
                                 </span>
 
                             </div>
@@ -605,7 +1027,13 @@ export default function Profile() {
                             <div className="mt-5 grid gap-3 sm:grid-cols-2">
 
                                 <InfoItem
-                                    icon={<GraduationCap size={17} />}
+                                    icon={
+                                        <GraduationCap
+                                            size={
+                                                17
+                                            }
+                                        />
+                                    }
                                     label="Education"
                                     value={
                                         profile.branch &&
@@ -616,7 +1044,13 @@ export default function Profile() {
                                 />
 
                                 <InfoItem
-                                    icon={<MapPin size={17} />}
+                                    icon={
+                                        <MapPin
+                                            size={
+                                                17
+                                            }
+                                        />
+                                    }
                                     label="Location"
                                     value={
                                         profile.location ||
@@ -625,6 +1059,7 @@ export default function Profile() {
                                 />
 
                             </div>
+
                         </section>
 
                         {/* SKILLS */}
@@ -634,6 +1069,7 @@ export default function Profile() {
                             <div className="flex items-center justify-between gap-3">
 
                                 <div>
+
                                     <h3 className="text-xl font-bold">
                                         Skills
                                     </h3>
@@ -641,25 +1077,38 @@ export default function Profile() {
                                     <p className="mt-1 text-xs text-slate-400">
                                         Technologies you're comfortable with
                                     </p>
+
                                 </div>
 
                                 <span className="shrink-0 rounded-xl bg-[#1E1B4B]/5 px-3 py-2 text-xs font-bold">
-                                    {profile.skills?.length || 0} Skills
+                                    {profile.skills
+                                        ?.length ||
+                                        0}{" "}
+                                    Skills
                                 </span>
 
                             </div>
 
-                            {profile.skills?.length > 0 ? (
+                            {profile.skills
+                                ?.length > 0 ? (
                                 <div className="mt-5 flex flex-wrap gap-2.5">
 
-                                    {profile.skills.map((skill) => (
-                                        <span
-                                            key={skill}
-                                            className="rounded-full border border-slate-200 bg-slate-50 px-3.5 py-2 text-xs font-semibold text-[#1E1B4B] transition hover:border-[#312E81] hover:bg-[#1E1B4B] hover:text-white sm:text-sm"
-                                        >
-                                            {skill}
-                                        </span>
-                                    ))}
+                                    {profile.skills.map(
+                                        (
+                                            skill
+                                        ) => (
+                                            <span
+                                                key={
+                                                    skill
+                                                }
+                                                className="rounded-full border border-slate-200 bg-slate-50 px-3.5 py-2 text-xs font-semibold text-[#1E1B4B] transition hover:border-[#312E81] hover:bg-[#1E1B4B] hover:text-white sm:text-sm"
+                                            >
+                                                {
+                                                    skill
+                                                }
+                                            </span>
+                                        )
+                                    )}
 
                                 </div>
                             ) : (
@@ -677,6 +1126,7 @@ export default function Profile() {
                             <div className="flex items-center justify-between gap-3">
 
                                 <div>
+
                                     <h3 className="text-xl font-bold">
                                         🚀 Projects
                                     </h3>
@@ -684,61 +1134,89 @@ export default function Profile() {
                                     <p className="mt-1 text-xs text-slate-400">
                                         Things you've built
                                     </p>
+
                                 </div>
 
                                 <span className="shrink-0 text-xs font-semibold text-slate-400">
-                                    {projects.length} Projects
+                                    {
+                                        projects.length
+                                    }{" "}
+                                    Projects
                                 </span>
 
                             </div>
 
                             <div className="mt-5 grid gap-4 sm:grid-cols-2">
 
-                                {projects.map((project) => (
-                                    <button
-                                        key={project.title}
-                                        onClick={() =>
-                                            setSelectedProject(project)
-                                        }
-                                        className="group rounded-2xl border border-slate-200 bg-slate-50 p-5 text-left transition duration-300 hover:-translate-y-1 hover:border-[#312E81]/20 hover:bg-white hover:shadow-lg"
-                                    >
+                                {projects.map(
+                                    (
+                                        project
+                                    ) => (
+                                        <button
+                                            key={
+                                                project.title
+                                            }
+                                            onClick={() =>
+                                                setSelectedProject(
+                                                    project
+                                                )
+                                            }
+                                            className="group rounded-2xl border border-slate-200 bg-slate-50 p-5 text-left transition duration-300 hover:-translate-y-1 hover:border-[#312E81]/20 hover:bg-white hover:shadow-lg"
+                                        >
 
-                                        <div className="flex items-start justify-between">
+                                            <div className="flex items-start justify-between">
 
-                                            <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white text-2xl shadow-sm">
-                                                {project.icon}
+                                                <div className="flex h-12 w-12 items-center justify-center rounded-xl bg-white text-2xl shadow-sm">
+                                                    {
+                                                        project.icon
+                                                    }
+                                                </div>
+
+                                                <ChevronRight
+                                                    size={
+                                                        18
+                                                    }
+                                                    className="text-slate-300 transition group-hover:translate-x-1 group-hover:text-[#1E1B4B]"
+                                                />
+
                                             </div>
 
-                                            <ChevronRight
-                                                size={18}
-                                                className="text-slate-300 transition group-hover:translate-x-1 group-hover:text-[#1E1B4B]"
-                                            />
+                                            <h4 className="mt-4 text-lg font-bold">
+                                                {
+                                                    project.title
+                                                }
+                                            </h4>
 
-                                        </div>
+                                            <p className="mt-2 text-sm leading-6 text-slate-500">
+                                                {
+                                                    project.description
+                                                }
+                                            </p>
 
-                                        <h4 className="mt-4 text-lg font-bold">
-                                            {project.title}
-                                        </h4>
+                                            <div className="mt-4 flex flex-wrap gap-2">
 
-                                        <p className="mt-2 text-sm leading-6 text-slate-500">
-                                            {project.description}
-                                        </p>
+                                                {project.skills.map(
+                                                    (
+                                                        skill
+                                                    ) => (
+                                                        <span
+                                                            key={
+                                                                skill
+                                                            }
+                                                            className="rounded-full bg-white px-3 py-1 text-[11px] font-semibold text-slate-500"
+                                                        >
+                                                            {
+                                                                skill
+                                                            }
+                                                        </span>
+                                                    )
+                                                )}
 
-                                        <div className="mt-4 flex flex-wrap gap-2">
+                                            </div>
 
-                                            {project.skills.map((skill) => (
-                                                <span
-                                                    key={skill}
-                                                    className="rounded-full bg-white px-3 py-1 text-[11px] font-semibold text-slate-500"
-                                                >
-                                                    {skill}
-                                                </span>
-                                            ))}
-
-                                        </div>
-
-                                    </button>
-                                ))}
+                                        </button>
+                                    )
+                                )}
 
                             </div>
 
@@ -750,13 +1228,14 @@ export default function Profile() {
 
                     <div className="space-y-6">
 
-                        {/* PROFILE COMPLETION */}
+                        {/* COMPLETION */}
 
                         <section className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm">
 
                             <div className="flex items-start justify-between gap-4">
 
                                 <div>
+
                                     <h3 className="font-bold">
                                         Profile Completion
                                     </h3>
@@ -764,10 +1243,14 @@ export default function Profile() {
                                     <p className="mt-1 text-xs text-slate-400">
                                         Improve your visibility
                                     </p>
+
                                 </div>
 
                                 <span className="text-xl font-black">
-                                    {completion}%
+                                    {
+                                        completion
+                                    }
+                                    %
                                 </span>
 
                             </div>
@@ -790,20 +1273,26 @@ export default function Profile() {
                                 </span>
 
                                 <p className="text-xs leading-5 text-slate-500">
-                                    Complete your profile to get better AI
-                                    team recommendations.
+                                    Complete your profile to get better AI team recommendations.
                                 </p>
 
                             </div>
 
                             <button
                                 onClick={() =>
-                                    navigate("/complete-profile")
+                                    navigate(
+                                        "/complete-profile"
+                                    )
                                 }
                                 className="mt-4 flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 py-2.5 text-sm font-semibold transition hover:bg-slate-50"
                             >
-                                <Edit3 size={15} />
+
+                                <Edit3
+                                    size={15}
+                                />
+
                                 Complete Profile
+
                             </button>
 
                         </section>
@@ -815,10 +1304,17 @@ export default function Profile() {
                             <div className="flex items-center gap-3">
 
                                 <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-100 text-blue-700">
-                                    <GraduationCap size={21} />
+
+                                    <GraduationCap
+                                        size={
+                                            21
+                                        }
+                                    />
+
                                 </div>
 
                                 <div>
+
                                     <h3 className="font-bold">
                                         Education
                                     </h3>
@@ -826,6 +1322,7 @@ export default function Profile() {
                                     <p className="text-xs text-slate-400">
                                         Academic background
                                     </p>
+
                                 </div>
 
                             </div>
@@ -842,7 +1339,8 @@ export default function Profile() {
                                 </p>
 
                                 <p className="mt-1 text-xs text-slate-400">
-                                    2023 – 2027
+                                    {profile.year ||
+                                        "Year not added"}
                                 </p>
 
                             </div>
@@ -856,21 +1354,33 @@ export default function Profile() {
                             <div className="flex items-center justify-between gap-3">
 
                                 <div className="flex items-center gap-2">
-                                    <Award size={19} />
+
+                                    <Award
+                                        size={19}
+                                    />
 
                                     <h3 className="font-bold">
                                         Achievements
                                     </h3>
+
                                 </div>
 
                                 <button
                                     onClick={() =>
-                                        navigate("/achievements")
+                                        navigate(
+                                            "/achievements"
+                                        )
                                     }
                                     className="flex items-center gap-1 text-xs font-bold text-[#19A99A] transition hover:text-[#1E1B4B]"
                                 >
                                     View All
-                                    <ArrowRight size={13} />
+
+                                    <ArrowRight
+                                        size={
+                                            13
+                                        }
+                                    />
+
                                 </button>
 
                             </div>
@@ -917,8 +1427,11 @@ export default function Profile() {
                                     rel="noreferrer"
                                     className="flex items-center justify-center gap-2 rounded-xl border border-slate-200 py-3 text-sm font-semibold transition hover:bg-slate-50"
                                 >
+
                                     <FaGithub />
+
                                     GitHub
+
                                 </a>
 
                                 <a
@@ -930,15 +1443,20 @@ export default function Profile() {
                                     rel="noreferrer"
                                     className="flex items-center justify-center gap-2 rounded-xl border border-slate-200 py-3 text-sm font-semibold transition hover:bg-slate-50"
                                 >
+
                                     <FaLinkedin />
+
                                     LinkedIn
+
                                 </a>
 
                             </div>
 
                             {profile.portfolio && (
                                 <a
-                                    href={profile.portfolio}
+                                    href={
+                                        profile.portfolio
+                                    }
                                     target="_blank"
                                     rel="noreferrer"
                                     className="mt-3 flex w-full items-center justify-center gap-2 rounded-xl border border-slate-200 py-3 text-sm font-semibold transition hover:bg-slate-50"
@@ -957,13 +1475,18 @@ export default function Profile() {
                             <div className="flex items-center gap-3">
 
                                 <div className="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-slate-100">
+
                                     <FileText
-                                        size={21}
+                                        size={
+                                            21
+                                        }
                                         className="text-[#1E1B4B]"
                                     />
+
                                 </div>
 
                                 <div>
+
                                     <h3 className="font-bold">
                                         Resume
                                     </h3>
@@ -971,6 +1494,7 @@ export default function Profile() {
                                     <p className="text-xs text-slate-400">
                                         Your uploaded resume
                                     </p>
+
                                 </div>
 
                             </div>
@@ -983,19 +1507,27 @@ export default function Profile() {
                                         <div className="flex min-w-0 items-center gap-3">
 
                                             <FileText
-                                                size={20}
+                                                size={
+                                                    20
+                                                }
                                                 className="shrink-0 text-[#1E1B4B]"
                                             />
 
                                             <p className="truncate text-sm font-semibold">
-                                                {profile.resume.name}
+                                                {
+                                                    profile
+                                                        .resume
+                                                        .name
+                                                }
                                             </p>
 
                                         </div>
 
                                         {profile.resume.data && (
                                             <button
-                                                onClick={handleResumeView}
+                                                onClick={
+                                                    handleResumeView
+                                                }
                                                 className="shrink-0 rounded-lg bg-[#1E1B4B] px-3 py-2 text-xs font-semibold text-white hover:bg-[#312E81]"
                                             >
                                                 View
@@ -1014,10 +1546,11 @@ export default function Profile() {
                         </section>
 
                     </div>
+
                 </div>
 
                 {/* =====================================================
-                    BOTTOM CTA
+                    CTA
                 ===================================================== */}
 
                 <section className="relative mt-6 overflow-hidden rounded-3xl bg-gradient-to-r from-[#1E1B4B] to-[#14B8A6] p-6 text-white shadow-lg sm:p-7">
@@ -1029,11 +1562,15 @@ export default function Profile() {
                         <div>
 
                             <div className="flex items-center gap-2">
-                                <Users size={18} />
+
+                                <Users
+                                    size={18}
+                                />
 
                                 <h3 className="text-lg font-bold">
                                     Ready to build your next team?
                                 </h3>
+
                             </div>
 
                             <p className="mt-1 text-sm text-white/70">
@@ -1044,15 +1581,22 @@ export default function Profile() {
 
                         <button
                             onClick={() =>
-                                navigate("/find-teammates")
+                                navigate(
+                                    "/find-teammates"
+                                )
                             }
                             className="flex items-center justify-center gap-2 rounded-xl bg-white px-5 py-3 text-sm font-bold text-[#1E1B4B] transition hover:-translate-y-0.5 hover:bg-slate-100"
                         >
                             Find Teammates
-                            <ArrowRight size={16} />
+
+                            <ArrowRight
+                                size={16}
+                            />
+
                         </button>
 
                     </div>
+
                 </section>
 
             </main>
@@ -1065,7 +1609,9 @@ export default function Profile() {
                 <div
                     className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm"
                     onClick={() =>
-                        setShowEditModal(false)
+                        setShowEditModal(
+                            false
+                        )
                     }
                 >
 
@@ -1094,11 +1640,17 @@ export default function Profile() {
 
                             <button
                                 onClick={() =>
-                                    setShowEditModal(false)
+                                    setShowEditModal(
+                                        false
+                                    )
                                 }
                                 className="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-slate-100 transition hover:bg-slate-200"
                             >
-                                <X size={18} />
+
+                                <X
+                                    size={18}
+                                />
+
                             </button>
 
                         </div>
@@ -1123,7 +1675,9 @@ export default function Profile() {
                                             <div className="relative">
 
                                                 <img
-                                                    src={editForm.photo}
+                                                    src={
+                                                        editForm.photo
+                                                    }
                                                     alt="Profile"
                                                     className="h-24 w-24 rounded-full border-4 border-white object-cover shadow-md"
                                                 />
@@ -1138,7 +1692,13 @@ export default function Profile() {
                                                     }
                                                     className="absolute -right-1 -top-1 flex h-7 w-7 items-center justify-center rounded-full bg-red-500 text-white hover:bg-red-600"
                                                 >
-                                                    <X size={14} />
+
+                                                    <X
+                                                        size={
+                                                            14
+                                                        }
+                                                    />
+
                                                 </button>
 
                                             </div>
@@ -1146,7 +1706,9 @@ export default function Profile() {
                                             <label className="flex h-24 w-24 cursor-pointer flex-col items-center justify-center rounded-full border-2 border-dashed border-slate-300 hover:border-[#14B8A6]">
 
                                                 <Upload
-                                                    size={24}
+                                                    size={
+                                                        24
+                                                    }
                                                     className="text-slate-400"
                                                 />
 
@@ -1190,7 +1752,9 @@ export default function Profile() {
                                                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white">
 
                                                     <FileText
-                                                        size={20}
+                                                        size={
+                                                            20
+                                                        }
                                                         className="text-[#1E1B4B]"
                                                     />
 
@@ -1199,7 +1763,11 @@ export default function Profile() {
                                                 <div className="min-w-0">
 
                                                     <p className="truncate text-sm font-semibold">
-                                                        {editForm.resume.name}
+                                                        {
+                                                            editForm
+                                                                .resume
+                                                                .name
+                                                        }
                                                     </p>
 
                                                     <p className="text-xs text-slate-400">
@@ -1220,7 +1788,13 @@ export default function Profile() {
                                                 }
                                                 className="ml-2 flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-red-500 hover:bg-red-100"
                                             >
-                                                <X size={16} />
+
+                                                <X
+                                                    size={
+                                                        16
+                                                    }
+                                                />
+
                                             </button>
 
                                         </div>
@@ -1230,7 +1804,9 @@ export default function Profile() {
                                             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-slate-100">
 
                                                 <Upload
-                                                    size={20}
+                                                    size={
+                                                        20
+                                                    }
                                                     className="text-[#1E1B4B]"
                                                 />
 
@@ -1272,8 +1848,12 @@ export default function Profile() {
 
                             <InputField
                                 label="Full Name"
-                                value={editForm.name}
-                                onChange={(value) =>
+                                value={
+                                    editForm.name
+                                }
+                                onChange={(
+                                    value
+                                ) =>
                                     handleEditChange(
                                         "name",
                                         value
@@ -1283,8 +1863,12 @@ export default function Profile() {
 
                             <InputField
                                 label="Role"
-                                value={editForm.role}
-                                onChange={(value) =>
+                                value={
+                                    editForm.role
+                                }
+                                onChange={(
+                                    value
+                                ) =>
                                     handleEditChange(
                                         "role",
                                         value
@@ -1295,8 +1879,12 @@ export default function Profile() {
                             <InputField
                                 label="Email"
                                 type="email"
-                                value={editForm.email}
-                                onChange={(value) =>
+                                value={
+                                    editForm.email
+                                }
+                                onChange={(
+                                    value
+                                ) =>
                                     handleEditChange(
                                         "email",
                                         value
@@ -1306,8 +1894,12 @@ export default function Profile() {
 
                             <InputField
                                 label="College"
-                                value={editForm.college}
-                                onChange={(value) =>
+                                value={
+                                    editForm.college
+                                }
+                                onChange={(
+                                    value
+                                ) =>
                                     handleEditChange(
                                         "college",
                                         value
@@ -1317,8 +1909,12 @@ export default function Profile() {
 
                             <InputField
                                 label="Branch"
-                                value={editForm.branch}
-                                onChange={(value) =>
+                                value={
+                                    editForm.branch
+                                }
+                                onChange={(
+                                    value
+                                ) =>
                                     handleEditChange(
                                         "branch",
                                         value
@@ -1328,8 +1924,12 @@ export default function Profile() {
 
                             <InputField
                                 label="Year"
-                                value={editForm.year}
-                                onChange={(value) =>
+                                value={
+                                    editForm.year
+                                }
+                                onChange={(
+                                    value
+                                ) =>
                                     handleEditChange(
                                         "year",
                                         value
@@ -1339,14 +1939,20 @@ export default function Profile() {
 
                             <InputField
                                 label="Location"
-                                value={editForm.location}
-                                onChange={(value) =>
+                                value={
+                                    editForm.location
+                                }
+                                onChange={(
+                                    value
+                                ) =>
                                     handleEditChange(
                                         "location",
                                         value
                                     )
                                 }
                             />
+
+                            {/* AVAILABILITY */}
 
                             <div>
 
@@ -1359,14 +1965,19 @@ export default function Profile() {
                                         editForm.availability ||
                                         "Available"
                                     }
-                                    onChange={(e) =>
+                                    onChange={(
+                                        e
+                                    ) =>
                                         handleEditChange(
                                             "availability",
-                                            e.target.value
+                                            e
+                                                .target
+                                                .value
                                         )
                                     }
                                     className="mt-2 w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm outline-none transition focus:border-[#312E81] focus:ring-2 focus:ring-[#312E81]/10"
                                 >
+
                                     <option>
                                         Available
                                     </option>
@@ -1378,14 +1989,19 @@ export default function Profile() {
                                     <option>
                                         Busy
                                     </option>
+
                                 </select>
 
                             </div>
 
                             <InputField
                                 label="GitHub URL"
-                                value={editForm.github}
-                                onChange={(value) =>
+                                value={
+                                    editForm.github
+                                }
+                                onChange={(
+                                    value
+                                ) =>
                                     handleEditChange(
                                         "github",
                                         value
@@ -1395,8 +2011,12 @@ export default function Profile() {
 
                             <InputField
                                 label="LinkedIn URL"
-                                value={editForm.linkedin}
-                                onChange={(value) =>
+                                value={
+                                    editForm.linkedin
+                                }
+                                onChange={(
+                                    value
+                                ) =>
                                     handleEditChange(
                                         "linkedin",
                                         value
@@ -1406,8 +2026,12 @@ export default function Profile() {
 
                             <InputField
                                 label="Portfolio URL"
-                                value={editForm.portfolio}
-                                onChange={(value) =>
+                                value={
+                                    editForm.portfolio
+                                }
+                                onChange={(
+                                    value
+                                ) =>
                                     handleEditChange(
                                         "portfolio",
                                         value
@@ -1431,12 +2055,17 @@ export default function Profile() {
                                             ? editForm.skills.join(
                                                 ", "
                                             )
-                                            : editForm.skills || ""
+                                            : editForm.skills ||
+                                            ""
                                     }
-                                    onChange={(e) =>
+                                    onChange={(
+                                        e
+                                    ) =>
                                         handleEditChange(
                                             "skills",
-                                            e.target.value
+                                            e
+                                                .target
+                                                .value
                                         )
                                     }
                                     placeholder="React, Node.js, MongoDB..."
@@ -1459,12 +2088,17 @@ export default function Profile() {
 
                                 <textarea
                                     value={
-                                        editForm.bio || ""
+                                        editForm.bio ||
+                                        ""
                                     }
-                                    onChange={(e) =>
+                                    onChange={(
+                                        e
+                                    ) =>
                                         handleEditChange(
                                             "bio",
-                                            e.target.value
+                                            e
+                                                .target
+                                                .value
                                         )
                                     }
                                     rows={4}
@@ -1482,24 +2116,52 @@ export default function Profile() {
 
                             <button
                                 onClick={() =>
-                                    setShowEditModal(false)
+                                    setShowEditModal(
+                                        false
+                                    )
                                 }
-                                className="rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold transition hover:bg-slate-100"
+                                disabled={
+                                    saving
+                                }
+                                className="rounded-xl border border-slate-200 bg-white px-5 py-3 text-sm font-semibold transition hover:bg-slate-100 disabled:opacity-50"
                             >
                                 Cancel
                             </button>
 
                             <button
-                                onClick={handleSaveProfile}
-                                className="flex items-center justify-center gap-2 rounded-xl bg-[#1E1B4B] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#312E81]"
+                                onClick={
+                                    handleSaveProfile
+                                }
+                                disabled={
+                                    saving
+                                }
+                                className="flex items-center justify-center gap-2 rounded-xl bg-[#1E1B4B] px-5 py-3 text-sm font-semibold text-white transition hover:bg-[#312E81] disabled:cursor-not-allowed disabled:opacity-60"
                             >
-                                <Save size={16} />
-                                Save Changes
+
+                                {saving ? (
+                                    <>
+                                        <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/30 border-t-white" />
+
+                                        Saving...
+                                    </>
+                                ) : (
+                                    <>
+                                        <Save
+                                            size={
+                                                16
+                                            }
+                                        />
+
+                                        Save Changes
+                                    </>
+                                )}
+
                             </button>
 
                         </div>
 
                     </div>
+
                 </div>
             )}
 
@@ -1511,7 +2173,9 @@ export default function Profile() {
                 <div
                     className="fixed inset-0 z-50 flex items-center justify-center bg-slate-950/60 p-4 backdrop-blur-sm"
                     onClick={() =>
-                        setSelectedProject(null)
+                        setSelectedProject(
+                            null
+                        )
                     }
                 >
 
@@ -1527,22 +2191,34 @@ export default function Profile() {
                             <div className="flex items-center justify-between">
 
                                 <span className="text-4xl">
-                                    {selectedProject.icon}
+                                    {
+                                        selectedProject.icon
+                                    }
                                 </span>
 
                                 <button
                                     onClick={() =>
-                                        setSelectedProject(null)
+                                        setSelectedProject(
+                                            null
+                                        )
                                     }
                                     className="rounded-xl bg-white/10 p-2 transition hover:bg-white/20"
                                 >
-                                    <X size={18} />
+
+                                    <X
+                                        size={
+                                            18
+                                        }
+                                    />
+
                                 </button>
 
                             </div>
 
                             <h3 className="mt-5 text-2xl font-bold">
-                                {selectedProject.title}
+                                {
+                                    selectedProject.title
+                                }
                             </h3>
 
                         </div>
@@ -1550,18 +2226,26 @@ export default function Profile() {
                         <div className="p-6">
 
                             <p className="text-sm leading-7 text-slate-500">
-                                {selectedProject.details}
+                                {
+                                    selectedProject.details
+                                }
                             </p>
 
                             <div className="mt-5 flex flex-wrap gap-2">
 
                                 {selectedProject.skills.map(
-                                    (skill) => (
+                                    (
+                                        skill
+                                    ) => (
                                         <span
-                                            key={skill}
+                                            key={
+                                                skill
+                                            }
                                             className="rounded-full bg-slate-100 px-3 py-1.5 text-xs font-semibold"
                                         >
-                                            {skill}
+                                            {
+                                                skill
+                                            }
                                         </span>
                                     )
                                 )}
@@ -1570,17 +2254,27 @@ export default function Profile() {
 
                             <button
                                 onClick={() =>
-                                    setSelectedProject(null)
+                                    setSelectedProject(
+                                        null
+                                    )
                                 }
                                 className="mt-6 flex w-full items-center justify-center gap-2 rounded-xl bg-[#1E1B4B] py-3 text-sm font-semibold text-white transition hover:bg-[#312E81]"
                             >
+
                                 Close
-                                <Check size={16} />
+
+                                <Check
+                                    size={
+                                        16
+                                    }
+                                />
+
                             </button>
 
                         </div>
 
                     </div>
+
                 </div>
             )}
 
@@ -1592,7 +2286,11 @@ export default function Profile() {
    PROFILE STAT
 ===================================================== */
 
-function ProfileStat({ value, label, icon }) {
+function ProfileStat({
+    value,
+    label,
+    icon,
+}) {
     return (
         <div className="group rounded-2xl border border-slate-200 bg-slate-50 p-4 text-center transition hover:-translate-y-1 hover:bg-white hover:shadow-md sm:p-5">
 
@@ -1616,7 +2314,11 @@ function ProfileStat({ value, label, icon }) {
    INFO ITEM
 ===================================================== */
 
-function InfoItem({ icon, label, value }) {
+function InfoItem({
+    icon,
+    label,
+    value,
+}) {
     return (
         <div className="flex min-w-0 items-center gap-3 rounded-2xl bg-slate-50 p-4">
 
@@ -1696,7 +2398,9 @@ function InputField({
                 type={type}
                 value={value || ""}
                 onChange={(e) =>
-                    onChange(e.target.value)
+                    onChange(
+                        e.target.value
+                    )
                 }
                 className="mt-2 w-full rounded-xl border border-slate-200 px-4 py-3 text-sm outline-none transition focus:border-[#312E81] focus:ring-2 focus:ring-[#312E81]/10"
             />

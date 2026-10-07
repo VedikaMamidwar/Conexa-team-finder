@@ -9,7 +9,7 @@ import StatsCards from "../../components/dashboard/StatsCards";
 import QuickActions from "../../components/dashboard/QuickActions";
 import RecommendedStudents from "../../components/dashboard/RecommendedStudents";
 import TeamWorkspace from "../../components/dashboard/TeamWorkspace";
-import HackathonSection from "../../components/dashboard/HackathonSection";
+
 import RightSidebar from "../../components/dashboard/RightSidebar";
 
 export default function Dashboard() {
@@ -18,228 +18,67 @@ export default function Dashboard() {
     const [sidebarOpen, setSidebarOpen] = useState(true);
 
     return (
-        <div className="min-h-screen bg-[#F8FAFC] overflow-x-hidden">
+        <div className="min-h-screen bg-slate-100">
 
-            {/* ================= SIDEBAR ================= */}
-
+            {/* Sidebar */}
             <Sidebar
                 sidebarOpen={sidebarOpen}
                 setSidebarOpen={setSidebarOpen}
             />
 
-
-            {/* ================= MAIN AREA ================= */}
-
+            {/* Main Area */}
             <div
-                className={`
-                    min-h-screen
-                    flex
-                    flex-col
-                    transition-all
-                    duration-300
-                    ${sidebarOpen
-                        ? "lg:ml-72"
-                        : "lg:ml-24"
-                    }
-                `}
+                className={`min-h-screen transition-all duration-300 ${sidebarOpen ? "ml-[260px]" : "ml-[100px]"
+                    }`}
             >
 
-                {/* ================= TOPBAR ================= */}
-
+                {/* Topbar */}
                 <Topbar
                     sidebarOpen={sidebarOpen}
                     setSidebarOpen={setSidebarOpen}
                 />
 
+                {/* Main Content */}
+                <main className="p-6">
 
-                {/* ================= CONTENT ================= */}
+                    {/* Greeting */}
+                    <div className="bg-white rounded-xl shadow p-6 mb-6">
+                        <h1 className="text-3xl font-bold text-[#1E1B4B]">
+                            Hello, {user?.name || "Student"} 👋
+                        </h1>
 
-                <main
-                    className="
-                        flex-1
-                        px-3
-                        py-4
-                        sm:px-4
-                        sm:py-5
-                        lg:px-6
-                        lg:py-6
-                    "
-                >
+                        <p className="text-gray-500 mt-2">
+                            Welcome back to CONEXA
+                        </p>
+                    </div>
 
-                    {/* ================= GREETING ================= */}
+                    {/* Dashboard Grid */}
+                    <div className="grid grid-cols-1 xl:grid-cols-4 gap-6">
 
-                    <section
-                        className="
-                            relative
-                            overflow-hidden
-                            mb-5
-                            rounded-2xl
-                            bg-white
-                            border
-                            border-slate-200
-                            px-5
-                            py-5
-                            shadow-sm
-                        "
-                    >
+                        {/* Left Content */}
+                        <div className="xl:col-span-3 space-y-8">
 
-                        {/* Decorative Circle */}
-
-                        <div
-                            className="
-                                absolute
-                                -right-10
-                                -top-12
-                                h-36
-                                w-36
-                                rounded-full
-                                bg-[#14B8A6]/10
-                            "
-                        />
-
-                        <div
-                            className="
-                                absolute
-                                -bottom-16
-                                right-24
-                                h-32
-                                w-32
-                                rounded-full
-                                bg-[#1E1B4B]/5
-                            "
-                        />
-
-
-                        {/* Greeting Content */}
-
-                        <div className="relative z-10">
-
-                            <p
-                                className="
-                                    text-xs
-                                    font-semibold
-                                    text-[#14B8A6]
-                                "
-                            >
-                                Welcome back 👋
-                            </p>
-
-
-                            <h1
-                                className="
-                                    mt-1
-                                    text-2xl
-                                    sm:text-3xl
-                                    font-black
-                                    leading-tight
-                                    text-[#1E1B4B]
-                                "
-                            >
-                                Hello, {user?.name || "Student"}!
-                            </h1>
-
-
-                            <p
-                                className="
-                                    mt-1
-                                    text-xs
-                                    sm:text-sm
-                                    text-slate-500
-                                "
-                            >
-                                Ready to find your perfect team and
-                                build something amazing?
-                            </p>
-
-                        </div>
-
-                    </section>
-
-
-                    {/* ================= DASHBOARD GRID ================= */}
-
-                    <div
-                        className="
-                            grid
-                            grid-cols-1
-                            gap-5
-                            xl:grid-cols-12
-                        "
-                    >
-
-                        {/* ================= LEFT / MAIN ================= */}
-
-                        <div
-                            className="
-                                min-w-0
-                                space-y-5
-                                xl:col-span-8
-                                2xl:col-span-9
-                            "
-                        >
-
-                            {/* Welcome */}
-
-                            <WelcomeBanner />
-
-
-                            {/* Statistics */}
+                            <WelcomeBanner user={user} />
 
                             <StatsCards />
 
-
-                            {/* Quick Actions */}
-
                             <QuickActions />
-
-
-                            {/* Recommended Students */}
 
                             <RecommendedStudents />
 
-
-                            {/* Team Workspace */}
-
                             <TeamWorkspace />
-
-
-                            {/* Hackathons */}
-
-                            <HackathonSection />
 
                         </div>
 
-
-                        {/* ================= RIGHT SIDEBAR ================= */}
-
-                        <div
-                            className="
-                                min-w-0
-                                xl:col-span-4
-                                2xl:col-span-3
-                            "
-                        >
-
-                            <div
-                                className="
-                                    space-y-5
-                                    xl:sticky
-                                    xl:top-24
-                                "
-                            >
-
-                                <RightSidebar />
-
-                            </div>
-
+                        {/* Right Content */}
+                        <div className="space-y-6">
+                            <RightSidebar />
                         </div>
 
                     </div>
 
                 </main>
-
             </div>
-
         </div>
     );
 }

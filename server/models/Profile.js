@@ -7,41 +7,49 @@ const profileSchema = new mongoose.Schema(
             ref: "User",
             required: true,
             unique: true,
+            index: true,
         },
 
         name: {
             type: String,
             required: true,
+            trim: true,
         },
 
         role: {
             type: String,
             default: "MERN Developer",
+            trim: true,
         },
 
         email: {
             type: String,
             required: true,
+            trim: true,
+            lowercase: true,
         },
 
         college: {
             type: String,
-            required: true,
+            default: "",
+            trim: true,
         },
 
         location: {
             type: String,
-            required: true,
+            default: "",
+            trim: true,
         },
 
         branch: {
             type: String,
-            required: true,
+            default: "",
+            trim: true,
         },
 
         year: {
             type: String,
-            required: true,
+            default: "",
         },
 
         photo: {
@@ -50,33 +58,42 @@ const profileSchema = new mongoose.Schema(
         },
 
         resume: {
-            type: Object,
+            type: mongoose.Schema.Types.Mixed,
             default: null,
         },
 
         github: {
             type: String,
             default: "",
+            trim: true,
         },
 
         linkedin: {
             type: String,
             default: "",
+            trim: true,
         },
 
         portfolio: {
             type: String,
             default: "",
+            trim: true,
         },
 
         availability: {
             type: String,
+            enum: [
+                "Available",
+                "Looking for Team",
+                "Busy",
+            ],
             default: "Available",
         },
 
         bio: {
             type: String,
             default: "",
+            trim: true,
         },
 
         skills: {
@@ -89,6 +106,7 @@ const profileSchema = new mongoose.Schema(
             default: false,
         },
     },
+
     {
         timestamps: true,
     }
