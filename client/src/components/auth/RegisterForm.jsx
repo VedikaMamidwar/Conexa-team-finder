@@ -19,6 +19,7 @@ import {
     BriefcaseBusiness,
     Globe,
     FileText,
+    Loader2,
 } from "lucide-react";
 
 import SocialLogin from "./SocialLogin";
@@ -53,6 +54,7 @@ export default function RegisterForm() {
     const [loading, setLoading] = useState(false);
     const [showPassword, setShowPassword] = useState(false);
     const [showConfirm, setShowConfirm] = useState(false);
+    const [acceptedTerms, setAcceptedTerms] = useState(false);
 
     // =====================================================
     // HANDLE CHANGE
@@ -72,6 +74,13 @@ export default function RegisterForm() {
                 [name]: "",
             }));
         }
+
+        if (errors.submit) {
+            setErrors((prev) => ({
+                ...prev,
+                submit: "",
+            }));
+        }
     };
 
     // =====================================================
@@ -88,7 +97,7 @@ export default function RegisterForm() {
     };
 
     // =====================================================
-    // PASSWORD CHECK
+    // PASSWORD CHECKS
     // =====================================================
 
     const checks = [
@@ -110,16 +119,20 @@ export default function RegisterForm() {
         },
     ];
 
-    const score = checks.filter((x) => x.valid).length;
+    const score = checks.filter(
+        (item) => item.valid
+    ).length;
 
     const strength =
-        score <= 1
-            ? "Weak"
-            : score === 2
-                ? "Fair"
-                : score === 3
-                    ? "Good"
-                    : "Strong";
+        score === 0
+            ? "Not Set"
+            : score <= 1
+                ? "Weak"
+                : score === 2
+                    ? "Fair"
+                    : score === 3
+                        ? "Good"
+                        : "Strong";
 
     // =====================================================
     // VALIDATION
@@ -142,13 +155,17 @@ export default function RegisterForm() {
         if (!form.email.trim()) {
             newErrors.email =
                 "Email is required.";
-        } else if (!/\S+@\S+\.\S+/.test(form.email)) {
+        } else if (
+            !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
+                form.email.trim()
+            )
+        ) {
             newErrors.email =
-                "Invalid email.";
+                "Please enter a valid email.";
         }
 
         // =================================================
-        // STUDENT VALIDATION
+        // STUDENT
         // =================================================
 
         if (form.accountType === "student") {
@@ -164,12 +181,12 @@ export default function RegisterForm() {
 
             if (!form.year) {
                 newErrors.year =
-                    "Select your year.";
+                    "Please select your year.";
             }
         }
 
         // =================================================
-        // STAKEHOLDER VALIDATION
+        // STAKEHOLDER
         // =================================================
 
         if (form.accountType === "stakeholder") {
@@ -203,17 +220,26 @@ export default function RegisterForm() {
                 "Password is required.";
         } else if (form.password.length < 8) {
             newErrors.password =
-                "Minimum 8 characters.";
+                "Password must contain at least 8 characters.";
         }
 
         if (!form.confirmPassword) {
             newErrors.confirmPassword =
-                "Confirm your password.";
+                "Please confirm your password.";
         } else if (
             form.confirmPassword !== form.password
         ) {
             newErrors.confirmPassword =
                 "Passwords do not match.";
+        }
+
+        // =================================================
+        // TERMS
+        // =================================================
+
+        if (!acceptedTerms) {
+            newErrors.terms =
+                "Please accept the Terms & Conditions.";
         }
 
         setErrors(newErrors);
@@ -244,10 +270,7 @@ export default function RegisterForm() {
 
                 accountType: form.accountType,
 
-                // =================================================
-                // STUDENT DATA
-                // =================================================
-
+                // Student
                 college:
                     form.accountType === "student"
                         ? form.college.trim()
@@ -263,10 +286,7 @@ export default function RegisterForm() {
                         ? form.year
                         : "",
 
-                // =================================================
-                // STAKEHOLDER DATA
-                // =================================================
-
+                // Stakeholder
                 organizationName:
                     form.accountType === "stakeholder"
                         ? form.organizationName.trim()
@@ -295,7 +315,7 @@ export default function RegisterForm() {
 
             if (!data?.token || !data?.user) {
                 throw new Error(
-                    "Invalid registration response from server"
+                    "Invalid registration response from server."
                 );
             }
 
@@ -314,17 +334,13 @@ export default function RegisterForm() {
                 JSON.stringify(data.user)
             );
 
-            // Token should already be saved by authService.
-            // Save again for extra persistence.
             localStorage.setItem(
                 "token",
                 data.token
             );
 
-            alert("Registration Successful");
-
             // =================================================
-            // ACCOUNT TYPE BASED REDIRECT
+            // ROLE BASED NAVIGATION
             // =================================================
 
             if (
@@ -351,55 +367,121 @@ export default function RegisterForm() {
                 err
             );
 
-            alert(
-                err.response?.data?.message ||
-                err.message ||
-                "Registration Failed"
-            );
+            setErrors({
+                submit:
+                    err.response?.data?.message ||
+                    err.message ||
+                    "Registration failed. Please try again.",
+            });
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="min-h-screen flex items-center justify-center px-4 py-6 bg-[#F8FAFC]">
-
-            <div className="w-full max-w-2xl">
+        <div
+            className="
+                min-h-screen
+                w-full
+                flex
+                items-center
+                justify-center
+                px-4
+                py-6
+                sm:px-6
+                sm:py-8
+                bg-[#F8FAFC]
+            "
+        >
+            <div className="w-full max-w-3xl">
 
                 {/* =================================================
-                    TOP
+                    BRAND + HEADER
                 ================================================= */}
 
-                <div className="text-center mb-5">
+                <div className="text-center mb-6">
 
                     <Link
                         to="/landing"
-                        className="inline-flex items-center gap-2 mb-3"
+                        className="
+                            inline-flex
+                            items-center
+                            gap-2
+                            mb-4
+                            group
+                        "
                     >
-                        <div className="w-9 h-9 rounded-lg bg-[#1E1B4B] text-[#14B8A6] flex items-center justify-center">
-                            <Sparkles size={17} />
+                        <div
+                            className="
+                                flex
+                                items-center
+                                justify-center
+                                w-10
+                                h-10
+                                rounded-2xl
+                                bg-[#1E1B4B]
+                                text-[#14B8A6]
+                                shadow-md
+                                shadow-[#1E1B4B]/15
+                                group-hover:scale-105
+                                transition-transform
+                            "
+                        >
+                            <Sparkles size={18} />
                         </div>
 
-                        <span className="font-black tracking-[0.15em] text-[#1E1B4B]">
+                        <span
+                            className="
+                                font-black
+                                tracking-[0.16em]
+                                text-[#1E1B4B]
+                            "
+                        >
                             CONEXA
                         </span>
                     </Link>
 
-                    <h1 className="text-2xl sm:text-3xl font-black text-[#1E1B4B]">
+                    <h1
+                        className="
+                            text-2xl
+                            sm:text-3xl
+                            font-black
+                            tracking-tight
+                            text-[#1E1B4B]
+                        "
+                    >
                         Create Account
                     </h1>
 
-                    <p className="text-xs sm:text-sm text-slate-500 mt-1">
+                    <p
+                        className="
+                            mt-2
+                            text-xs
+                            sm:text-sm
+                            text-slate-500
+                        "
+                    >
                         Join India's smartest hackathon community.
                     </p>
-
                 </div>
 
                 {/* =================================================
-                    CARD
+                    MAIN CARD
                 ================================================= */}
 
-                <div className="bg-white border border-slate-200 rounded-2xl shadow-xl p-5 sm:p-7">
+                <div
+                    className="
+                        w-full
+                        bg-white
+                        border
+                        border-slate-200
+                        rounded-[28px]
+                        shadow-[0_20px_60px_rgba(30,27,75,0.08)]
+                        p-5
+                        sm:p-7
+                        md:p-8
+                    "
+                >
 
                     {/* SOCIAL LOGIN */}
 
@@ -407,152 +489,113 @@ export default function RegisterForm() {
 
                     {/* DIVIDER */}
 
-                    <div className="flex items-center gap-3 my-4">
-
+                    <div className="flex items-center gap-3 my-6">
                         <div className="flex-1 h-px bg-slate-200" />
 
-                        <span className="text-[10px] font-semibold text-slate-400">
-                            OR EMAIL
+                        <span
+                            className="
+                                text-[10px]
+                                sm:text-xs
+                                font-semibold
+                                text-slate-400
+                                whitespace-nowrap
+                            "
+                        >
+                            OR CONTINUE WITH EMAIL
                         </span>
 
                         <div className="flex-1 h-px bg-slate-200" />
-
                     </div>
 
                     {/* =================================================
                         ACCOUNT TYPE
                     ================================================= */}
 
-                    <div className="mb-4">
+                    <div className="mb-6">
 
-                        <label className="block text-xs font-semibold text-slate-600 mb-2">
+                        <label
+                            className="
+                                block
+                                text-sm
+                                font-semibold
+                                text-[#1E1B4B]
+                                mb-3
+                            "
+                        >
                             Choose Account Type
                         </label>
 
-                        <div className="grid grid-cols-2 gap-3">
+                        <div
+                            className="
+                                grid
+                                grid-cols-1
+                                sm:grid-cols-2
+                                gap-3
+                            "
+                        >
 
                             {/* STUDENT */}
 
-                            <button
-                                type="button"
+                            <AccountTypeCard
+                                selected={
+                                    form.accountType ===
+                                    "student"
+                                }
                                 onClick={() =>
                                     selectAccountType(
                                         "student"
                                     )
                                 }
-                                className={`
-                                    p-3 rounded-xl border-2
-                                    text-left
-                                    transition-all
-                                    ${form.accountType ===
-                                        "student"
-                                        ? "border-[#14B8A6] bg-[#14B8A6]/5"
-                                        : "border-slate-200 hover:border-[#14B8A6]/50"
-                                    }
-                                `}
-                            >
-
-                                <div className="flex items-center gap-2">
-
-                                    <div
-                                        className={`
-                                            w-9 h-9 rounded-lg flex items-center justify-center
-                                            ${form.accountType ===
-                                                "student"
-                                                ? "bg-[#1E1B4B] text-[#14B8A6]"
-                                                : "bg-slate-100 text-slate-500"
-                                            }
-                                        `}
-                                    >
-                                        <GraduationCap size={19} />
-                                    </div>
-
-                                    <div>
-
-                                        <p className="text-sm font-bold text-[#1E1B4B]">
-                                            Student
-                                        </p>
-
-                                        <p className="text-[9px] text-slate-500">
-                                            Find teams & projects
-                                        </p>
-
-                                    </div>
-
-                                </div>
-
-                            </button>
+                                icon={GraduationCap}
+                                title="Student"
+                                description="Find teams & projects"
+                            />
 
                             {/* STAKEHOLDER */}
 
-                            <button
-                                type="button"
+                            <AccountTypeCard
+                                selected={
+                                    form.accountType ===
+                                    "stakeholder"
+                                }
                                 onClick={() =>
                                     selectAccountType(
                                         "stakeholder"
                                     )
                                 }
-                                className={`
-                                    p-3 rounded-xl border-2
-                                    text-left
-                                    transition-all
-                                    ${form.accountType ===
-                                        "stakeholder"
-                                        ? "border-[#14B8A6] bg-[#14B8A6]/5"
-                                        : "border-slate-200 hover:border-[#14B8A6]/50"
-                                    }
-                                `}
-                            >
-
-                                <div className="flex items-center gap-2">
-
-                                    <div
-                                        className={`
-                                            w-9 h-9 rounded-lg flex items-center justify-center
-                                            ${form.accountType ===
-                                                "stakeholder"
-                                                ? "bg-[#1E1B4B] text-[#14B8A6]"
-                                                : "bg-slate-100 text-slate-500"
-                                            }
-                                        `}
-                                    >
-                                        <Building2 size={19} />
-                                    </div>
-
-                                    <div>
-
-                                        <p className="text-sm font-bold text-[#1E1B4B]">
-                                            Stakeholder
-                                        </p>
-
-                                        <p className="text-[9px] text-slate-500">
-                                            Post real-world problems
-                                        </p>
-
-                                    </div>
-
-                                </div>
-
-                            </button>
+                                icon={Building2}
+                                title="Stakeholder"
+                                description="Post real-world problems"
+                            />
 
                         </div>
 
                         {errors.accountType && (
-                            <p className="text-[10px] text-red-500 mt-1">
+                            <p className="mt-2 text-xs font-medium text-red-500">
                                 {errors.accountType}
                             </p>
                         )}
-
                     </div>
 
-                    <form onSubmit={handleSubmit}>
+                    {/* =================================================
+                        FORM
+                    ================================================= */}
 
-                        {/* =================================================
-                            COMMON - NAME + EMAIL
-                        ================================================= */}
+                    <form
+                        onSubmit={handleSubmit}
+                        noValidate
+                    >
 
-                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                        {/* COMMON */}
 
+                        <div
+                            className="
+                                grid
+                                grid-cols-1
+                                sm:grid-cols-2
+                                gap-4
+                            "
+                        >
                             <Input
                                 label="Full Name"
                                 name="name"
@@ -561,6 +604,8 @@ export default function RegisterForm() {
                                 value={form.name}
                                 onChange={handleChange}
                                 error={errors.name}
+                                disabled={loading}
+                                required
                             />
 
                             <Input
@@ -572,26 +617,36 @@ export default function RegisterForm() {
                                 value={form.email}
                                 onChange={handleChange}
                                 error={errors.email}
+                                disabled={loading}
+                                required
                             />
-
                         </div>
 
                         {/* =================================================
-                            STUDENT INFORMATION
+                            STUDENT
                         ================================================= */}
 
                         {form.accountType === "student" && (
-                            <>
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
+                            <div className="mt-4 space-y-4">
 
+                                <div
+                                    className="
+                                        grid
+                                        grid-cols-1
+                                        sm:grid-cols-2
+                                        gap-4
+                                    "
+                                >
                                     <Input
                                         label="College"
                                         name="college"
                                         icon={GraduationCap}
-                                        placeholder="College Name"
+                                        placeholder="College name"
                                         value={form.college}
                                         onChange={handleChange}
                                         error={errors.college}
+                                        disabled={loading}
+                                        required
                                     />
 
                                     <Input
@@ -602,63 +657,28 @@ export default function RegisterForm() {
                                         value={form.branch}
                                         onChange={handleChange}
                                         error={errors.branch}
+                                        disabled={loading}
+                                        required
                                     />
-
                                 </div>
 
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
-
-                                    <div>
-
-                                        <label className="block text-xs font-semibold text-slate-600 mb-1.5">
-                                            Current Year
-                                        </label>
-
-                                        <div className="relative">
-
-                                            <GraduationCap
-                                                size={17}
-                                                className="absolute left-3 top-1/2 -translate-y-1/2 text-[#14B8A6]"
-                                            />
-
-                                            <select
-                                                name="year"
-                                                value={form.year}
-                                                onChange={handleChange}
-                                                className="w-full h-11 pl-9 pr-3 rounded-xl border border-slate-200 text-sm outline-none focus:border-[#14B8A6] focus:ring-2 focus:ring-[#14B8A6]/10"
-                                            >
-
-                                                <option value="">
-                                                    Select Year
-                                                </option>
-
-                                                <option>
-                                                    1st Year
-                                                </option>
-
-                                                <option>
-                                                    2nd Year
-                                                </option>
-
-                                                <option>
-                                                    3rd Year
-                                                </option>
-
-                                                <option>
-                                                    4th Year
-                                                </option>
-
-                                            </select>
-
-                                        </div>
-
-                                        {errors.year && (
-                                            <p className="text-[10px] text-red-500 mt-1">
-                                                {errors.year}
-                                            </p>
-                                        )}
-
-                                    </div>
+                                <div
+                                    className="
+                                        grid
+                                        grid-cols-1
+                                        sm:grid-cols-2
+                                        gap-4
+                                    "
+                                >
+                                    <SelectInput
+                                        label="Current Year"
+                                        name="year"
+                                        icon={GraduationCap}
+                                        value={form.year}
+                                        onChange={handleChange}
+                                        error={errors.year}
+                                        disabled={loading}
+                                    />
 
                                     <PasswordInput
                                         label="Password"
@@ -668,29 +688,41 @@ export default function RegisterForm() {
                                         show={showPassword}
                                         setShow={setShowPassword}
                                         error={errors.password}
+                                        disabled={loading}
                                     />
-
                                 </div>
-                            </>
+                            </div>
                         )}
 
                         {/* =================================================
-                            STAKEHOLDER INFORMATION
+                            STAKEHOLDER
                         ================================================= */}
 
                         {form.accountType === "stakeholder" && (
-                            <>
+                            <div className="mt-4 space-y-4">
 
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
-
+                                <div
+                                    className="
+                                        grid
+                                        grid-cols-1
+                                        sm:grid-cols-2
+                                        gap-4
+                                    "
+                                >
                                     <Input
                                         label="Organization Name"
                                         name="organizationName"
                                         icon={Building2}
                                         placeholder="Company / NGO / Startup"
-                                        value={form.organizationName}
+                                        value={
+                                            form.organizationName
+                                        }
                                         onChange={handleChange}
-                                        error={errors.organizationName}
+                                        error={
+                                            errors.organizationName
+                                        }
+                                        disabled={loading}
+                                        required
                                     />
 
                                     <Input
@@ -698,23 +730,40 @@ export default function RegisterForm() {
                                         name="organizationType"
                                         icon={BriefcaseBusiness}
                                         placeholder="Company / NGO / College"
-                                        value={form.organizationType}
+                                        value={
+                                            form.organizationType
+                                        }
                                         onChange={handleChange}
-                                        error={errors.organizationType}
+                                        error={
+                                            errors.organizationType
+                                        }
+                                        disabled={loading}
+                                        required
                                     />
-
                                 </div>
 
-                                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
-
+                                <div
+                                    className="
+                                        grid
+                                        grid-cols-1
+                                        sm:grid-cols-2
+                                        gap-4
+                                    "
+                                >
                                     <Input
                                         label="Stakeholder Role"
                                         name="stakeholderRole"
                                         icon={User}
                                         placeholder="Founder / HR / Manager"
-                                        value={form.stakeholderRole}
+                                        value={
+                                            form.stakeholderRole
+                                        }
                                         onChange={handleChange}
-                                        error={errors.stakeholderRole}
+                                        error={
+                                            errors.stakeholderRole
+                                        }
+                                        disabled={loading}
+                                        required
                                     />
 
                                     <Input
@@ -725,21 +774,34 @@ export default function RegisterForm() {
                                         value={form.website}
                                         onChange={handleChange}
                                         error={errors.website}
+                                        disabled={loading}
                                     />
-
                                 </div>
 
-                                <div className="mt-3">
+                                {/* Description */}
 
-                                    <label className="block text-xs font-semibold text-slate-600 mb-1.5">
+                                <div>
+                                    <label
+                                        className="
+                                            block
+                                            text-sm
+                                            font-semibold
+                                            text-[#1E1B4B]
+                                            mb-2
+                                        "
+                                    >
                                         Organization Description
                                     </label>
 
                                     <div className="relative">
-
                                         <FileText
-                                            size={17}
-                                            className="absolute left-3 top-3 text-[#14B8A6]"
+                                            size={18}
+                                            className="
+                                                absolute
+                                                left-3
+                                                top-3.5
+                                                text-[#14B8A6]
+                                            "
                                         />
 
                                         <textarea
@@ -747,53 +809,56 @@ export default function RegisterForm() {
                                             value={
                                                 form.organizationDescription
                                             }
-                                            onChange={handleChange}
+                                            onChange={
+                                                handleChange
+                                            }
                                             placeholder="Tell students about your organization and the problems you want to solve..."
-                                            rows={3}
+                                            rows={4}
+                                            disabled={loading}
                                             className={`
                                                 w-full
-                                                pl-9
-                                                pr-3
+                                                pl-10
+                                                pr-4
                                                 py-3
-                                                rounded-xl
+                                                rounded-2xl
                                                 border
+                                                bg-white
                                                 text-sm
+                                                text-slate-700
+                                                placeholder:text-slate-400
                                                 outline-none
                                                 resize-none
+                                                transition-all
                                                 ${errors.organizationDescription
-                                                    ? "border-red-400"
-                                                    : "border-slate-200 focus:border-[#14B8A6] focus:ring-2 focus:ring-[#14B8A6]/10"
+                                                    ? "border-red-400 focus:ring-4 focus:ring-red-100"
+                                                    : "border-slate-200 focus:border-[#14B8A6] focus:ring-4 focus:ring-[#14B8A6]/10"
                                                 }
+                                                disabled:bg-slate-50
+                                                disabled:cursor-not-allowed
                                             `}
                                         />
-
                                     </div>
 
                                     {errors.organizationDescription && (
-                                        <p className="text-[10px] text-red-500 mt-1">
+                                        <p className="mt-1.5 text-xs font-medium text-red-500">
                                             {
                                                 errors.organizationDescription
                                             }
                                         </p>
                                     )}
-
                                 </div>
 
-                                <div className="mt-3">
-
-                                    <PasswordInput
-                                        label="Password"
-                                        name="password"
-                                        value={form.password}
-                                        onChange={handleChange}
-                                        show={showPassword}
-                                        setShow={setShowPassword}
-                                        error={errors.password}
-                                    />
-
-                                </div>
-
-                            </>
+                                <PasswordInput
+                                    label="Password"
+                                    name="password"
+                                    value={form.password}
+                                    onChange={handleChange}
+                                    show={showPassword}
+                                    setShow={setShowPassword}
+                                    error={errors.password}
+                                    disabled={loading}
+                                />
+                            </div>
                         )}
 
                         {/* =================================================
@@ -801,96 +866,117 @@ export default function RegisterForm() {
                         ================================================= */}
 
                         {form.password && (
-                            <div className="mt-2 p-3 rounded-xl bg-slate-50 border border-slate-100">
-
-                                <div className="flex justify-between mb-2">
-
-                                    <span className="text-[10px] font-semibold text-slate-500">
+                            <div
+                                className="
+                                    mt-4
+                                    p-4
+                                    rounded-2xl
+                                    bg-slate-50
+                                    border
+                                    border-slate-200
+                                "
+                            >
+                                <div className="flex items-center justify-between mb-3">
+                                    <span
+                                        className="
+                                            text-xs
+                                            sm:text-sm
+                                            font-semibold
+                                            text-[#1E1B4B]
+                                        "
+                                    >
                                         Password Strength
                                     </span>
 
                                     <span
                                         className={`
-                                            text-[10px] font-bold
+                                            text-xs
+                                            sm:text-sm
+                                            font-bold
                                             ${score <= 1
                                                 ? "text-red-500"
                                                 : score === 2
-                                                    ? "text-orange-500"
+                                                    ? "text-amber-500"
                                                     : score === 3
                                                         ? "text-blue-500"
-                                                        : "text-green-500"
+                                                        : "text-[#14B8A6]"
                                             }
                                         `}
                                     >
                                         {strength}
                                     </span>
-
                                 </div>
 
-                                <div className="grid grid-cols-4 gap-1.5 mb-2">
+                                {/* Strength Bars */}
 
+                                <div className="grid grid-cols-4 gap-1.5 mb-3">
                                     {[1, 2, 3, 4].map(
                                         (bar) => (
                                             <div
                                                 key={bar}
                                                 className={`
-                                                    h-1.5 rounded-full
+                                                    h-1.5
+                                                    rounded-full
+                                                    transition-all
+                                                    duration-300
                                                     ${bar <= score
                                                         ? score <= 1
                                                             ? "bg-red-400"
                                                             : score === 2
-                                                                ? "bg-orange-400"
+                                                                ? "bg-amber-400"
                                                                 : score === 3
                                                                     ? "bg-blue-400"
-                                                                    : "bg-green-500"
+                                                                    : "bg-[#14B8A6]"
                                                         : "bg-slate-200"
                                                     }
                                                 `}
                                             />
                                         )
                                     )}
-
                                 </div>
 
-                                <div className="grid grid-cols-2 sm:grid-cols-4 gap-y-1">
+                                {/* Rules */}
 
-                                    {checks.map(
-                                        (item) => (
-                                            <div
-                                                key={item.label}
-                                                className="flex items-center gap-1"
+                                <div
+                                    className="
+                                        grid
+                                        grid-cols-1
+                                        sm:grid-cols-2
+                                        gap-2
+                                    "
+                                >
+                                    {checks.map((item) => (
+                                        <div
+                                            key={item.label}
+                                            className="flex items-center gap-2"
+                                        >
+                                            {item.valid ? (
+                                                <Check
+                                                    size={14}
+                                                    className="shrink-0 text-[#14B8A6]"
+                                                    strokeWidth={3}
+                                                />
+                                            ) : (
+                                                <X
+                                                    size={14}
+                                                    className="shrink-0 text-slate-300"
+                                                />
+                                            )}
+
+                                            <span
+                                                className={`
+                                                    text-xs
+                                                    ${item.valid
+                                                        ? "text-[#0F9488] font-medium"
+                                                        : "text-slate-400"
+                                                    }
+                                                `}
                                             >
-
-                                                {item.valid ? (
-                                                    <Check
-                                                        size={11}
-                                                        className="text-green-500"
-                                                    />
-                                                ) : (
-                                                    <X
-                                                        size={11}
-                                                        className="text-slate-300"
-                                                    />
-                                                )}
-
-                                                <span
-                                                    className={`
-                                                        text-[9px]
-                                                        ${item.valid
-                                                            ? "text-green-600"
-                                                            : "text-slate-400"
-                                                        }
-                                                    `}
-                                                >
-                                                    {item.label}
-                                                </span>
-
-                                            </div>
-                                        )
-                                    )}
-
+                                                {item.label}
+                                            </span>
+                                        </div>
+                                    ))}
                                 </div>
-
                             </div>
                         )}
 
@@ -898,121 +984,383 @@ export default function RegisterForm() {
                             CONFIRM PASSWORD
                         ================================================= */}
 
-                        <div className="mt-3">
-
+                        <div className="mt-4">
                             <PasswordInput
                                 label="Confirm Password"
                                 name="confirmPassword"
-                                value={form.confirmPassword}
+                                value={
+                                    form.confirmPassword
+                                }
                                 onChange={handleChange}
                                 show={showConfirm}
                                 setShow={setShowConfirm}
-                                error={errors.confirmPassword}
+                                error={
+                                    errors.confirmPassword
+                                }
+                                disabled={loading}
                             />
-
                         </div>
 
                         {/* =================================================
                             TERMS
                         ================================================= */}
 
-                        <label className="flex items-start gap-2 mt-3 cursor-pointer">
+                        <div className="mt-5">
 
-                            <input
-                                type="checkbox"
-                                required
-                                className="mt-0.5 accent-[#14B8A6]"
-                            />
+                            <label
+                                className="
+                                    flex
+                                    items-start
+                                    gap-3
+                                    cursor-pointer
+                                "
+                            >
+                                <input
+                                    type="checkbox"
+                                    checked={acceptedTerms}
+                                    onChange={(e) => {
+                                        setAcceptedTerms(
+                                            e.target.checked
+                                        );
 
-                            <span className="text-[10px] sm:text-xs text-slate-500 leading-4">
+                                        if (
+                                            errors.terms
+                                        ) {
+                                            setErrors(
+                                                (prev) => ({
+                                                    ...prev,
+                                                    terms: "",
+                                                })
+                                            );
+                                        }
+                                    }}
+                                    disabled={loading}
+                                    className="
+                                        mt-0.5
+                                        w-4
+                                        h-4
+                                        shrink-0
+                                        rounded
+                                        border-slate-300
+                                        accent-[#14B8A6]
+                                        cursor-pointer
+                                    "
+                                />
 
-                                I agree to the{" "}
+                                <span
+                                    className="
+                                        text-xs
+                                        sm:text-sm
+                                        leading-5
+                                        text-slate-500
+                                    "
+                                >
+                                    I agree to the{" "}
+                                    <button
+                                        type="button"
+                                        className="
+                                            font-semibold
+                                            text-[#1E1B4B]
+                                            hover:text-[#14B8A6]
+                                        "
+                                    >
+                                        Terms & Conditions
+                                    </button>{" "}
+                                    and{" "}
+                                    <button
+                                        type="button"
+                                        className="
+                                            font-semibold
+                                            text-[#1E1B4B]
+                                            hover:text-[#14B8A6]
+                                        "
+                                    >
+                                        Privacy Policy
+                                    </button>
+                                </span>
+                            </label>
 
-                                <b className="text-[#1E1B4B]">
-                                    Terms & Conditions
-                                </b>{" "}
-
-                                and{" "}
-
-                                <b className="text-[#1E1B4B]">
-                                    Privacy Policy
-                                </b>
-
-                            </span>
-
-                        </label>
+                            {errors.terms && (
+                                <p className="mt-2 text-xs font-medium text-red-500">
+                                    {errors.terms}
+                                </p>
+                            )}
+                        </div>
 
                         {/* =================================================
-                            BUTTON
+                            SUBMIT ERROR
+                        ================================================= */}
+
+                        {errors.submit && (
+                            <div
+                                className="
+                                    mt-5
+                                    px-4
+                                    py-3
+                                    rounded-2xl
+                                    border
+                                    border-red-200
+                                    bg-red-50
+                                    text-sm
+                                    font-medium
+                                    text-red-600
+                                "
+                            >
+                                {errors.submit}
+                            </div>
+                        )}
+
+                        {/* =================================================
+                            CREATE ACCOUNT BUTTON
                         ================================================= */}
 
                         <button
                             type="submit"
                             disabled={loading}
                             className="
+                                group
                                 w-full
-                                h-11
-                                mt-4
-                                rounded-xl
+                                min-h-[56px]
+                                mt-5
+                                rounded-2xl
                                 bg-[#1E1B4B]
                                 hover:bg-[#312E81]
                                 text-white
                                 text-sm
+                                sm:text-base
                                 font-bold
                                 flex
                                 items-center
                                 justify-center
                                 gap-2
-                                transition
+                                transition-all
+                                duration-300
                                 shadow-lg
-                                shadow-[#1E1B4B]/20
+                                shadow-[#1E1B4B]/15
+                                hover:-translate-y-0.5
+                                active:translate-y-0
+                                active:scale-[0.99]
                                 disabled:opacity-60
                                 disabled:cursor-not-allowed
+                                disabled:hover:translate-y-0
                             "
                         >
+                            {loading ? (
+                                <>
+                                    <Loader2
+                                        size={20}
+                                        className="animate-spin"
+                                    />
 
-                            {loading
-                                ? "Creating Account..."
-                                : form.accountType ===
-                                    "stakeholder"
-                                    ? "Create Stakeholder Account"
-                                    : "Create Student Account"}
+                                    <span>
+                                        Creating Account...
+                                    </span>
+                                </>
+                            ) : (
+                                <>
+                                    <span>
+                                        {form.accountType ===
+                                            "stakeholder"
+                                            ? "Create Stakeholder Account"
+                                            : "Create Student Account"}
+                                    </span>
 
-                            {!loading && (
-                                <ArrowRight size={17} />
+                                    <ArrowRight
+                                        size={19}
+                                        className="
+                                            transition-transform
+                                            duration-300
+                                            group-hover:translate-x-1
+                                        "
+                                    />
+                                </>
                             )}
-
                         </button>
-
                     </form>
 
                     {/* =================================================
                         LOGIN
                     ================================================= */}
 
-                    <p className="text-center text-xs sm:text-sm text-slate-500 mt-4">
-
-                        Already have an account?{" "}
+                    <div
+                        className="
+                            flex
+                            items-center
+                            justify-center
+                            flex-wrap
+                            gap-1.5
+                            mt-7
+                            text-sm
+                            text-slate-500
+                            text-center
+                        "
+                    >
+                        <span>
+                            Already have an account?
+                        </span>
 
                         <Link
                             to="/login"
-                            className="font-bold text-[#14B8A6] hover:text-[#0F9F91]"
+                            className="
+                                font-bold
+                                text-[#14B8A6]
+                                hover:text-[#0F9488]
+                                transition-colors
+                            "
                         >
-                            Sign In →
+                            Sign In
                         </Link>
+                    </div>
 
-                    </p>
+                    {/* Security */}
 
+                    <div
+                        className="
+                            flex
+                            items-center
+                            justify-center
+                            gap-2
+                            mt-5
+                            text-[11px]
+                            text-slate-400
+                            text-center
+                        "
+                    >
+                        <Lock size={12} />
+
+                        <span>
+                            Your account information is securely protected.
+                        </span>
+                    </div>
                 </div>
-
             </div>
-
         </div>
     );
 }
 
 /* =====================================================
-   INPUT
+   ACCOUNT TYPE CARD
+===================================================== */
+
+function AccountTypeCard({
+    selected,
+    onClick,
+    icon: Icon,
+    title,
+    description,
+}) {
+    return (
+        <button
+            type="button"
+            onClick={onClick}
+            aria-pressed={selected}
+            className={`
+                group
+                relative
+                w-full
+                text-left
+                p-4
+                rounded-2xl
+                border-2
+                transition-all
+                duration-300
+                active:scale-[0.98]
+                ${selected
+                    ? `
+                            border-[#14B8A6]
+                            bg-[#14B8A6]/5
+                            shadow-md
+                            shadow-[#14B8A6]/10
+                          `
+                    : `
+                            border-slate-200
+                            bg-white
+                            hover:border-[#14B8A6]/50
+                            hover:bg-slate-50
+                          `
+                }
+            `}
+        >
+            <div className="flex items-center gap-3">
+
+                <div
+                    className={`
+                        relative
+                        flex
+                        items-center
+                        justify-center
+                        shrink-0
+                        w-11
+                        h-11
+                        rounded-xl
+                        transition-all
+                        duration-300
+                        ${selected
+                            ? "bg-[#1E1B4B] text-[#14B8A6]"
+                            : "bg-slate-100 text-slate-500 group-hover:bg-[#14B8A6]/10 group-hover:text-[#14B8A6]"
+                        }
+                    `}
+                >
+                    <Icon
+                        size={21}
+                        strokeWidth={2}
+                    />
+
+                    {selected && (
+                        <span
+                            className="
+                                absolute
+                                -top-1.5
+                                -right-1.5
+                                flex
+                                items-center
+                                justify-center
+                                w-5
+                                h-5
+                                rounded-full
+                                bg-[#14B8A6]
+                                text-white
+                                border-2
+                                border-white
+                            "
+                        >
+                            <Check
+                                size={11}
+                                strokeWidth={3}
+                            />
+                        </span>
+                    )}
+                </div>
+
+                <div className="min-w-0">
+                    <p
+                        className="
+                            text-sm
+                            sm:text-base
+                            font-bold
+                            text-[#1E1B4B]
+                        "
+                    >
+                        {title}
+                    </p>
+
+                    <p
+                        className="
+                            mt-0.5
+                            text-xs
+                            text-slate-500
+                        "
+                    >
+                        {description}
+                    </p>
+                </div>
+            </div>
+        </button>
+    );
+}
+
+/* =====================================================
+   TEXT INPUT
 ===================================================== */
 
 function Input({
@@ -1024,57 +1372,209 @@ function Input({
     value,
     onChange,
     error,
+    disabled = false,
+    required = false,
 }) {
     return (
-        <div>
+        <div className="w-full">
 
-            <label className="block text-xs font-semibold text-slate-600 mb-1.5">
+            <label
+                htmlFor={name}
+                className="
+                    block
+                    text-sm
+                    font-semibold
+                    text-[#1E1B4B]
+                    mb-2
+                "
+            >
                 {label}
+
+                {required && (
+                    <span className="ml-1 text-red-500">
+                        *
+                    </span>
+                )}
             </label>
 
-            <div className="relative">
-
+            <div
+                className={`
+                    relative
+                    flex
+                    items-center
+                    w-full
+                    min-h-[52px]
+                    rounded-2xl
+                    border
+                    bg-white
+                    transition-all
+                    duration-300
+                    ${error
+                        ? "border-red-400 focus-within:ring-4 focus-within:ring-red-100"
+                        : "border-slate-200 focus-within:border-[#14B8A6] focus-within:ring-4 focus-within:ring-[#14B8A6]/10"
+                    }
+                    ${disabled
+                        ? "bg-slate-50 opacity-60"
+                        : ""
+                    }
+                `}
+            >
                 <Icon
-                    size={17}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-[#14B8A6]"
+                    size={18}
+                    className="
+                        absolute
+                        left-4
+                        text-[#14B8A6]
+                    "
                 />
 
                 <input
+                    id={name}
                     type={type}
                     name={name}
-                    value={value}
+                    value={value ?? ""}
                     onChange={onChange}
                     placeholder={placeholder}
-                    className={`
+                    disabled={disabled}
+                    required={required}
+                    autoComplete="off"
+                    className="
                         w-full
-                        h-11
-                        pl-9
-                        pr-3
-                        rounded-xl
-                        border
+                        h-[50px]
+                        pl-11
+                        pr-4
+                        rounded-2xl
+                        bg-transparent
                         text-sm
+                        text-slate-700
+                        placeholder:text-slate-400
                         outline-none
-                        ${error
-                            ? "border-red-400"
-                            : "border-slate-200 focus:border-[#14B8A6] focus:ring-2 focus:ring-[#14B8A6]/10"
-                        }
-                    `}
+                        disabled:cursor-not-allowed
+                    "
                 />
-
             </div>
 
             {error && (
-                <p className="text-[10px] text-red-500 mt-1">
+                <p className="mt-1.5 px-1 text-xs font-medium text-red-500">
                     {error}
                 </p>
             )}
-
         </div>
     );
 }
 
 /* =====================================================
-   PASSWORD
+   SELECT INPUT
+===================================================== */
+
+function SelectInput({
+    label,
+    name,
+    icon: Icon,
+    value,
+    onChange,
+    error,
+    disabled = false,
+}) {
+    return (
+        <div className="w-full">
+
+            <label
+                htmlFor={name}
+                className="
+                    block
+                    text-sm
+                    font-semibold
+                    text-[#1E1B4B]
+                    mb-2
+                "
+            >
+                {label}
+                <span className="ml-1 text-red-500">
+                    *
+                </span>
+            </label>
+
+            <div
+                className={`
+                    relative
+                    flex
+                    items-center
+                    min-h-[52px]
+                    rounded-2xl
+                    border
+                    bg-white
+                    transition-all
+                    ${error
+                        ? "border-red-400"
+                        : "border-slate-200 focus-within:border-[#14B8A6] focus-within:ring-4 focus-within:ring-[#14B8A6]/10"
+                    }
+                `}
+            >
+                <Icon
+                    size={18}
+                    className="
+                        absolute
+                        left-4
+                        text-[#14B8A6]
+                        pointer-events-none
+                    "
+                />
+
+                <select
+                    id={name}
+                    name={name}
+                    value={value}
+                    onChange={onChange}
+                    disabled={disabled}
+                    className="
+                        w-full
+                        h-[50px]
+                        pl-11
+                        pr-4
+                        rounded-2xl
+                        bg-transparent
+                        text-sm
+                        text-slate-700
+                        outline-none
+                        appearance-none
+                        cursor-pointer
+                        disabled:cursor-not-allowed
+                    "
+                >
+                    <option value="">
+                        Select Year
+                    </option>
+
+                    <option value="1st Year">
+                        1st Year
+                    </option>
+
+                    <option value="2nd Year">
+                        2nd Year
+                    </option>
+
+                    <option value="3rd Year">
+                        3rd Year
+                    </option>
+
+                    <option value="4th Year">
+                        4th Year
+                    </option>
+                </select>
+            </div>
+
+            {error && (
+                <p className="mt-1.5 px-1 text-xs font-medium text-red-500">
+                    {error}
+                </p>
+            )}
+        </div>
+    );
+}
+
+/* =====================================================
+   PASSWORD INPUT
 ===================================================== */
 
 function PasswordInput({
@@ -1085,67 +1585,130 @@ function PasswordInput({
     show,
     setShow,
     error,
+    disabled = false,
 }) {
     return (
-        <div>
+        <div className="w-full">
 
-            <label className="block text-xs font-semibold text-slate-600 mb-1.5">
+            <label
+                htmlFor={name}
+                className="
+                    block
+                    text-sm
+                    font-semibold
+                    text-[#1E1B4B]
+                    mb-2
+                "
+            >
                 {label}
+                <span className="ml-1 text-red-500">
+                    *
+                </span>
             </label>
 
-            <div className="relative">
-
+            <div
+                className={`
+                    relative
+                    flex
+                    items-center
+                    min-h-[52px]
+                    rounded-2xl
+                    border
+                    bg-white
+                    transition-all
+                    duration-300
+                    ${error
+                        ? "border-red-400 focus-within:ring-4 focus-within:ring-red-100"
+                        : "border-slate-200 focus-within:border-[#14B8A6] focus-within:ring-4 focus-within:ring-[#14B8A6]/10"
+                    }
+                `}
+            >
                 <Lock
-                    size={17}
-                    className="absolute left-3 top-1/2 -translate-y-1/2 text-[#14B8A6]"
+                    size={18}
+                    className="
+                        absolute
+                        left-4
+                        text-[#14B8A6]
+                    "
                 />
 
                 <input
-                    type={show ? "text" : "password"}
+                    id={name}
+                    type={
+                        show
+                            ? "text"
+                            : "password"
+                    }
                     name={name}
-                    value={value}
+                    value={value ?? ""}
                     onChange={onChange}
                     placeholder={
                         label === "Password"
                             ? "Create password"
                             : "Confirm password"
                     }
-                    className={`
+                    disabled={disabled}
+                    autoComplete={
+                        label === "Password"
+                            ? "new-password"
+                            : "new-password"
+                    }
+                    className="
                         w-full
-                        h-11
-                        pl-9
-                        pr-10
-                        rounded-xl
-                        border
+                        h-[50px]
+                        pl-11
+                        pr-12
+                        rounded-2xl
+                        bg-transparent
                         text-sm
+                        text-slate-700
+                        placeholder:text-slate-400
                         outline-none
-                        ${error
-                            ? "border-red-400"
-                            : "border-slate-200 focus:border-[#14B8A6] focus:ring-2 focus:ring-[#14B8A6]/10"
-                        }
-                    `}
+                        disabled:cursor-not-allowed
+                    "
                 />
 
                 <button
                     type="button"
-                    onClick={() => setShow(!show)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-[#14B8A6]"
+                    onClick={() =>
+                        setShow((prev) => !prev)
+                    }
+                    disabled={disabled}
+                    aria-label={
+                        show
+                            ? "Hide password"
+                            : "Show password"
+                    }
+                    className="
+                        absolute
+                        right-3
+                        flex
+                        items-center
+                        justify-center
+                        w-9
+                        h-9
+                        rounded-xl
+                        text-slate-400
+                        hover:text-[#14B8A6]
+                        hover:bg-[#14B8A6]/5
+                        active:scale-95
+                        transition-all
+                        disabled:pointer-events-none
+                    "
                 >
                     {show ? (
-                        <EyeOff size={17} />
+                        <EyeOff size={18} />
                     ) : (
-                        <Eye size={17} />
+                        <Eye size={18} />
                     )}
                 </button>
-
             </div>
 
             {error && (
-                <p className="text-[10px] text-red-500 mt-1">
+                <p className="mt-1.5 px-1 text-xs font-medium text-red-500">
                     {error}
                 </p>
             )}
-
         </div>
     );
 }

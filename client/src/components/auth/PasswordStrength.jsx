@@ -1,6 +1,12 @@
-import { CheckCircle, XCircle } from "lucide-react";
+import {
+    CheckCircle,
+    XCircle,
+    ShieldCheck,
+} from "lucide-react";
 
-export default function PasswordStrength({ password }) {
+export default function PasswordStrength({
+    password = "",
+}) {
     const checks = [
         {
             label: "At least 8 characters",
@@ -20,104 +26,222 @@ export default function PasswordStrength({ password }) {
         },
         {
             label: "One special character",
-            valid: /[!@#$%^&*(),.?\":{}|<>]/.test(password),
+            valid: /[!@#$%^&*(),.?":{}|<>]/.test(
+                password
+            ),
         },
     ];
 
-    const score = checks.filter((item) => item.valid).length;
+    const score = checks.filter(
+        (item) => item.valid
+    ).length;
 
     const strength =
-        score <= 2
-            ? "Weak"
-            : score === 3 || score === 4
-                ? "Medium"
-                : "Strong";
+        score === 0
+            ? "Not Set"
+            : score <= 2
+                ? "Weak"
+                : score <= 4
+                    ? "Medium"
+                    : "Strong";
 
-    const color =
-        score <= 2
-            ? "bg-red-500"
-            : score <= 4
-                ? "bg-yellow-500"
-                : "bg-green-500";
+    const strengthTextColor =
+        score === 0
+            ? "text-slate-400"
+            : score <= 2
+                ? "text-red-500"
+                : score <= 4
+                    ? "text-amber-500"
+                    : "text-emerald-500";
+
+    const progressColor =
+        score === 0
+            ? "bg-slate-300"
+            : score <= 2
+                ? "bg-red-500"
+                : score <= 4
+                    ? "bg-amber-500"
+                    : "bg-[#14B8A6]";
 
     const width =
         score === 0
             ? "0%"
-            : `${(score / 5) * 100}%`;
+            : `${(score / checks.length) * 100}%`;
 
     return (
-        <div className="mt-4">
+        <div
+            className="
+                mt-4
+                p-4
+                rounded-2xl
+                border
+                border-slate-200
+                bg-slate-50/70
+            "
+        >
+            {/* =========================================
+                HEADER
+            ========================================== */}
 
-            {/* Strength Text */}
+            <div className="flex items-center justify-between gap-3 mb-3">
+                <div className="flex items-center gap-2">
+                    <div
+                        className="
+                            flex
+                            items-center
+                            justify-center
+                            w-8
+                            h-8
+                            rounded-xl
+                            bg-[#14B8A6]/10
+                            text-[#14B8A6]
+                        "
+                    >
+                        <ShieldCheck
+                            size={17}
+                            strokeWidth={2}
+                        />
+                    </div>
 
-            <div className="flex justify-between items-center mb-2">
-
-                <p className="text-sm font-semibold text-slate-600">
-                    Password Strength
-                </p>
+                    <p
+                        className="
+                            text-sm
+                            font-semibold
+                            text-[#1E1B4B]
+                        "
+                    >
+                        Password Strength
+                    </p>
+                </div>
 
                 <span
-                    className={`text-sm font-bold ${strength === "Weak"
-                            ? "text-red-500"
-                            : strength === "Medium"
-                                ? "text-yellow-500"
-                                : "text-green-600"
-                        }`}
+                    className={`
+                        text-xs
+                        sm:text-sm
+                        font-bold
+                        ${strengthTextColor}
+                    `}
                 >
                     {strength}
                 </span>
-
             </div>
 
-            {/* Progress Bar */}
+            {/* =========================================
+                PROGRESS BAR
+            ========================================== */}
 
-            <div className="w-full h-2 bg-slate-200 rounded-full overflow-hidden">
-
+            <div
+                className="
+                    w-full
+                    h-2
+                    bg-slate-200
+                    rounded-full
+                    overflow-hidden
+                "
+            >
                 <div
-                    className={`${color} h-full transition-all duration-500`}
-                    style={{ width }}
+                    className={`
+                        h-full
+                        rounded-full
+                        transition-all
+                        duration-500
+                        ease-out
+                        ${progressColor}
+                    `}
+                    style={{
+                        width,
+                    }}
                 />
-
             </div>
 
-            {/* Rules */}
+            {/* =========================================
+                RULES
+            ========================================== */}
 
-            <div className="mt-5 space-y-2">
-
+            <div className="mt-4 space-y-2.5">
                 {checks.map((item) => (
-
                     <div
                         key={item.label}
-                        className="flex items-center gap-2"
+                        className="
+                            flex
+                            items-center
+                            gap-2.5
+                        "
                     >
-
                         {item.valid ? (
                             <CheckCircle
-                                size={18}
-                                className="text-green-500"
+                                size={17}
+                                strokeWidth={2}
+                                className="
+                                    shrink-0
+                                    text-[#14B8A6]
+                                "
                             />
                         ) : (
                             <XCircle
-                                size={18}
-                                className="text-red-400"
+                                size={17}
+                                strokeWidth={2}
+                                className="
+                                    shrink-0
+                                    text-slate-300
+                                "
                             />
                         )}
 
                         <span
-                            className={`text-sm ${item.valid
-                                    ? "text-green-600"
+                            className={`
+                                text-xs
+                                sm:text-sm
+                                transition-colors
+                                duration-300
+                                ${item.valid
+                                    ? "font-medium text-[#0F9488]"
                                     : "text-slate-500"
-                                }`}
+                                }
+                            `}
                         >
                             {item.label}
                         </span>
-
                     </div>
-
                 ))}
-
             </div>
 
+            {/* =========================================
+                COMPLETION MESSAGE
+            ========================================== */}
+
+            {score === checks.length && (
+                <div
+                    className="
+                        mt-4
+                        flex
+                        items-center
+                        gap-2
+                        px-3
+                        py-2.5
+                        rounded-xl
+                        bg-[#14B8A6]/10
+                        border
+                        border-[#14B8A6]/20
+                    "
+                >
+                    <CheckCircle
+                        size={16}
+                        className="shrink-0 text-[#14B8A6]"
+                    />
+
+                    <p
+                        className="
+                            text-xs
+                            sm:text-sm
+                            font-medium
+                            text-[#0F766E]
+                        "
+                    >
+                        Strong password. Your account is better protected.
+                    </p>
+                </div>
+            )}
         </div>
     );
 }
