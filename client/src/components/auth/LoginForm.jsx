@@ -5,6 +5,9 @@ import {
     Lock,
     GraduationCap,
     Building2,
+    ArrowRight,
+    Check,
+    Loader2,
 } from "lucide-react";
 
 import { loginUser } from "../../services/authService";
@@ -15,7 +18,6 @@ import SocialLogin from "./SocialLogin";
 
 export default function LoginForm() {
     const navigate = useNavigate();
-
     const { setUser } = useAuth();
 
     const [form, setForm] = useState({
@@ -26,6 +28,7 @@ export default function LoginForm() {
 
     const [errors, setErrors] = useState({});
     const [loading, setLoading] = useState(false);
+    const [rememberMe, setRememberMe] = useState(false);
 
     // =====================================================
     // HANDLE CHANGE
@@ -57,7 +60,10 @@ export default function LoginForm() {
             accountType: type,
         }));
 
-        setErrors({});
+        setErrors((prev) => ({
+            ...prev,
+            accountType: "",
+        }));
     };
 
     // =====================================================
@@ -69,22 +75,22 @@ export default function LoginForm() {
 
         if (!form.accountType) {
             newErrors.accountType =
-                "Please select account type.";
+                "Please select an account type.";
         }
 
         if (!form.email.trim()) {
-            newErrors.email =
-                "Email is required";
+            newErrors.email = "Email is required.";
         } else if (
-            !/\S+@\S+\.\S+/.test(form.email)
+            !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(
+                form.email.trim()
+            )
         ) {
-            newErrors.email =
-                "Invalid email";
+            newErrors.email = "Please enter a valid email.";
         }
 
         if (!form.password) {
             newErrors.password =
-                "Password is required";
+                "Password is required.";
         }
 
         setErrors(newErrors);
@@ -109,14 +115,12 @@ export default function LoginForm() {
             const data = await loginUser({
                 email: form.email.trim(),
                 password: form.password,
-
-                // IMPORTANT
                 accountType: form.accountType,
             });
 
             if (!data?.token || !data?.user) {
                 throw new Error(
-                    "Invalid login response from server"
+                    "Invalid login response from server."
                 );
             }
 
@@ -148,19 +152,23 @@ export default function LoginForm() {
             // =================================================
 
             localStorage.setItem(
-                "user",
-                JSON.stringify(data.user)
-            );
-
-            localStorage.setItem(
                 "token",
                 data.token
             );
 
-            alert("Login Successful");
+            localStorage.setItem(
+                "user",
+                JSON.stringify(data.user)
+            );
+
+            // Optional remember preference
+            localStorage.setItem(
+                "rememberMe",
+                rememberMe ? "true" : "false"
+            );
 
             // =================================================
-            // ACCOUNT TYPE BASED NAVIGATION
+            // ROLE BASED NAVIGATION
             // =================================================
 
             if (
@@ -187,109 +195,240 @@ export default function LoginForm() {
                 err
             );
 
-            alert(
+            const message =
                 err.response?.data?.message ||
                 err.message ||
-                "Login Failed"
-            );
+                "Login failed. Please try again.";
+
+            setErrors({
+                submit: message,
+            });
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="bg-white rounded-3xl shadow-xl border border-slate-200 p-8">
-
+        <div
+            className="
+                w-full
+                bg-white
+                rounded-[28px]
+                border
+                border-slate-200
+                shadow-[0_20px_60px_rgba(30,27,75,0.08)]
+                p-5
+                sm:p-7
+                md:p-8
+            "
+        >
             {/* =================================================
                 HEADER
             ================================================= */}
 
             <div className="text-center">
+                <div
+                    className="
+                        inline-flex
+                        items-center
+                        justify-center
+                        w-12
+                        h-12
+                        rounded-2xl
+                        bg-[#14B8A6]/10
+                        text-[#14B8A6]
+                        mb-4
+                    "
+                >
+                    <Lock
+                        size={22}
+                        strokeWidth={2}
+                    />
+                </div>
 
-                <h2 className="text-3xl font-black text-[#1E1B4B]">
+                <h2
+                    className="
+                        text-2xl
+                        sm:text-3xl
+                        font-black
+                        tracking-tight
+                        text-[#1E1B4B]
+                    "
+                >
                     Welcome Back
                 </h2>
 
-                <p className="mt-2 text-slate-500">
+                <p
+                    className="
+                        mt-2
+                        text-sm
+                        sm:text-base
+                        text-slate-500
+                    "
+                >
                     Sign in to continue your CONEXA journey.
                 </p>
-
             </div>
 
-            <SocialLogin />
+            {/* =================================================
+                SOCIAL LOGIN
+            ================================================= */}
+
+            <div className="mt-6">
+                <SocialLogin />
+            </div>
+
+            {/* =================================================
+                DIVIDER
+            ================================================= */}
+
+            <div className="flex items-center gap-3 my-6">
+                <div className="h-px flex-1 bg-slate-200" />
+
+                <span className="text-xs font-medium text-slate-400">
+                    OR CONTINUE WITH EMAIL
+                </span>
+
+                <div className="h-px flex-1 bg-slate-200" />
+            </div>
 
             {/* =================================================
                 ACCOUNT TYPE
             ================================================= */}
 
-            <div className="mt-6">
-
-                <label className="block text-sm font-semibold text-slate-600 mb-3">
+            <div>
+                <label
+                    className="
+                        block
+                        mb-3
+                        text-sm
+                        font-semibold
+                        text-[#1E1B4B]
+                    "
+                >
                     Sign in as
                 </label>
 
-                <div className="grid grid-cols-2 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
 
-                    {/* STUDENT */}
+                    {/* ================= STUDENT ================= */}
 
                     <button
                         type="button"
                         onClick={() =>
-                            selectAccountType(
-                                "student"
-                            )
+                            selectAccountType("student")
+                        }
+                        disabled={loading}
+                        aria-pressed={
+                            form.accountType ===
+                            "student"
                         }
                         className={`
+                            group
+                            relative
+                            w-full
+                            text-left
                             p-3
-                            rounded-xl
+                            sm:p-4
+                            rounded-2xl
                             border-2
                             transition-all
-                            text-left
+                            duration-300
+                            active:scale-[0.98]
+                            disabled:cursor-not-allowed
                             ${form.accountType ===
                                 "student"
-                                ? "border-[#14B8A6] bg-[#14B8A6]/5"
-                                : "border-slate-200 hover:border-[#14B8A6]/50"
+                                ? `
+                                        border-[#14B8A6]
+                                        bg-[#14B8A6]/5
+                                        shadow-md
+                                        shadow-[#14B8A6]/10
+                                      `
+                                : `
+                                        border-slate-200
+                                        bg-white
+                                        hover:border-[#14B8A6]/50
+                                        hover:bg-slate-50
+                                      `
                             }
                         `}
                     >
-
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-3">
 
                             <div
                                 className={`
-                                    w-9
-                                    h-9
-                                    rounded-lg
+                                    relative
                                     flex
                                     items-center
                                     justify-center
+                                    shrink-0
+                                    w-10
+                                    h-10
+                                    rounded-xl
+                                    transition-all
+                                    duration-300
                                     ${form.accountType ===
                                         "student"
                                         ? "bg-[#1E1B4B] text-[#14B8A6]"
-                                        : "bg-slate-100 text-slate-500"
+                                        : "bg-slate-100 text-slate-500 group-hover:bg-[#14B8A6]/10 group-hover:text-[#14B8A6]"
                                     }
                                 `}
                             >
-                                <GraduationCap size={18} />
+                                <GraduationCap
+                                    size={20}
+                                />
+
+                                {form.accountType ===
+                                    "student" && (
+                                        <span
+                                            className="
+                                            absolute
+                                            -top-1
+                                            -right-1
+                                            flex
+                                            items-center
+                                            justify-center
+                                            w-4
+                                            h-4
+                                            rounded-full
+                                            bg-[#14B8A6]
+                                            text-white
+                                        "
+                                        >
+                                            <Check
+                                                size={10}
+                                                strokeWidth={3}
+                                            />
+                                        </span>
+                                    )}
                             </div>
 
-                            <div>
-
-                                <p className="text-sm font-bold text-[#1E1B4B]">
+                            <div className="min-w-0">
+                                <p
+                                    className="
+                                        text-sm
+                                        font-bold
+                                        text-[#1E1B4B]
+                                    "
+                                >
                                     Student
                                 </p>
 
-                                <p className="text-[10px] text-slate-500">
+                                <p
+                                    className="
+                                        mt-0.5
+                                        text-[11px]
+                                        leading-4
+                                        text-slate-500
+                                    "
+                                >
                                     Find teams & projects
                                 </p>
-
                             </div>
-
                         </div>
-
                     </button>
 
-                    {/* STAKEHOLDER */}
+                    {/* =============== STAKEHOLDER =============== */}
 
                     <button
                         type="button"
@@ -298,64 +437,122 @@ export default function LoginForm() {
                                 "stakeholder"
                             )
                         }
+                        disabled={loading}
+                        aria-pressed={
+                            form.accountType ===
+                            "stakeholder"
+                        }
                         className={`
+                            group
+                            relative
+                            w-full
+                            text-left
                             p-3
-                            rounded-xl
+                            sm:p-4
+                            rounded-2xl
                             border-2
                             transition-all
-                            text-left
+                            duration-300
+                            active:scale-[0.98]
+                            disabled:cursor-not-allowed
                             ${form.accountType ===
                                 "stakeholder"
-                                ? "border-[#14B8A6] bg-[#14B8A6]/5"
-                                : "border-slate-200 hover:border-[#14B8A6]/50"
+                                ? `
+                                        border-[#14B8A6]
+                                        bg-[#14B8A6]/5
+                                        shadow-md
+                                        shadow-[#14B8A6]/10
+                                      `
+                                : `
+                                        border-slate-200
+                                        bg-white
+                                        hover:border-[#14B8A6]/50
+                                        hover:bg-slate-50
+                                      `
                             }
                         `}
                     >
-
-                        <div className="flex items-center gap-2">
+                        <div className="flex items-center gap-3">
 
                             <div
                                 className={`
-                                    w-9
-                                    h-9
-                                    rounded-lg
+                                    relative
                                     flex
                                     items-center
                                     justify-center
+                                    shrink-0
+                                    w-10
+                                    h-10
+                                    rounded-xl
+                                    transition-all
+                                    duration-300
                                     ${form.accountType ===
                                         "stakeholder"
                                         ? "bg-[#1E1B4B] text-[#14B8A6]"
-                                        : "bg-slate-100 text-slate-500"
+                                        : "bg-slate-100 text-slate-500 group-hover:bg-[#14B8A6]/10 group-hover:text-[#14B8A6]"
                                     }
                                 `}
                             >
-                                <Building2 size={18} />
+                                <Building2
+                                    size={20}
+                                />
+
+                                {form.accountType ===
+                                    "stakeholder" && (
+                                        <span
+                                            className="
+                                            absolute
+                                            -top-1
+                                            -right-1
+                                            flex
+                                            items-center
+                                            justify-center
+                                            w-4
+                                            h-4
+                                            rounded-full
+                                            bg-[#14B8A6]
+                                            text-white
+                                        "
+                                        >
+                                            <Check
+                                                size={10}
+                                                strokeWidth={3}
+                                            />
+                                        </span>
+                                    )}
                             </div>
 
-                            <div>
-
-                                <p className="text-sm font-bold text-[#1E1B4B]">
+                            <div className="min-w-0">
+                                <p
+                                    className="
+                                        text-sm
+                                        font-bold
+                                        text-[#1E1B4B]
+                                    "
+                                >
                                     Stakeholder
                                 </p>
 
-                                <p className="text-[10px] text-slate-500">
+                                <p
+                                    className="
+                                        mt-0.5
+                                        text-[11px]
+                                        leading-4
+                                        text-slate-500
+                                    "
+                                >
                                     Post real-world problems
                                 </p>
-
                             </div>
-
                         </div>
-
                     </button>
-
                 </div>
 
                 {errors.accountType && (
-                    <p className="text-xs text-red-500 mt-2">
+                    <p className="mt-2 px-1 text-xs font-medium text-red-500">
                         {errors.accountType}
                     </p>
                 )}
-
             </div>
 
             {/* =================================================
@@ -364,9 +561,8 @@ export default function LoginForm() {
 
             <form
                 onSubmit={handleSubmit}
-                className="space-y-5 mt-6"
+                className="mt-6 space-y-5"
             >
-
                 <AuthInput
                     label="Email"
                     name="email"
@@ -377,6 +573,7 @@ export default function LoginForm() {
                     onChange={handleChange}
                     error={errors.email}
                     required
+                    disabled={loading}
                 />
 
                 <AuthInput
@@ -384,38 +581,96 @@ export default function LoginForm() {
                     name="password"
                     type="password"
                     icon={Lock}
-                    placeholder="Enter password"
+                    placeholder="Enter your password"
                     value={form.password}
                     onChange={handleChange}
                     error={errors.password}
                     required
+                    disabled={loading}
                 />
 
                 {/* =================================================
                     REMEMBER + FORGOT
                 ================================================= */}
 
-                <div className="flex items-center justify-between">
-
-                    <label className="flex items-center gap-2 text-sm text-slate-600">
-
+                <div
+                    className="
+                        flex
+                        flex-col
+                        sm:flex-row
+                        sm:items-center
+                        sm:justify-between
+                        gap-3
+                    "
+                >
+                    <label
+                        className="
+                            flex
+                            items-center
+                            gap-2
+                            text-sm
+                            text-slate-600
+                            cursor-pointer
+                            select-none
+                        "
+                    >
                         <input
                             type="checkbox"
-                            className="accent-[#14B8A6]"
+                            checked={rememberMe}
+                            onChange={(e) =>
+                                setRememberMe(
+                                    e.target.checked
+                                )
+                            }
+                            disabled={loading}
+                            className="
+                                w-4
+                                h-4
+                                rounded
+                                border-slate-300
+                                accent-[#14B8A6]
+                                cursor-pointer
+                            "
                         />
 
                         Remember Me
-
                     </label>
 
                     <Link
                         to="/forgot-password"
-                        className="text-[#14B8A6] font-medium hover:underline"
+                        className="
+                            text-sm
+                            font-semibold
+                            text-[#14B8A6]
+                            hover:text-[#0F9488]
+                            transition-colors
+                        "
                     >
                         Forgot Password?
                     </Link>
-
                 </div>
+
+                {/* =================================================
+                    SUBMIT ERROR
+                ================================================= */}
+
+                {errors.submit && (
+                    <div
+                        className="
+                            rounded-xl
+                            border
+                            border-red-200
+                            bg-red-50
+                            px-4
+                            py-3
+                            text-sm
+                            font-medium
+                            text-red-600
+                        "
+                    >
+                        {errors.submit}
+                    </div>
+                )}
 
                 {/* =================================================
                     LOGIN BUTTON
@@ -425,48 +680,121 @@ export default function LoginForm() {
                     type="submit"
                     disabled={loading}
                     className="
+                        group
                         w-full
-                        h-14
-                        rounded-xl
+                        min-h-[56px]
+                        flex
+                        items-center
+                        justify-center
+                        gap-2
+                        rounded-2xl
                         bg-[#1E1B4B]
+                        px-5
+                        text-sm
+                        sm:text-base
+                        font-bold
                         text-white
-                        font-semibold
+                        shadow-lg
+                        shadow-[#1E1B4B]/15
                         hover:bg-[#312E81]
+                        hover:-translate-y-0.5
+                        active:translate-y-0
+                        active:scale-[0.99]
                         transition-all
                         duration-300
                         disabled:opacity-60
                         disabled:cursor-not-allowed
+                        disabled:hover:translate-y-0
                     "
                 >
+                    {loading ? (
+                        <>
+                            <Loader2
+                                size={20}
+                                className="animate-spin"
+                            />
 
-                    {loading
-                        ? "Signing In..."
-                        : form.accountType ===
-                            "stakeholder"
-                            ? "Sign In as Stakeholder"
-                            : "Sign In as Student"}
+                            <span>
+                                Signing In...
+                            </span>
+                        </>
+                    ) : (
+                        <>
+                            <span>
+                                {form.accountType ===
+                                    "stakeholder"
+                                    ? "Sign In as Stakeholder"
+                                    : "Sign In as Student"}
+                            </span>
 
+                            <ArrowRight
+                                size={19}
+                                className="
+                                    transition-transform
+                                    duration-300
+                                    group-hover:translate-x-1
+                                "
+                            />
+                        </>
+                    )}
                 </button>
-
             </form>
 
             {/* =================================================
                 REGISTER
             ================================================= */}
 
-            <p className="text-center mt-8 text-slate-600">
-
-                Don't have an account?
+            <div
+                className="
+                    flex
+                    items-center
+                    justify-center
+                    gap-1.5
+                    mt-7
+                    text-sm
+                    text-slate-600
+                    text-center
+                    flex-wrap
+                "
+            >
+                <span>
+                    Don't have an account?
+                </span>
 
                 <Link
                     to="/register"
-                    className="ml-2 text-[#14B8A6] font-semibold hover:underline"
+                    className="
+                        font-bold
+                        text-[#14B8A6]
+                        hover:text-[#0F9488]
+                        transition-colors
+                    "
                 >
                     Create Account
                 </Link>
+            </div>
 
-            </p>
+            {/* =================================================
+                SECURITY NOTE
+            ================================================= */}
 
+            <div
+                className="
+                    flex
+                    items-center
+                    justify-center
+                    gap-2
+                    mt-6
+                    text-[11px]
+                    text-slate-400
+                "
+            >
+                <Lock size={12} />
+
+                <span>
+                    Your account information is securely protected.
+                </span>
+            </div>
         </div>
     );
 }
