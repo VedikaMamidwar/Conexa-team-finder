@@ -1,5 +1,5 @@
+
 import React, { useMemo, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
 import { useNavigate } from "react-router-dom";
 import {
     Search,
@@ -426,7 +426,7 @@ const HackathonHome = () => {
     ];
 
     // ============================================================
-    // COLLEGE / NATIONAL / INTERNATIONAL + FREE / PAID
+    // META DATA
     // ============================================================
 
     const hackathonMeta = {
@@ -453,70 +453,16 @@ const HackathonHome = () => {
     };
 
     // ============================================================
-    // FILTER DATA
+    // TECHNOLOGIES
     // ============================================================
 
     const technologyItems = [
-        {
-            name: "AI/ML",
-            icon: Sparkles,
-            description: "Artificial Intelligence & Machine Learning",
-        },
-        {
-            name: "Web Development",
-            icon: Globe,
-            description: "Frontend, Backend & Full Stack",
-        },
-        {
-            name: "Cybersecurity",
-            icon: ShieldCheck,
-            description: "Security, Privacy & Ethical Hacking",
-        },
-        {
-            name: "Blockchain",
-            icon: Blocks,
-            description: "Web3, Smart Contracts & Crypto",
-        },
-        {
-            name: "IoT",
-            icon: Cpu,
-            description: "Connected Devices & Smart Systems",
-        },
-        {
-            name: "Cloud",
-            icon: Cloud,
-            description: "Cloud Computing & DevOps",
-        },
-    ];
-
-    const difficultyItems = [
-        {
-            name: "Beginner",
-            description: "Perfect for students getting started",
-        },
-        {
-            name: "Intermediate",
-            description: "For developers with some experience",
-        },
-        {
-            name: "Advanced",
-            description: "For experienced developers",
-        },
-    ];
-
-    const modeItems = [
-        {
-            name: "Online",
-            icon: Globe,
-        },
-        {
-            name: "Offline",
-            icon: MapPin,
-        },
-        {
-            name: "Hybrid",
-            icon: Users,
-        },
+        "AI/ML",
+        "Web Development",
+        "Cybersecurity",
+        "Blockchain",
+        "IoT",
+        "Cloud",
     ];
 
     // ============================================================
@@ -524,9 +470,9 @@ const HackathonHome = () => {
     // ============================================================
 
     const filteredHackathons = useMemo(() => {
-        return hackathons.filter((hackathon) => {
-            const search = searchTerm.toLowerCase().trim();
+        const search = searchTerm.toLowerCase().trim();
 
+        return hackathons.filter((hackathon) => {
             const meta = hackathonMeta[hackathon.id] || {
                 scope: "National",
                 fee: "Free",
@@ -621,31 +567,6 @@ const HackathonHome = () => {
     };
 
     // ============================================================
-    // MOTION PRESETS
-    // ============================================================
-
-    const fadeUp = {
-        hidden: { opacity: 0, y: 24 },
-        visible: {
-            opacity: 1,
-            y: 0,
-            transition: {
-                duration: 0.55,
-                ease: [0.22, 1, 0.36, 1],
-            },
-        },
-    };
-
-    const staggerContainer = {
-        hidden: {},
-        visible: {
-            transition: {
-                staggerChildren: 0.08,
-            },
-        },
-    };
-
-    // ============================================================
     // HACKATHON CARD
     // ============================================================
 
@@ -661,45 +582,44 @@ const HackathonHome = () => {
         );
 
         return (
-            <motion.div
-                variants={fadeUp}
-                initial="hidden"
-                whileInView="visible"
-                viewport={{ once: true, amount: 0.12 }}
-                whileHover={{ y: -6 }}
-                transition={{ duration: 0.25 }}
-                className="group overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_8px_30px_rgba(15,23,42,0.05)] transition-all duration-300 hover:border-teal-300 hover:shadow-[0_18px_45px_rgba(20,184,166,0.12)]"
-            >
+            <div className="group overflow-hidden rounded-3xl border border-slate-200 bg-white shadow-[0_8px_30px_rgba(15,23,42,0.05)] transition-all duration-300 hover:-translate-y-1.5 hover:border-teal-300 hover:shadow-[0_18px_45px_rgba(20,184,166,0.12)]">
                 <div className="relative h-48 overflow-hidden">
                     <img
                         src={hackathon.image}
                         alt={hackathon.name}
                         className="h-full w-full object-cover transition duration-700 group-hover:scale-105"
+                        onError={(e) => {
+                            e.currentTarget.style.display = "none";
+                            e.currentTarget.parentElement.classList.add(
+                                "bg-gradient-to-br",
+                                "from-[#1E1B4B]",
+                                "to-[#312E81]"
+                            );
+                        }}
                     />
 
                     <div className="absolute inset-0 bg-gradient-to-t from-[#0f172a]/90 via-[#1e1b4b]/20 to-transparent" />
 
                     <div className="absolute left-4 top-4 flex flex-wrap gap-2">
                         {hackathon.featured && (
-                            <span className="flex items-center gap-1 rounded-full bg-[#14B8A6] px-3 py-1 text-xs font-bold text-white shadow-lg shadow-teal-950/20">
+                            <span className="flex items-center gap-1 rounded-full bg-[#14B8A6] px-3 py-1 text-xs font-bold text-white shadow-lg">
                                 <Sparkles size={13} />
                                 Featured
                             </span>
                         )}
 
-                        <span className="rounded-full border border-white/20 bg-white/95 px-3 py-1 text-xs font-semibold text-slate-700 backdrop-blur">
+                        <span className="rounded-full border border-white/20 bg-white/95 px-3 py-1 text-xs font-semibold text-slate-700">
                             {hackathon.mode}
                         </span>
                     </div>
 
-                    <motion.button
+                    <button
                         type="button"
-                        whileTap={{ scale: 0.9 }}
                         className="absolute right-4 top-4 flex h-9 w-9 items-center justify-center rounded-full border border-white/20 bg-white/90 text-slate-700 shadow transition hover:bg-white hover:text-[#14B8A6]"
                         title="Save Hackathon"
                     >
                         <Bookmark size={17} />
-                    </motion.button>
+                    </button>
 
                     <div className="absolute bottom-4 left-4 right-4">
                         <p className="mb-1 text-xs font-medium text-teal-300">
@@ -768,7 +688,7 @@ const HackathonHome = () => {
                         </span>
                     </div>
 
-                    <div className="mb-5 flex items-center justify-between gap-3 text-sm">
+                    <div className="mb-4 flex items-center justify-between gap-3 text-sm">
                         <div className="flex items-center gap-2 text-slate-500">
                             <Users size={16} />
                             <span>
@@ -777,26 +697,24 @@ const HackathonHome = () => {
                             </span>
                         </div>
 
-                        <div className="flex items-center gap-2 text-right font-medium text-slate-500">
-                            <Clock size={15} />
+                        <div className="flex items-center gap-1 text-right text-xs font-medium text-slate-500">
+                            <Clock size={14} />
                             <span>Closing {hackathon.registrationDeadline}</span>
                         </div>
                     </div>
 
                     <div className="mb-5 h-1.5 overflow-hidden rounded-full bg-slate-100">
-                        <motion.div
-                            initial={{ width: 0 }}
-                            whileInView={{ width: `${participantPercentage}%` }}
-                            viewport={{ once: true }}
-                            transition={{ duration: 0.8, ease: "easeOut" }}
-                            className="h-full rounded-full bg-gradient-to-r from-[#312E81] to-[#14B8A6]"
+                        <div
+                            className="h-full rounded-full bg-gradient-to-r from-[#312E81] to-[#14B8A6] transition-all duration-700"
+                            style={{
+                                width: `${participantPercentage}%`,
+                            }}
                         />
                     </div>
 
                     <div className="flex gap-3">
-                        <motion.button
+                        <button
                             type="button"
-                            whileTap={{ scale: 0.98 }}
                             onClick={() =>
                                 navigate(`/hackathons/${hackathon.id}`)
                             }
@@ -804,24 +722,23 @@ const HackathonHome = () => {
                         >
                             View Details
                             <ArrowRight size={16} />
-                        </motion.button>
+                        </button>
 
-                        <motion.button
+                        <button
                             type="button"
-                            whileTap={{ scale: 0.98 }}
                             onClick={() =>
                                 navigate(
                                     `/hackathons/${hackathon.id}/register`
                                 )
                             }
-                            className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#1E1B4B] px-4 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-[#312E81] hover:shadow-lg hover:shadow-indigo-950/15"
+                            className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-[#1E1B4B] px-4 py-3 text-sm font-semibold text-white transition hover:bg-[#312E81] hover:shadow-lg"
                         >
                             Register
                             <Zap size={16} />
-                        </motion.button>
+                        </button>
                     </div>
                 </div>
-            </motion.div>
+            </div>
         );
     };
 
@@ -835,13 +752,7 @@ const HackathonHome = () => {
         description,
         onViewAll,
     }) => (
-        <motion.div
-            variants={fadeUp}
-            initial="hidden"
-            whileInView="visible"
-            viewport={{ once: true, amount: 0.3 }}
-            className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between"
-        >
+        <div className="mb-6 flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
             <div>
                 <div className="mb-2 flex items-center gap-2">
                     <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-indigo-50 text-[#312E81]">
@@ -866,7 +777,7 @@ const HackathonHome = () => {
                     <ChevronRight size={17} />
                 </button>
             )}
-        </motion.div>
+        </div>
     );
 
     // ============================================================
@@ -882,13 +793,12 @@ const HackathonHome = () => {
             <header className="sticky top-0 z-50 border-b border-slate-200/80 bg-white/95 backdrop-blur-xl">
                 <div className="mx-auto max-w-7xl px-4 sm:px-6 lg:px-8">
                     <div className="flex min-h-[72px] items-center justify-between gap-6">
-                        {/* LOGO */}
                         <button
                             type="button"
                             onClick={() => navigate("/hackathons")}
                             className="flex items-center gap-3 text-left"
                         >
-                            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#1E1B4B] shadow-lg shadow-indigo-950/10">
+                            <div className="flex h-11 w-11 items-center justify-center rounded-2xl bg-[#1E1B4B] shadow-lg">
                                 <Trophy size={23} className="text-white" />
                             </div>
 
@@ -896,13 +806,13 @@ const HackathonHome = () => {
                                 <h1 className="text-xl font-bold tracking-tight text-[#1E1B4B]">
                                     CONEXA
                                 </h1>
+
                                 <p className="text-[10px] font-bold tracking-[0.18em] text-[#14B8A6]">
                                     HACKATHON PLATFORM
                                 </p>
                             </div>
                         </button>
 
-                        {/* NAVIGATION */}
                         <nav className="hidden items-center gap-8 lg:flex">
                             <button
                                 type="button"
@@ -932,12 +842,11 @@ const HackathonHome = () => {
                             </button>
                         </nav>
 
-                        {/* RIGHT SIDE BUTTONS */}
                         <div className="hidden items-center gap-3 md:flex">
                             <button
                                 type="button"
                                 onClick={() => navigate("/my-hackathons")}
-                                className="rounded-xl border border-[#1E1B4B]/10 bg-indigo-50/70 px-4 py-2.5 text-sm font-semibold text-[#1E1B4B] transition hover:border-indigo-200 hover:bg-indigo-50"
+                                className="rounded-xl border border-[#1E1B4B]/10 bg-indigo-50/70 px-4 py-2.5 text-sm font-semibold text-[#1E1B4B] transition hover:bg-indigo-50"
                             >
                                 My Hackathons
                             </button>
@@ -947,7 +856,7 @@ const HackathonHome = () => {
                                 onClick={() =>
                                     navigate("/create-hackathon")
                                 }
-                                className="flex items-center gap-2 rounded-xl bg-[#1E1B4B] px-5 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-[#312E81] hover:shadow-lg hover:shadow-indigo-950/15"
+                                className="flex items-center gap-2 rounded-xl bg-[#1E1B4B] px-5 py-2.5 text-sm font-semibold text-white transition hover:bg-[#312E81] hover:shadow-lg"
                             >
                                 <Plus size={17} />
                                 Create Hackathon
@@ -964,13 +873,7 @@ const HackathonHome = () => {
 
                 <section className="relative overflow-hidden bg-white">
                     <div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 sm:py-12 lg:px-8 lg:py-14">
-                        <motion.div
-                            initial="hidden"
-                            animate="visible"
-                            variants={staggerContainer}
-                            className="relative overflow-hidden rounded-[2rem] border border-indigo-900/30 bg-gradient-to-br from-[#1E1B4B] via-[#24205E] to-[#312E81] shadow-[0_30px_90px_-30px_rgba(30,27,75,0.65)]"
-                        >
-                            {/* Premium grid */}
+                        <div className="relative overflow-hidden rounded-[2rem] border border-indigo-900/30 bg-gradient-to-br from-[#1E1B4B] via-[#24205E] to-[#312E81] shadow-[0_30px_90px_-30px_rgba(30,27,75,0.65)]">
                             <div
                                 className="pointer-events-none absolute inset-0 opacity-[0.09]"
                                 style={{
@@ -980,42 +883,12 @@ const HackathonHome = () => {
                                 }}
                             />
 
-                            {/* Glow fields */}
-                            <motion.div
-                                animate={{
-                                    x: [0, 25, 0],
-                                    y: [0, -15, 0],
-                                    opacity: [0.25, 0.38, 0.25],
-                                }}
-                                transition={{
-                                    duration: 8,
-                                    repeat: Infinity,
-                                    ease: "easeInOut",
-                                }}
-                                className="pointer-events-none absolute -right-32 -top-32 h-[28rem] w-[28rem] rounded-full bg-[#14B8A6]/20 blur-[90px]"
-                            />
+                            <div className="pointer-events-none absolute -right-32 -top-32 h-[28rem] w-[28rem] rounded-full bg-[#14B8A6]/20 blur-[90px]" />
 
-                            <motion.div
-                                animate={{
-                                    x: [0, -20, 0],
-                                    y: [0, 20, 0],
-                                    opacity: [0.16, 0.28, 0.16],
-                                }}
-                                transition={{
-                                    duration: 10,
-                                    repeat: Infinity,
-                                    ease: "easeInOut",
-                                }}
-                                className="pointer-events-none absolute -bottom-40 left-1/4 h-[30rem] w-[30rem] rounded-full bg-indigo-500/25 blur-[100px]"
-                            />
-
-                            {/* Decorative rings */}
-                            <div className="pointer-events-none absolute right-[18%] top-[16%] hidden h-44 w-44 rounded-full border border-white/10 lg:block" />
-                            <div className="pointer-events-none absolute right-[20%] top-[20%] hidden h-32 w-32 rounded-full border border-teal-300/10 lg:block" />
+                            <div className="pointer-events-none absolute -bottom-40 left-1/4 h-[30rem] w-[30rem] rounded-full bg-indigo-500/25 blur-[100px]" />
 
                             <div className="relative grid items-center gap-12 p-7 sm:p-10 lg:grid-cols-[1.05fr_0.95fr] lg:p-14">
-                                {/* HERO COPY */}
-                                <motion.div variants={fadeUp}>
+                                <div>
                                     <div className="mb-6 inline-flex items-center gap-2 rounded-full border border-white/15 bg-white/10 px-4 py-2 backdrop-blur-xl">
                                         <span className="flex h-6 w-6 items-center justify-center rounded-full bg-[#14B8A6] text-[#1E1B4B]">
                                             <Sparkles size={13} />
@@ -1045,16 +918,14 @@ const HackathonHome = () => {
                                     </p>
 
                                     <div className="mt-8 flex flex-col gap-3 sm:flex-row">
-                                        <motion.button
+                                        <button
                                             type="button"
-                                            whileHover={{ y: -2 }}
-                                            whileTap={{ scale: 0.98 }}
                                             onClick={() =>
                                                 navigate(
                                                     "/hackathons/explore"
                                                 )
                                             }
-                                            className="group flex items-center justify-center gap-2 rounded-xl bg-[#14B8A6] px-6 py-3.5 text-sm font-bold text-[#1E1B4B] shadow-lg shadow-black/20 transition hover:bg-teal-300 hover:shadow-xl"
+                                            className="group flex items-center justify-center gap-2 rounded-xl bg-[#14B8A6] px-6 py-3.5 text-sm font-bold text-[#1E1B4B] shadow-lg transition hover:bg-teal-300 hover:shadow-xl"
                                         >
                                             <Search size={18} />
                                             Explore Hackathons
@@ -1062,22 +933,20 @@ const HackathonHome = () => {
                                                 size={17}
                                                 className="transition-transform group-hover:translate-x-1"
                                             />
-                                        </motion.button>
+                                        </button>
 
-                                        <motion.button
+                                        <button
                                             type="button"
-                                            whileHover={{ y: -2 }}
-                                            whileTap={{ scale: 0.98 }}
                                             onClick={() =>
                                                 navigate(
                                                     "/create-hackathon"
                                                 )
                                             }
-                                            className="flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/10 px-6 py-3.5 text-sm font-bold text-white backdrop-blur-md transition hover:border-white/25 hover:bg-white/15"
+                                            className="flex items-center justify-center gap-2 rounded-xl border border-white/15 bg-white/10 px-6 py-3.5 text-sm font-bold text-white backdrop-blur-md transition hover:bg-white/15"
                                         >
                                             <Plus size={18} />
                                             Create Hackathon
-                                        </motion.button>
+                                        </button>
                                     </div>
 
                                     <div className="mt-8 flex flex-wrap gap-x-6 gap-y-3 text-xs font-medium text-slate-300">
@@ -1105,23 +974,12 @@ const HackathonHome = () => {
                                             Find your next challenge
                                         </div>
                                     </div>
-                                </motion.div>
+                                </div>
 
                                 {/* FEATURED VISUAL */}
-                                <motion.div
-                                    variants={fadeUp}
-                                    className="relative mx-auto w-full max-w-md"
-                                >
-                                    <motion.div
-                                        animate={{ y: [0, -8, 0] }}
-                                        transition={{
-                                            duration: 5,
-                                            repeat: Infinity,
-                                            ease: "easeInOut",
-                                        }}
-                                        className="relative"
-                                    >
-                                        {/* Floating prize card */}
+
+                                <div className="relative mx-auto w-full max-w-md">
+                                    <div className="relative">
                                         <div className="absolute -left-4 top-4 z-20 hidden w-48 rounded-2xl border border-white/15 bg-white/10 p-4 shadow-2xl backdrop-blur-xl sm:block lg:-left-8">
                                             <div className="flex items-center gap-3">
                                                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#14B8A6] text-[#1E1B4B]">
@@ -1132,6 +990,7 @@ const HackathonHome = () => {
                                                     <p className="text-[11px] font-medium text-slate-300">
                                                         Prize pools
                                                     </p>
+
                                                     <p className="text-lg font-black text-white">
                                                         ₹3.5L+
                                                     </p>
@@ -1139,7 +998,6 @@ const HackathonHome = () => {
                                             </div>
                                         </div>
 
-                                        {/* Main featured card */}
                                         <div className="relative rounded-[2rem] border border-white/15 bg-white/[0.08] p-4 shadow-2xl backdrop-blur-xl sm:p-5">
                                             <div className="overflow-hidden rounded-[1.5rem] bg-white shadow-xl">
                                                 <div className="relative h-40 overflow-hidden">
@@ -1151,6 +1009,10 @@ const HackathonHome = () => {
                                                             featuredVisual.name
                                                         }
                                                         className="h-full w-full object-cover"
+                                                        onError={(e) => {
+                                                            e.currentTarget.style.display =
+                                                                "none";
+                                                        }}
                                                     />
 
                                                     <div className="absolute inset-0 bg-gradient-to-t from-[#1E1B4B]/80 to-transparent" />
@@ -1161,7 +1023,9 @@ const HackathonHome = () => {
                                                         </p>
 
                                                         <h3 className="mt-1 text-lg font-black text-white">
-                                                            {featuredVisual.name}
+                                                            {
+                                                                featuredVisual.name
+                                                            }
                                                         </h3>
                                                     </div>
                                                 </div>
@@ -1173,6 +1037,7 @@ const HackathonHome = () => {
                                                                 Build • Learn •
                                                                 Compete
                                                             </p>
+
                                                             <p className="mt-1 text-sm font-semibold text-[#1E1B4B]">
                                                                 {
                                                                     featuredVisual.organization
@@ -1260,7 +1125,6 @@ const HackathonHome = () => {
                                             </div>
                                         </div>
 
-                                        {/* Floating team card */}
                                         <div className="absolute -bottom-5 -right-3 z-20 hidden w-52 rounded-2xl border border-white/15 bg-[#1E1B4B]/95 p-4 shadow-2xl backdrop-blur-xl sm:block lg:-right-8">
                                             <div className="flex items-center gap-3">
                                                 <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-[#14B8A6]/15 text-teal-300">
@@ -1278,11 +1142,12 @@ const HackathonHome = () => {
                                                 </div>
                                             </div>
                                         </div>
-                                    </motion.div>
-                                </motion.div>
+                                    </div>
+                                </div>
                             </div>
 
-                            {/* Journey strip */}
+                            {/* JOURNEY */}
+
                             <div className="relative border-t border-white/10 bg-black/10 px-7 py-5 sm:px-10 lg:px-14">
                                 <div className="grid gap-4 sm:grid-cols-3">
                                     {[
@@ -1308,9 +1173,8 @@ const HackathonHome = () => {
                                         const Icon = item.icon;
 
                                         return (
-                                            <motion.div
+                                            <div
                                                 key={item.number}
-                                                whileHover={{ x: 3 }}
                                                 className="group flex gap-3 rounded-2xl p-3 transition hover:bg-white/5"
                                             >
                                                 <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl border border-white/10 bg-white/10 text-[#14B8A6]">
@@ -1332,21 +1196,16 @@ const HackathonHome = () => {
                                                         {item.text}
                                                     </p>
                                                 </div>
-                                            </motion.div>
+                                            </div>
                                         );
                                     })}
                                 </div>
                             </div>
-                        </motion.div>
+                        </div>
 
-                        {/* Hero statistics */}
-                        <motion.div
-                            variants={staggerContainer}
-                            initial="hidden"
-                            whileInView="visible"
-                            viewport={{ once: true, amount: 0.15 }}
-                            className="relative -mt-1 grid gap-3 pt-5 sm:grid-cols-2 lg:grid-cols-4"
-                        >
+                        {/* HERO STATS */}
+
+                        <div className="grid gap-3 pt-5 sm:grid-cols-2 lg:grid-cols-4">
                             {[
                                 {
                                     value: hackathons.length,
@@ -1372,11 +1231,9 @@ const HackathonHome = () => {
                                 const Icon = stat.icon;
 
                                 return (
-                                    <motion.div
+                                    <div
                                         key={stat.label}
-                                        variants={fadeUp}
-                                        whileHover={{ y: -4 }}
-                                        className="group rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:border-teal-200 hover:shadow-lg"
+                                        className="group rounded-2xl border border-slate-200 bg-white p-4 shadow-sm transition-all hover:-translate-y-1 hover:border-teal-200 hover:shadow-lg"
                                     >
                                         <div className="flex items-center gap-3">
                                             <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-indigo-50 text-[#1E1B4B] transition group-hover:bg-teal-50 group-hover:text-[#14B8A6]">
@@ -1393,30 +1250,24 @@ const HackathonHome = () => {
                                                 </p>
                                             </div>
                                         </div>
-                                    </motion.div>
+                                    </div>
                                 );
                             })}
-                        </motion.div>
+                        </div>
                     </div>
                 </section>
 
-                {/* ========================================================
-                    SEARCH & FILTERS
-                ======================================================== */}
+                {/* =====================================================
+                    SEARCH AND FILTERS
+                ====================================================== */}
 
                 <section className="mx-auto max-w-7xl px-4 pt-8 sm:px-6 lg:px-8">
-                    <motion.div
-                        initial={{ opacity: 0, y: 18 }}
-                        whileInView={{ opacity: 1, y: 0 }}
-                        viewport={{ once: true, amount: 0.2 }}
-                        transition={{ duration: 0.5 }}
-                        className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-300 hover:border-teal-200 hover:shadow-lg sm:p-6"
-                    >
+                    <div className="rounded-3xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-300 hover:border-teal-200 hover:shadow-lg sm:p-6">
                         <div className="flex flex-col gap-3 lg:flex-row lg:items-center">
                             <div className="group relative flex min-w-0 flex-1 items-center">
                                 <Search
                                     size={20}
-                                    className="absolute left-4 top-1/2 z-10 -translate-y-1/2 text-slate-400 transition group-focus-within:text-[#14B8A6]"
+                                    className="absolute left-4 top-1/2 z-10 -translate-y-1/2 text-slate-400"
                                 />
 
                                 <input
@@ -1429,33 +1280,19 @@ const HackathonHome = () => {
                                     className="w-full rounded-2xl border border-slate-200 bg-slate-50 py-4 pl-12 pr-12 text-sm text-slate-700 outline-none transition-all duration-300 placeholder:text-slate-400 hover:border-teal-300 hover:bg-white focus:border-teal-400 focus:bg-white focus:ring-4 focus:ring-teal-50"
                                 />
 
-                                <AnimatePresence>
-                                    {searchTerm && (
-                                        <motion.button
-                                            initial={{
-                                                opacity: 0,
-                                                scale: 0.8,
-                                            }}
-                                            animate={{
-                                                opacity: 1,
-                                                scale: 1,
-                                            }}
-                                            exit={{
-                                                opacity: 0,
-                                                scale: 0.8,
-                                            }}
-                                            type="button"
-                                            onClick={() => setSearchTerm("")}
-                                            className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full p-1 text-slate-400 transition hover:bg-slate-200 hover:text-slate-700"
-                                        >
-                                            <X size={17} />
-                                        </motion.button>
-                                    )}
-                                </AnimatePresence>
+                                {searchTerm && (
+                                    <button
+                                        type="button"
+                                        onClick={() => setSearchTerm("")}
+                                        className="absolute right-4 top-1/2 -translate-y-1/2 rounded-full p-1 text-slate-400 transition hover:bg-slate-200 hover:text-slate-700"
+                                    >
+                                        <X size={17} />
+                                    </button>
+                                )}
                             </div>
 
                             <div className="flex flex-wrap items-center gap-2">
-                                <div className="group flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 transition hover:border-indigo-200 hover:bg-indigo-50">
+                                <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 transition hover:border-indigo-200 hover:bg-indigo-50">
                                     <Search
                                         size={16}
                                         className="text-[#312E81]"
@@ -1466,7 +1303,7 @@ const HackathonHome = () => {
                                     </span>
                                 </div>
 
-                                <div className="group flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 transition hover:border-teal-200 hover:bg-teal-50">
+                                <div className="flex items-center gap-2 rounded-xl border border-slate-200 bg-slate-50 px-4 py-3 transition hover:border-teal-200 hover:bg-teal-50">
                                     <Target
                                         size={16}
                                         className="text-[#14B8A6]"
@@ -1497,93 +1334,80 @@ const HackathonHome = () => {
                         </div>
 
                         <div className="mt-5 grid gap-3 sm:grid-cols-2 lg:grid-cols-5">
-                            <div>
-                                <select
-                                    value={activeMode}
-                                    onChange={(e) =>
-                                        setActiveMode(e.target.value)
-                                    }
-                                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 outline-none transition hover:border-teal-300 hover:bg-teal-50/30 focus:border-teal-400 focus:ring-4 focus:ring-teal-50"
-                                >
-                                    <option value="All">All Modes</option>
-                                    <option value="Online">Online</option>
-                                    <option value="Offline">Offline</option>
-                                    <option value="Hybrid">Hybrid</option>
-                                </select>
-                            </div>
+                            <select
+                                value={activeMode}
+                                onChange={(e) =>
+                                    setActiveMode(e.target.value)
+                                }
+                                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 outline-none transition hover:border-teal-300 hover:bg-teal-50/30 focus:border-teal-400 focus:ring-4 focus:ring-teal-50"
+                            >
+                                <option value="All">All Modes</option>
+                                <option value="Online">Online</option>
+                                <option value="Offline">Offline</option>
+                                <option value="Hybrid">Hybrid</option>
+                            </select>
 
-                            <div>
-                                <select
-                                    value={activeDifficulty}
-                                    onChange={(e) =>
-                                        setActiveDifficulty(e.target.value)
-                                    }
-                                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 outline-none transition hover:border-teal-300 hover:bg-teal-50/30 focus:border-teal-400 focus:ring-4 focus:ring-teal-50"
-                                >
-                                    <option value="All">All Levels</option>
-                                    <option value="Beginner">Beginner</option>
-                                    <option value="Intermediate">
-                                        Intermediate
+                            <select
+                                value={activeDifficulty}
+                                onChange={(e) =>
+                                    setActiveDifficulty(e.target.value)
+                                }
+                                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 outline-none transition hover:border-teal-300 hover:bg-teal-50/30 focus:border-teal-400 focus:ring-4 focus:ring-teal-50"
+                            >
+                                <option value="All">All Levels</option>
+                                <option value="Beginner">Beginner</option>
+                                <option value="Intermediate">
+                                    Intermediate
+                                </option>
+                                <option value="Advanced">Advanced</option>
+                            </select>
+
+                            <select
+                                value={activeScope}
+                                onChange={(e) =>
+                                    setActiveScope(e.target.value)
+                                }
+                                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 outline-none transition hover:border-teal-300 hover:bg-teal-50/30 focus:border-teal-400 focus:ring-4 focus:ring-teal-50"
+                            >
+                                <option value="All">
+                                    All Participation
+                                </option>
+                                <option value="College">College</option>
+                                <option value="National">National</option>
+                                <option value="International">
+                                    International
+                                </option>
+                            </select>
+
+                            <select
+                                value={activeFee}
+                                onChange={(e) =>
+                                    setActiveFee(e.target.value)
+                                }
+                                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 outline-none transition hover:border-teal-300 hover:bg-teal-50/30 focus:border-teal-400 focus:ring-4 focus:ring-teal-50"
+                            >
+                                <option value="All">All Fees</option>
+                                <option value="Free">Free</option>
+                                <option value="Paid">Paid</option>
+                            </select>
+
+                            <select
+                                value={activeTechnology}
+                                onChange={(e) =>
+                                    setActiveTechnology(e.target.value)
+                                }
+                                className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 outline-none transition hover:border-teal-300 hover:bg-teal-50/30 focus:border-teal-400 focus:ring-4 focus:ring-teal-50"
+                            >
+                                <option value="All">
+                                    All Technologies
+                                </option>
+
+                                {technologyItems.map((technology) => (
+                                    <option key={technology} value={technology}>
+                                        {technology}
                                     </option>
-                                    <option value="Advanced">Advanced</option>
-                                </select>
-                            </div>
-
-                            <div>
-                                <select
-                                    value={activeScope}
-                                    onChange={(e) =>
-                                        setActiveScope(e.target.value)
-                                    }
-                                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 outline-none transition hover:border-teal-300 hover:bg-teal-50/30 focus:border-teal-400 focus:ring-4 focus:ring-teal-50"
-                                >
-                                    <option value="All">
-                                        All Participation
-                                    </option>
-                                    <option value="College">College</option>
-                                    <option value="National">National</option>
-                                    <option value="International">
-                                        International
-                                    </option>
-                                </select>
-                            </div>
-
-                            <div>
-                                <select
-                                    value={activeFee}
-                                    onChange={(e) =>
-                                        setActiveFee(e.target.value)
-                                    }
-                                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 outline-none transition hover:border-teal-300 hover:bg-teal-50/30 focus:border-teal-400 focus:ring-4 focus:ring-teal-50"
-                                >
-                                    <option value="All">All Fees</option>
-                                    <option value="Free">Free</option>
-                                    <option value="Paid">Paid</option>
-                                </select>
-                            </div>
-
-                            <div>
-                                <select
-                                    value={activeTechnology}
-                                    onChange={(e) =>
-                                        setActiveTechnology(e.target.value)
-                                    }
-                                    className="w-full rounded-xl border border-slate-200 bg-white px-4 py-3 text-sm font-medium text-slate-700 outline-none transition hover:border-teal-300 hover:bg-teal-50/30 focus:border-teal-400 focus:ring-4 focus:ring-teal-50"
-                                >
-                                    <option value="All">
-                                        All Technologies
-                                    </option>
-
-                                    {technologyItems.map((technology) => (
-                                        <option
-                                            key={technology.name}
-                                            value={technology.name}
-                                        >
-                                            {technology.name}
-                                        </option>
-                                    ))}
-                                </select>
-                            </div>
+                                ))}
+                            </select>
                         </div>
 
                         {(searchTerm ||
@@ -1607,21 +1431,15 @@ const HackathonHome = () => {
                                 </button>
                             </div>
                         )}
-                    </motion.div>
+                    </div>
                 </section>
 
-                {/* ========================================================
+                {/* =====================================================
                     QUICK STATISTICS
-                ======================================================== */}
+                ====================================================== */}
 
                 <section className="mx-auto max-w-7xl px-4 pt-8 sm:px-6 lg:px-8">
-                    <motion.div
-                        variants={staggerContainer}
-                        initial="hidden"
-                        whileInView="visible"
-                        viewport={{ once: true, amount: 0.15 }}
-                        className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4"
-                    >
+                    <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
                         {[
                             {
                                 title: "Total Hackathons",
@@ -1651,11 +1469,9 @@ const HackathonHome = () => {
                             const Icon = stat.icon;
 
                             return (
-                                <motion.div
+                                <div
                                     key={stat.title}
-                                    variants={fadeUp}
-                                    whileHover={{ y: -4 }}
-                                    className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:border-teal-200 hover:shadow-lg"
+                                    className="rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition hover:-translate-y-1 hover:border-teal-200 hover:shadow-lg"
                                 >
                                     <div className="flex items-start justify-between">
                                         <div>
@@ -1676,112 +1492,108 @@ const HackathonHome = () => {
                                             <Icon size={21} />
                                         </div>
                                     </div>
-                                </motion.div>
+                                </div>
                             );
                         })}
-                    </motion.div>
+                    </div>
                 </section>
 
-                {/* ACTIVE FILTERS */}
+                {/* =====================================================
+                    ACTIVE FILTERS
+                ====================================================== */}
 
-                <AnimatePresence>
-                    {(searchTerm ||
-                        activeTechnology !== "All" ||
-                        activeDifficulty !== "All" ||
-                        activeMode !== "All" ||
-                        activeScope !== "All" ||
-                        activeFee !== "All") && (
-                        <motion.div
-                            initial={{ opacity: 0, height: 0, y: -8 }}
-                            animate={{ opacity: 1, height: "auto", y: 0 }}
-                            exit={{ opacity: 0, height: 0, y: -8 }}
-                            className="mx-auto max-w-7xl overflow-hidden px-4 pt-8 sm:px-6 lg:px-8"
-                        >
-                            <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-teal-100 bg-teal-50/60 p-4">
-                                <span className="text-sm font-semibold text-slate-700">
-                                    Active filters:
-                                </span>
+                {(searchTerm ||
+                    activeTechnology !== "All" ||
+                    activeDifficulty !== "All" ||
+                    activeMode !== "All" ||
+                    activeScope !== "All" ||
+                    activeFee !== "All") && (
+                    <section className="mx-auto max-w-7xl px-4 pt-8 sm:px-6 lg:px-8">
+                        <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-teal-100 bg-teal-50/60 p-4">
+                            <span className="text-sm font-semibold text-slate-700">
+                                Active filters:
+                            </span>
 
-                                {searchTerm && (
-                                    <button
-                                        type="button"
-                                        onClick={() => setSearchTerm("")}
-                                        className="flex items-center gap-1 rounded-full border border-teal-100 bg-white px-3 py-1.5 text-xs font-semibold text-teal-700 shadow-sm"
-                                    >
-                                        Search: {searchTerm}
-                                        <X size={13} />
-                                    </button>
-                                )}
+                            {searchTerm && (
+                                <button
+                                    type="button"
+                                    onClick={() => setSearchTerm("")}
+                                    className="flex items-center gap-1 rounded-full border border-teal-100 bg-white px-3 py-1.5 text-xs font-semibold text-teal-700 shadow-sm"
+                                >
+                                    Search: {searchTerm}
+                                    <X size={13} />
+                                </button>
+                            )}
 
-                                {activeTechnology !== "All" && (
-                                    <button
-                                        type="button"
-                                        onClick={() =>
-                                            setActiveTechnology("All")
-                                        }
-                                        className="flex items-center gap-1 rounded-full border border-teal-100 bg-white px-3 py-1.5 text-xs font-semibold text-teal-700 shadow-sm"
-                                    >
-                                        {activeTechnology}
-                                        <X size={13} />
-                                    </button>
-                                )}
+                            {activeTechnology !== "All" && (
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        setActiveTechnology("All")
+                                    }
+                                    className="flex items-center gap-1 rounded-full border border-teal-100 bg-white px-3 py-1.5 text-xs font-semibold text-teal-700 shadow-sm"
+                                >
+                                    {activeTechnology}
+                                    <X size={13} />
+                                </button>
+                            )}
 
-                                {activeDifficulty !== "All" && (
-                                    <button
-                                        type="button"
-                                        onClick={() =>
-                                            setActiveDifficulty("All")
-                                        }
-                                        className="flex items-center gap-1 rounded-full border border-teal-100 bg-white px-3 py-1.5 text-xs font-semibold text-teal-700 shadow-sm"
-                                    >
-                                        {activeDifficulty}
-                                        <X size={13} />
-                                    </button>
-                                )}
+                            {activeDifficulty !== "All" && (
+                                <button
+                                    type="button"
+                                    onClick={() =>
+                                        setActiveDifficulty("All")
+                                    }
+                                    className="flex items-center gap-1 rounded-full border border-teal-100 bg-white px-3 py-1.5 text-xs font-semibold text-teal-700 shadow-sm"
+                                >
+                                    {activeDifficulty}
+                                    <X size={13} />
+                                </button>
+                            )}
 
-                                {activeMode !== "All" && (
-                                    <button
-                                        type="button"
-                                        onClick={() => setActiveMode("All")}
-                                        className="flex items-center gap-1 rounded-full border border-teal-100 bg-white px-3 py-1.5 text-xs font-semibold text-teal-700 shadow-sm"
-                                    >
-                                        {activeMode}
-                                        <X size={13} />
-                                    </button>
-                                )}
+                            {activeMode !== "All" && (
+                                <button
+                                    type="button"
+                                    onClick={() => setActiveMode("All")}
+                                    className="flex items-center gap-1 rounded-full border border-teal-100 bg-white px-3 py-1.5 text-xs font-semibold text-teal-700 shadow-sm"
+                                >
+                                    {activeMode}
+                                    <X size={13} />
+                                </button>
+                            )}
 
-                                {activeScope !== "All" && (
-                                    <button
-                                        type="button"
-                                        onClick={() => setActiveScope("All")}
-                                        className="flex items-center gap-1 rounded-full border border-teal-100 bg-white px-3 py-1.5 text-xs font-semibold text-teal-700 shadow-sm"
-                                    >
-                                        {activeScope}
-                                        <X size={13} />
-                                    </button>
-                                )}
+                            {activeScope !== "All" && (
+                                <button
+                                    type="button"
+                                    onClick={() => setActiveScope("All")}
+                                    className="flex items-center gap-1 rounded-full border border-teal-100 bg-white px-3 py-1.5 text-xs font-semibold text-teal-700 shadow-sm"
+                                >
+                                    {activeScope}
+                                    <X size={13} />
+                                </button>
+                            )}
 
-                                {activeFee !== "All" && (
-                                    <button
-                                        type="button"
-                                        onClick={() => setActiveFee("All")}
-                                        className="flex items-center gap-1 rounded-full border border-teal-100 bg-white px-3 py-1.5 text-xs font-semibold text-teal-700 shadow-sm"
-                                    >
-                                        {activeFee}
-                                        <X size={13} />
-                                    </button>
-                                )}
-                            </div>
-                        </motion.div>
-                    )}
-                </AnimatePresence>
+                            {activeFee !== "All" && (
+                                <button
+                                    type="button"
+                                    onClick={() => setActiveFee("All")}
+                                    className="flex items-center gap-1 rounded-full border border-teal-100 bg-white px-3 py-1.5 text-xs font-semibold text-teal-700 shadow-sm"
+                                >
+                                    {activeFee}
+                                    <X size={13} />
+                                </button>
+                            )}
+                        </div>
+                    </section>
+                )}
 
-                {/* ========================================================
+                {/* =====================================================
                     HACKATHON SECTIONS
-                ======================================================== */}
+                ====================================================== */}
 
                 <section className="mx-auto max-w-7xl px-4 py-12 sm:px-6 lg:px-8">
-                    {/* Featured */}
+                    {/* FEATURED */}
+
                     {featuredHackathons.length > 0 && (
                         <div className="mb-16">
                             <SectionHeader
@@ -1793,13 +1605,7 @@ const HackathonHome = () => {
                                 }
                             />
 
-                            <motion.div
-                                variants={staggerContainer}
-                                initial="hidden"
-                                whileInView="visible"
-                                viewport={{ once: true, amount: 0.08 }}
-                                className="grid gap-6 md:grid-cols-2 xl:grid-cols-3"
-                            >
+                            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
                                 {featuredHackathons
                                     .slice(0, 6)
                                     .map((hackathon) => (
@@ -1808,11 +1614,12 @@ const HackathonHome = () => {
                                             hackathon={hackathon}
                                         />
                                     ))}
-                            </motion.div>
+                            </div>
                         </div>
                     )}
 
-                    {/* Upcoming */}
+                    {/* UPCOMING */}
+
                     {upcomingHackathons.length > 0 && (
                         <div className="mb-16">
                             <SectionHeader
@@ -1824,24 +1631,19 @@ const HackathonHome = () => {
                                 }
                             />
 
-                            <motion.div
-                                variants={staggerContainer}
-                                initial="hidden"
-                                whileInView="visible"
-                                viewport={{ once: true, amount: 0.08 }}
-                                className="grid gap-6 md:grid-cols-2 xl:grid-cols-4"
-                            >
+                            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-4">
                                 {upcomingHackathons.map((hackathon) => (
                                     <HackathonCard
                                         key={hackathon.id}
                                         hackathon={hackathon}
                                     />
                                 ))}
-                            </motion.div>
+                            </div>
                         </div>
                     )}
 
-                    {/* Recently Added */}
+                    {/* RECENTLY ADDED */}
+
                     {recentlyAddedHackathons.length > 0 && (
                         <div className="mb-16">
                             <SectionHeader
@@ -1853,13 +1655,7 @@ const HackathonHome = () => {
                                 }
                             />
 
-                            <motion.div
-                                variants={staggerContainer}
-                                initial="hidden"
-                                whileInView="visible"
-                                viewport={{ once: true, amount: 0.08 }}
-                                className="grid gap-6 md:grid-cols-2 xl:grid-cols-3"
-                            >
+                            <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
                                 {recentlyAddedHackathons
                                     .slice(0, 6)
                                     .map((hackathon) => (
@@ -1868,17 +1664,14 @@ const HackathonHome = () => {
                                             hackathon={hackathon}
                                         />
                                     ))}
-                            </motion.div>
+                            </div>
                         </div>
                     )}
 
-                    {/* No results */}
+                    {/* NO RESULTS */}
+
                     {filteredHackathons.length === 0 && (
-                        <motion.div
-                            initial={{ opacity: 0, y: 18 }}
-                            animate={{ opacity: 1, y: 0 }}
-                            className="rounded-3xl border border-dashed border-slate-300 bg-white px-6 py-16 text-center shadow-sm"
-                        >
+                        <div className="rounded-3xl border border-dashed border-slate-300 bg-white px-6 py-16 text-center shadow-sm">
                             <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-indigo-50 text-[#1E1B4B]">
                                 <Search size={28} />
                             </div>
@@ -1899,35 +1692,19 @@ const HackathonHome = () => {
                             >
                                 Clear Filters
                             </button>
-                        </motion.div>
+                        </div>
                     )}
                 </section>
 
-                {/* ========================================================
-                    PROFESSIONAL CTA
-                ======================================================== */}
+                {/* =====================================================
+                    CTA
+                ====================================================== */}
 
                 <section className="border-t border-slate-200 bg-slate-50">
                     <div className="mx-auto max-w-7xl px-4 py-14 sm:px-6 lg:px-8">
-                        <motion.div
-                            initial={{ opacity: 0, y: 24 }}
-                            whileInView={{ opacity: 1, y: 0 }}
-                            viewport={{ once: true, amount: 0.2 }}
-                            transition={{ duration: 0.6 }}
-                            className="relative overflow-hidden rounded-[2rem] bg-[#1E1B4B] px-7 py-10 shadow-[0_25px_70px_-30px_rgba(30,27,75,0.65)] sm:px-10 lg:px-14"
-                        >
-                            <div className="pointer-events-none absolute inset-0 opacity-[0.08]">
-                                <div
-                                    className="h-full w-full"
-                                    style={{
-                                        backgroundImage:
-                                            "linear-gradient(rgba(255,255,255,.5) 1px, transparent 1px), linear-gradient(90deg, rgba(255,255,255,.5) 1px, transparent 1px)",
-                                        backgroundSize: "32px 32px",
-                                    }}
-                                />
-                            </div>
-
+                        <div className="relative overflow-hidden rounded-[2rem] bg-[#1E1B4B] px-7 py-10 shadow-[0_25px_70px_-30px_rgba(30,27,75,0.65)] sm:px-10 lg:px-14">
                             <div className="pointer-events-none absolute -right-20 -top-20 h-64 w-64 rounded-full bg-[#14B8A6]/15 blur-3xl" />
+
                             <div className="pointer-events-none absolute -bottom-24 left-1/4 h-64 w-64 rounded-full bg-indigo-500/20 blur-3xl" />
 
                             <div className="relative flex flex-col gap-7 lg:flex-row lg:items-center lg:justify-between">
@@ -1952,10 +1729,8 @@ const HackathonHome = () => {
                                     </p>
                                 </div>
 
-                                <motion.button
+                                <button
                                     type="button"
-                                    whileHover={{ y: -2 }}
-                                    whileTap={{ scale: 0.98 }}
                                     onClick={() =>
                                         navigate("/hackathons/explore")
                                     }
@@ -1966,9 +1741,9 @@ const HackathonHome = () => {
                                         size={17}
                                         className="transition-transform group-hover:translate-x-1"
                                     />
-                                </motion.button>
+                                </button>
                             </div>
-                        </motion.div>
+                        </div>
                     </div>
                 </section>
             </main>
