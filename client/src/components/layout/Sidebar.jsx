@@ -1,5 +1,7 @@
 import { Link, useLocation } from "react-router-dom";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence } from "framer-motion";
+import { useAuth } from "../../context/AuthContext";
+
 import {
     LayoutDashboard,
     Users,
@@ -9,16 +11,23 @@ import {
     UserCheck,
     Sparkles,
     BarChart3,
-    Search,
     ChevronLeft,
     ChevronRight,
+    MessageCircle,
+    CalendarDays,
+    Building2,
+    Lightbulb,
+    ClipboardList,
 } from "lucide-react";
+
+// =====================================================
+// MAIN MENU
+// =====================================================
 
 const mainMenu = [
     {
         title: "Dashboard",
         icon: LayoutDashboard,
-        path: "/dashboard",
     },
     {
         title: "Find Teammates",
@@ -28,7 +37,7 @@ const mainMenu = [
     {
         title: "Team Builder",
         icon: UserPlus,
-        path: "/team-builder",
+        path: "/build-team",
     },
     {
         title: "Hackathons",
@@ -36,9 +45,23 @@ const mainMenu = [
         path: "/hackathons",
         badge: "LIVE",
     },
+    {
+        title: "Events",
+        icon: CalendarDays,
+        path: "/events",
+    },
+    {
+        title: "Chat",
+        icon: MessageCircle,
+        path: "/chat",
+    },
 ];
 
-const workspaceMenu = [
+// =====================================================
+// STUDENT WORKSPACE MENU
+// =====================================================
+
+const studentWorkspaceMenu = [
     {
         title: "My Projects",
         icon: FolderKanban,
@@ -61,202 +84,948 @@ const workspaceMenu = [
         icon: BarChart3,
         path: "/analytics",
     },
+    {
+        title: "Real-World Problems",
+        icon: Lightbulb,
+        path: "/real-world-problems",
+        badge: "NEW",
+    },
 ];
+
+// =====================================================
+// STAKEHOLDER WORKSPACE MENU
+// =====================================================
+
+const stakeholderWorkspaceMenu = [
+    {
+        title: "My Problems",
+        icon: ClipboardList,
+        path: "/stakeholder/problems",
+    },
+    {
+        title: "Student Responses",
+        icon: UserCheck,
+        path: "/stakeholder/problems",
+    },
+    {
+        title: "Analytics",
+        icon: BarChart3,
+        path: "/analytics",
+    },
+];
+
+// =====================================================
+// SIDEBAR
+// =====================================================
 
 export default function Sidebar({
     sidebarOpen,
     setSidebarOpen,
 }) {
     const location = useLocation();
+    const { user } = useAuth();
+
+    // =====================================================
+    // CHECK USER TYPE
+    // =====================================================
+
+    const isStakeholder =
+        user?.accountType === "stakeholder" ||
+        user?.role === "stakeholder";
+
+    const isStudent = !isStakeholder;
+
+    // =====================================================
+    // ROLE-BASED DASHBOARD
+    // =====================================================
+
+    const dashboardPath = isStakeholder
+        ? "/stakeholder-dashboard"
+        : "/dashboard";
+
+    // =====================================================
+    // ROLE-BASED WORKSPACE
+    // =====================================================
+
+    const workspaceMenu = isStakeholder
+        ? stakeholderWorkspaceMenu
+        : studentWorkspaceMenu;
+
+    // =====================================================
+    // ACTIVE ROUTE
+    // =====================================================
+
+    const isActive = (path) => {
+        if (!path) return false;
+
+        if (
+            path === "/dashboard" ||
+            path === "/stakeholder-dashboard"
+        ) {
+            return location.pathname === path;
+        }
+
+        return location.pathname.startsWith(path);
+    };
+
+    // =====================================================
+    // MAIN MENU WITH ROLE DASHBOARD
+    // =====================================================
+
+    const roleBasedMainMenu = mainMenu.map((item) => {
+        if (item.title === "Dashboard") {
+            return {
+                ...item,
+                path: dashboardPath,
+            };
+        }
+
+        return item;
+    });
 
     return (
-        <aside
-            className={`sticky top-0 h-screen bg-white border-r border-slate-200 shadow-sm transition-all duration-300 flex flex-col ${sidebarOpen ? "w-72" : "w-24"
-                }`}
-        >
-            {/* Logo */}
+        <>
+            {/* =====================================================
+                MOBILE OVERLAY
+            ===================================================== */}
 
-            <div className="h-20 shrink-0 flex items-center justify-between px-6 border-b border-slate-100">
-
-                <div className="flex items-center gap-3">
-
-                    <div className="w-12 h-12 rounded-2xl bg-gradient-to-r from-[#1E1B4B] to-[#4F46E5] text-white flex items-center justify-center font-bold text-xl shadow-md">
-                        C
-                    </div>
-
-                    {sidebarOpen && (
-                        <div>
-                            <h1 className="font-black text-xl tracking-wider text-[#1E1B4B]">
-                                CONEXA
-                            </h1>
-
-                            <p className="text-xs text-slate-500">
-                                Team Building Platform
-                            </p>
-                        </div>
-                    )}
-
-                </div>
-
-                <button
-                    onClick={() => setSidebarOpen(!sidebarOpen)}
-                    className="hidden lg:flex w-9 h-9 rounded-xl hover:bg-slate-100 items-center justify-center"
-                >
-                    {sidebarOpen ? (
-                        <ChevronLeft size={18} />
-                    ) : (
-                        <ChevronRight size={18} />
-                    )}
-                </button>
-
-            </div>
-
-            {/* Scrollable Area */}
-
-            <div className="flex-1 overflow-y-auto overflow-x-hidden no-scrollbar">
-
-                {/* Search */}
-
+            <AnimatePresence>
                 {sidebarOpen && (
-                    <div className="px-5 pt-5">
-
-                        <div className="flex items-center gap-3 bg-slate-100 rounded-xl px-4 py-3">
-
-                            <Search size={18} className="text-slate-400" />
-
-                            <input
-                                type="text"
-                                placeholder="Search..."
-                                className="bg-transparent outline-none text-sm w-full"
-                            />
-
-                        </div>
-
-                    </div>
+                    <motion.div
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        exit={{ opacity: 0 }}
+                        transition={{ duration: 0.2 }}
+                        onClick={() => setSidebarOpen(false)}
+                        className="
+                            fixed
+                            inset-0
+                            z-40
+                            bg-[#1E1B4B]/20
+                            backdrop-blur-[2px]
+                            lg:hidden
+                        "
+                    />
                 )}
+            </AnimatePresence>
 
-                {/* MAIN */}
+            {/* =====================================================
+                SIDEBAR
+            ===================================================== */}
 
-                <div className="mt-8 px-4">
+            <motion.aside
+                initial={false}
+                animate={{
+                    width: sidebarOpen ? 264 : 82,
+                    x: 0,
+                }}
+                transition={{
+                    width: {
+                        duration: 0.3,
+                        ease: [0.4, 0, 0.2, 1],
+                    },
+                }}
+                className={`
+                    fixed
+                    left-0
+                    top-0
+                    z-50
+                    h-screen
+                    bg-white
+                    border-r
+                    border-slate-200
+                    shadow-[6px_0_30px_rgba(30,27,75,0.06)]
+                    flex
+                    flex-col
+                    overflow-hidden
 
-                    {sidebarOpen && (
-                        <p className="text-xs uppercase tracking-widest text-slate-400 mb-3 px-3">
-                            Main
-                        </p>
-                    )}
+                    max-lg:w-[264px]
+                    max-lg:transition-transform
 
-                    <div className="space-y-2">
+                    ${sidebarOpen
+                        ? "max-lg:translate-x-0"
+                        : "max-lg:-translate-x-full"
+                    }
+                `}
+            >
+                {/* =====================================================
+                    LOGO HEADER
+                ===================================================== */}
 
-                        {mainMenu.map((item) => {
+                <div
+                    className={`
+                        relative
+                        h-[76px]
+                        shrink-0
+                        flex
+                        items-center
+                        border-b
+                        border-slate-100
 
-                            const Icon = item.icon;
-                            const active = location.pathname === item.path;
+                        ${sidebarOpen
+                            ? "px-4"
+                            : "justify-center px-2"
+                        }
+                    `}
+                >
+                    {/* LOGO LINK */}
 
-                            return (
-                                <Link key={item.title} to={item.path}>
+                    <Link
+                        to={dashboardPath}
+                        className={`
+                            flex
+                            items-center
+                            min-w-0
 
-                                    <motion.div
-                                        whileHover={{ x: 5 }}
-                                        whileTap={{ scale: 0.97 }}
-                                        className={`flex items-center justify-between px-4 py-3 rounded-2xl transition-all ${active
-                                                ? "bg-indigo-50 text-[#1E1B4B] font-semibold"
-                                                : "hover:bg-slate-100 text-slate-700"
-                                            }`}
+                            ${sidebarOpen
+                                ? "gap-3"
+                                : ""
+                            }
+                        `}
+                    >
+                        {/* LOGO */}
+
+                        <motion.div
+                            whileHover={{
+                                scale: 1.05,
+                                rotate: 2,
+                            }}
+                            transition={{
+                                type: "spring",
+                                stiffness: 300,
+                                damping: 18,
+                            }}
+                            className="
+                                relative
+                                w-11
+                                h-11
+                                shrink-0
+                                rounded-2xl
+                                bg-gradient-to-br
+                                from-[#1E1B4B]
+                                via-[#312E81]
+                                to-[#14B8A6]
+                                text-white
+                                flex
+                                items-center
+                                justify-center
+                                font-black
+                                text-xl
+                                shadow-lg
+                                shadow-[#1E1B4B]/15
+                            "
+                        >
+                            C
+
+                            <span
+                                className="
+                                    absolute
+                                    -right-1
+                                    -top-1
+                                    w-3
+                                    h-3
+                                    rounded-full
+                                    bg-[#14B8A6]
+                                    border-2
+                                    border-white
+                                "
+                            />
+                        </motion.div>
+
+                        {/* BRAND */}
+
+                        <AnimatePresence initial={false}>
+                            {sidebarOpen && (
+                                <motion.div
+                                    initial={{
+                                        opacity: 0,
+                                        width: 0,
+                                        x: -8,
+                                    }}
+                                    animate={{
+                                        opacity: 1,
+                                        width: "auto",
+                                        x: 0,
+                                    }}
+                                    exit={{
+                                        opacity: 0,
+                                        width: 0,
+                                        x: -8,
+                                    }}
+                                    transition={{
+                                        duration: 0.2,
+                                    }}
+                                    className="
+                                        min-w-0
+                                        overflow-hidden
+                                        whitespace-nowrap
+                                    "
+                                >
+                                    <h1
+                                        className="
+                                            text-[17px]
+                                            font-black
+                                            tracking-[0.16em]
+                                            text-[#1E1B4B]
+                                        "
                                     >
+                                        CONEXA
+                                    </h1>
 
-                                        <div className="flex items-center gap-4">
+                                    <p
+                                        className="
+                                            mt-0.5
+                                            text-[9px]
+                                            font-medium
+                                            text-slate-400
+                                            tracking-wide
+                                        "
+                                    >
+                                        TEAM BUILDING PLATFORM
+                                    </p>
+                                </motion.div>
+                            )}
+                        </AnimatePresence>
+                    </Link>
 
-                                            <Icon size={21} />
+                    {/* =====================================================
+                        COLLAPSE BUTTON
+                    ===================================================== */}
 
-                                            {sidebarOpen && (
-                                                <span>{item.title}</span>
-                                            )}
+                    <AnimatePresence initial={false}>
+                        {sidebarOpen && (
+                            <motion.button
+                                initial={{
+                                    opacity: 0,
+                                    scale: 0.8,
+                                }}
+                                animate={{
+                                    opacity: 1,
+                                    scale: 1,
+                                }}
+                                exit={{
+                                    opacity: 0,
+                                    scale: 0.8,
+                                }}
+                                onClick={() =>
+                                    setSidebarOpen(false)
+                                }
+                                className="
+                                    hidden
+                                    lg:flex
+                                    absolute
+                                    right-3
+                                    w-8
+                                    h-8
+                                    rounded-xl
+                                    items-center
+                                    justify-center
+                                    text-slate-400
+                                    hover:text-[#1E1B4B]
+                                    hover:bg-slate-100
+                                    transition-all
+                                "
+                                title="Collapse sidebar"
+                            >
+                                <ChevronLeft size={18} />
+                            </motion.button>
+                        )}
+                    </AnimatePresence>
 
-                                        </div>
+                    {/* =====================================================
+                        EXPAND BUTTON
+                    ===================================================== */}
 
-                                        {sidebarOpen && item.badge && (
-                                            <span
-                                                className={`text-[10px] font-bold px-2 py-1 rounded-full ${item.badge === "LIVE"
-                                                        ? "bg-orange-100 text-orange-600"
-                                                        : "bg-blue-100 text-blue-600"
-                                                    }`}
-                                            >
-                                                {item.badge}
-                                            </span>
-                                        )}
-
-                                    </motion.div>
-
-                                </Link>
-                            );
-                        })}
-
-                    </div>
-
+                    {!sidebarOpen && (
+                        <motion.button
+                            initial={{
+                                opacity: 0,
+                                scale: 0.8,
+                            }}
+                            animate={{
+                                opacity: 1,
+                                scale: 1,
+                            }}
+                            onClick={() =>
+                                setSidebarOpen(true)
+                            }
+                            className="
+                                hidden
+                                lg:flex
+                                absolute
+                                -right-3
+                                top-[24px]
+                                w-7
+                                h-7
+                                rounded-full
+                                bg-white
+                                border
+                                border-slate-200
+                                shadow-md
+                                items-center
+                                justify-center
+                                text-slate-500
+                                hover:text-[#1E1B4B]
+                                hover:scale-105
+                                transition-all
+                            "
+                            title="Expand sidebar"
+                        >
+                            <ChevronRight size={15} />
+                        </motion.button>
+                    )}
                 </div>
 
-                {/* WORKSPACE */}
+                {/* =====================================================
+                    NAVIGATION
+                ===================================================== */}
 
-                <div className="mt-8 px-4 pb-8">
+                <nav
+                    className="
+                        flex-1
+                        overflow-y-auto
+                        overflow-x-hidden
+                        px-3
+                        py-5
+                        scrollbar-thin
+                        scrollbar-thumb-slate-200
+                        scrollbar-track-transparent
+                    "
+                >
+                    {/* =====================================================
+                        MAIN
+                    ===================================================== */}
 
-                    {sidebarOpen && (
-                        <p className="text-xs uppercase tracking-widest text-slate-400 mb-3 px-3">
-                            Workspace
-                        </p>
-                    )}
+                    <SectionTitle
+                        title="Main"
+                        sidebarOpen={sidebarOpen}
+                    />
 
-                    <div className="space-y-2">
-
-                        {workspaceMenu.map((item) => {
-
-                            const Icon = item.icon;
-                            const active = location.pathname === item.path;
-
-                            return (
-                                <Link key={item.title} to={item.path}>
-
-                                    <motion.div
-                                        whileHover={{ x: 5 }}
-                                        whileTap={{ scale: 0.97 }}
-                                        className={`flex items-center justify-between px-4 py-3 rounded-2xl transition-all ${active
-                                                ? "bg-indigo-50 text-[#1E1B4B] font-semibold"
-                                                : "hover:bg-slate-100 text-slate-700"
-                                            }`}
-                                    >
-
-                                        <div className="flex items-center gap-4">
-
-                                            <Icon size={21} />
-
-                                            {sidebarOpen && (
-                                                <span>{item.title}</span>
-                                            )}
-
-                                        </div>
-
-                                        {sidebarOpen && item.badge && (
-                                            <span
-                                                className={`text-[10px] font-bold px-2 py-1 rounded-full ${item.badge === "NEW"
-                                                        ? "bg-cyan-100 text-cyan-700"
-                                                        : "bg-green-100 text-green-700"
-                                                    }`}
-                                            >
-                                                {item.badge}
-                                            </span>
-                                        )}
-
-                                    </motion.div>
-
-                                </Link>
-                            );
-                        })}
-
+                    <div className="space-y-1.5">
+                        {roleBasedMainMenu.map((item) => (
+                            <SidebarItem
+                                key={item.title}
+                                item={item}
+                                active={isActive(item.path)}
+                                sidebarOpen={sidebarOpen}
+                            />
+                        ))}
                     </div>
 
+                    {/* =====================================================
+                        DIVIDER
+                    ===================================================== */}
+
+                    <div
+                        className="
+                            my-5
+                            mx-2
+                            h-px
+                            bg-slate-100
+                        "
+                    />
+
+                    {/* =====================================================
+                        WORKSPACE
+                    ===================================================== */}
+
+                    <SectionTitle
+                        title="Workspace"
+                        sidebarOpen={sidebarOpen}
+                    />
+
+                    <div className="space-y-1.5">
+                        {workspaceMenu.map((item) => (
+                            <SidebarItem
+                                key={`${isStakeholder ? "stakeholder" : "student"}-${item.title}`}
+                                item={item}
+                                active={isActive(item.path)}
+                                sidebarOpen={sidebarOpen}
+                            />
+                        ))}
+                    </div>
+                </nav>
+
+                {/* =====================================================
+                    BOTTOM ROLE CARD
+                ===================================================== */}
+
+                <div
+                    className={`
+                        shrink-0
+
+                        ${sidebarOpen
+                            ? "px-3 pb-4"
+                            : "px-2 pb-4"
+                        }
+                    `}
+                >
+                    <AnimatePresence
+                        initial={false}
+                        mode="wait"
+                    >
+                        {sidebarOpen ? (
+                            <motion.div
+                                key={
+                                    isStakeholder
+                                        ? "stakeholder-open-card"
+                                        : "student-open-card"
+                                }
+                                initial={{
+                                    opacity: 0,
+                                    y: 10,
+                                }}
+                                animate={{
+                                    opacity: 1,
+                                    y: 0,
+                                }}
+                                exit={{
+                                    opacity: 0,
+                                    y: 10,
+                                }}
+                                transition={{
+                                    duration: 0.2,
+                                }}
+                                className="
+                                    relative
+                                    overflow-hidden
+                                    rounded-2xl
+                                    bg-gradient-to-br
+                                    from-[#1E1B4B]
+                                    via-[#252158]
+                                    to-[#14B8A6]
+                                    p-4
+                                    text-white
+                                    shadow-lg
+                                "
+                            >
+                                {/* Decorative Circle */}
+
+                                <div
+                                    className="
+                                        absolute
+                                        -right-8
+                                        -top-8
+                                        w-24
+                                        h-24
+                                        rounded-full
+                                        bg-white/5
+                                    "
+                                />
+
+                                {/* Icon */}
+
+                                <div
+                                    className="
+                                        relative
+                                        w-9
+                                        h-9
+                                        rounded-xl
+                                        bg-white/10
+                                        border
+                                        border-white/10
+                                        flex
+                                        items-center
+                                        justify-center
+                                        mb-3
+                                    "
+                                >
+                                    {isStakeholder ? (
+                                        <Building2 size={17} />
+                                    ) : (
+                                        <Lightbulb size={17} />
+                                    )}
+                                </div>
+
+                                {/* TITLE */}
+
+                                <p className="relative text-sm font-bold">
+                                    {isStakeholder
+                                        ? "Stakeholder Workspace"
+                                        : "Real-World Problems"}
+                                </p>
+
+                                {/* DESCRIPTION */}
+
+                                <p
+                                    className="
+                                        relative
+                                        mt-1
+                                        text-[11px]
+                                        leading-relaxed
+                                        text-white/60
+                                    "
+                                >
+                                    {isStakeholder
+                                        ? "Create problems and connect with talented students."
+                                        : "Explore real-world challenges posted by stakeholders."}
+                                </p>
+
+                                {/* BUTTON */}
+
+                                <Link
+                                    to={
+                                        isStakeholder
+                                            ? "/stakeholder-dashboard"
+                                            : "/real-world-problems"
+                                    }
+                                    className="
+                                        relative
+                                        inline-flex
+                                        items-center
+                                        mt-3
+                                        px-3
+                                        py-2
+                                        rounded-lg
+                                        bg-white
+                                        text-[#1E1B4B]
+                                        text-[11px]
+                                        font-bold
+                                        hover:bg-slate-100
+                                        hover:translate-x-0.5
+                                        transition-all
+                                    "
+                                >
+                                    {isStakeholder
+                                        ? "Open Workspace"
+                                        : "Explore Problems"}
+
+                                    <span className="ml-1">
+                                        →
+                                    </span>
+                                </Link>
+                            </motion.div>
+                        ) : (
+                            <motion.div
+                                key={
+                                    isStakeholder
+                                        ? "stakeholder-closed-card"
+                                        : "student-closed-card"
+                                }
+                                initial={{
+                                    opacity: 0,
+                                    scale: 0.9,
+                                }}
+                                animate={{
+                                    opacity: 1,
+                                    scale: 1,
+                                }}
+                                className="
+                                    flex
+                                    justify-center
+                                "
+                            >
+                                <Link
+                                    to={
+                                        isStakeholder
+                                            ? "/stakeholder-dashboard"
+                                            : "/real-world-problems"
+                                    }
+                                    title={
+                                        isStakeholder
+                                            ? "Stakeholder Workspace"
+                                            : "Real-World Problems"
+                                    }
+                                    className="
+                                        flex
+                                        w-12
+                                        h-12
+                                        items-center
+                                        justify-center
+                                        rounded-2xl
+                                        bg-gradient-to-br
+                                        from-[#1E1B4B]
+                                        to-[#14B8A6]
+                                        text-white
+                                        shadow-md
+                                        hover:scale-105
+                                        transition-all
+                                    "
+                                >
+                                    {isStakeholder ? (
+                                        <Building2 size={19} />
+                                    ) : (
+                                        <Lightbulb size={19} />
+                                    )}
+                                </Link>
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
+            </motion.aside>
+        </>
+    );
+}
+
+/* =====================================================
+   SECTION TITLE
+===================================================== */
+
+function SectionTitle({
+    title,
+    sidebarOpen,
+}) {
+    return (
+        <AnimatePresence initial={false}>
+            {sidebarOpen && (
+                <motion.div
+                    initial={{
+                        opacity: 0,
+                        height: 0,
+                    }}
+                    animate={{
+                        opacity: 1,
+                        height: "auto",
+                    }}
+                    exit={{
+                        opacity: 0,
+                        height: 0,
+                    }}
+                    className="
+                        overflow-hidden
+                        px-3
+                        mb-2
+                    "
+                >
+                    <p
+                        className="
+                            text-[10px]
+                            font-black
+                            uppercase
+                            tracking-[0.2em]
+                            text-slate-400
+                        "
+                    >
+                        {title}
+                    </p>
+                </motion.div>
+            )}
+        </AnimatePresence>
+    );
+}
+
+/* =====================================================
+   SIDEBAR ITEM
+===================================================== */
+
+function SidebarItem({
+    item,
+    active,
+    sidebarOpen,
+}) {
+    const Icon = item.icon;
+
+    return (
+        <Link
+            to={item.path}
+            title={
+                !sidebarOpen
+                    ? item.title
+                    : undefined
+            }
+            className="block"
+        >
+            <motion.div
+                whileHover={{
+                    x: sidebarOpen ? 3 : 0,
+                }}
+                whileTap={{
+                    scale: 0.98,
+                }}
+                transition={{
+                    duration: 0.15,
+                }}
+                className={`
+                    group
+                    relative
+                    h-12
+                    rounded-xl
+                    flex
+                    items-center
+                    overflow-hidden
+                    transition-all
+                    duration-200
+
+                    ${sidebarOpen
+                        ? "justify-between px-2.5"
+                        : "justify-center"
+                    }
+
+                    ${active
+                        ? "bg-gradient-to-r from-[#1E1B4B]/[0.07] to-[#14B8A6]/[0.09]"
+                        : "hover:bg-slate-50"
+                    }
+                `}
+            >
+                {/* =====================================================
+                    ACTIVE LINE
+                ===================================================== */}
+
+                <motion.span
+                    initial={false}
+                    animate={{
+                        scaleY: active ? 1 : 0,
+                        opacity: active ? 1 : 0,
+                    }}
+                    transition={{
+                        duration: 0.2,
+                    }}
+                    className="
+                        absolute
+                        left-0
+                        top-2
+                        bottom-2
+                        w-1
+                        rounded-r-full
+                        bg-gradient-to-b
+                        from-[#1E1B4B]
+                        to-[#14B8A6]
+                        origin-center
+                    "
+                />
+
+                {/* =====================================================
+                    LEFT
+                ===================================================== */}
+
+                <div
+                    className={`
+                        flex
+                        items-center
+                        min-w-0
+
+                        ${sidebarOpen
+                            ? "gap-3"
+                            : "justify-center"
+                        }
+                    `}
+                >
+                    {/* ICON */}
+
+                    <motion.div
+                        animate={{
+                            scale: active
+                                ? 1
+                                : 0.96,
+                        }}
+                        className={`
+                            relative
+                            w-9
+                            h-9
+                            shrink-0
+                            rounded-xl
+                            flex
+                            items-center
+                            justify-center
+                            transition-all
+                            duration-200
+
+                            ${active
+                                ? "bg-white text-[#1E1B4B] shadow-sm"
+                                : "text-slate-500 group-hover:text-[#1E1B4B] group-hover:bg-white"
+                            }
+                        `}
+                    >
+                        <Icon size={18} />
+
+                        {active && (
+                            <span
+                                className="
+                                    absolute
+                                    -right-0.5
+                                    -top-0.5
+                                    w-2
+                                    h-2
+                                    rounded-full
+                                    bg-[#14B8A6]
+                                    border
+                                    border-white
+                                "
+                            />
+                        )}
+                    </motion.div>
+
+                    {/* TITLE */}
+
+                    <AnimatePresence initial={false}>
+                        {sidebarOpen && (
+                            <motion.span
+                                initial={{
+                                    opacity: 0,
+                                    x: -6,
+                                }}
+                                animate={{
+                                    opacity: 1,
+                                    x: 0,
+                                }}
+                                exit={{
+                                    opacity: 0,
+                                    x: -6,
+                                }}
+                                transition={{
+                                    duration: 0.18,
+                                }}
+                                className={`
+                                    truncate
+                                    text-sm
+                                    whitespace-nowrap
+
+                                    ${active
+                                        ? "font-bold text-[#1E1B4B]"
+                                        : "font-medium text-slate-600 group-hover:text-[#1E1B4B]"
+                                    }
+                                `}
+                            >
+                                {item.title}
+                            </motion.span>
+                        )}
+                    </AnimatePresence>
                 </div>
 
-            </div>
+                {/* =====================================================
+                    BADGE
+                ===================================================== */}
 
-        </aside>
+                <AnimatePresence initial={false}>
+                    {sidebarOpen &&
+                        item.badge && (
+                            <motion.span
+                                initial={{
+                                    opacity: 0,
+                                    scale: 0.8,
+                                }}
+                                animate={{
+                                    opacity: 1,
+                                    scale: 1,
+                                }}
+                                exit={{
+                                    opacity: 0,
+                                    scale: 0.8,
+                                }}
+                                className={`
+                                    shrink-0
+                                    text-[8px]
+                                    font-black
+                                    tracking-wide
+                                    px-2
+                                    py-1
+                                    rounded-full
+
+                                    ${item.badge ===
+                                        "LIVE"
+                                        ? "bg-[#14B8A6]/10 text-[#14B8A6]"
+                                        : item.badge ===
+                                            "NEW"
+                                            ? "bg-[#1E1B4B]/10 text-[#1E1B4B]"
+                                            : "bg-slate-100 text-slate-500"
+                                    }
+                                `}
+                            >
+                                {item.badge}
+                            </motion.span>
+                        )}
+                </AnimatePresence>
+            </motion.div>
+        </Link>
     );
 }

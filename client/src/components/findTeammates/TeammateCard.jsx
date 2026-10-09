@@ -1,219 +1,347 @@
+import {
+  MapPin,
+  GraduationCap,
+  CalendarDays,
+  BriefcaseBusiness,
+  Sparkles,
+  Eye,
+  Send,
+  Check,
+  Clock3,
+} from "lucide-react";
+
+const getInitials = (name) => {
+  if (!name) return "ST";
+
+  const parts = String(name)
+    .trim()
+    .split(/\s+/)
+    .filter(Boolean);
+
+  if (parts.length === 1) {
+    return parts[0].slice(0, 2).toUpperCase();
+  }
+
+  return (
+    String(parts[0][0]) +
+    String(parts[1][0])
+  ).toUpperCase();
+};
+
 export default function TeammateCard({
-    teammate,
-    connected,
-    onConnect,
+  teammate = {},
+  connected = false,
+  onConnect,
+  onViewProfile,
 }) {
-    return (
-        <article className="group relative overflow-hidden rounded-3xl border border-slate-200 bg-white transition-all duration-300 hover:-translate-y-1 hover:border-indigo-200 hover:shadow-[0_20px_45px_rgba(79,70,229,0.12)]">
-
-            {/* Top gradient */}
-            <div className="relative h-28 overflow-hidden bg-gradient-to-br from-[#111827] via-[#312e81] to-[#6366f1]">
-
-                <div className="absolute -right-10 -top-16 h-40 w-40 rounded-full bg-white/10 blur-2xl" />
-
-                <div className="absolute -bottom-20 left-20 h-40 w-40 rounded-full bg-violet-400/20 blur-3xl" />
-
-                {/* Match */}
-                <div className="absolute right-4 top-4 flex items-center gap-1.5 rounded-full border border-white/20 bg-white/10 px-3 py-1.5 text-xs font-bold text-white backdrop-blur-md">
-
-                    <span className="text-yellow-300">
-                        ✦
-                    </span>
-
-                    {teammate.match}% Match
-
-                </div>
-
-            </div>
-
-            <div className="px-5 pb-5">
-
-                {/* Avatar */}
-                <div className="-mt-11 flex items-end justify-between">
-
-                    <div className="flex h-20 w-20 items-center justify-center rounded-2xl border-4 border-white bg-gradient-to-br from-indigo-500 to-violet-600 text-xl font-black text-white shadow-lg">
-
-                        {teammate.initials}
-
-                    </div>
-
-                    <div className="mb-1 flex items-center gap-1.5 rounded-full bg-emerald-50 px-3 py-1.5 text-[11px] font-bold text-emerald-700">
-
-                        <span className="h-1.5 w-1.5 rounded-full bg-emerald-500" />
-
-                        {teammate.availability === "Available"
-                            ? "Available"
-                            : "Looking for team"}
-
-                    </div>
-
-                </div>
-
-                {/* Name */}
-                <div className="mt-4">
-
-                    <h3 className="text-lg font-black text-slate-950">
-                        {teammate.name}
-                    </h3>
-
-                    <p className="mt-1 text-sm font-semibold text-indigo-600">
-                        {teammate.role}
-                    </p>
-
-                </div>
-
-                {/* College */}
-                <div className="mt-4 space-y-2">
-
-                    <div className="flex items-start gap-2.5 text-sm text-slate-500">
-
-                        <span className="mt-0.5">
-                            🎓
-                        </span>
-
-                        <div>
-                            <p className="font-semibold text-slate-700">
-                                {teammate.college}
-                            </p>
-
-                            <p className="text-xs text-slate-400">
-                                {teammate.branch} · {teammate.year}
-                            </p>
-                        </div>
-
-                    </div>
-
-                    <div className="flex items-center gap-2.5 text-sm text-slate-500">
-
-                        <span>
-                            📍
-                        </span>
-
-                        {teammate.location}
-
-                    </div>
-
-                </div>
-
-                {/* Match score */}
-                <div className="mt-5 rounded-2xl bg-slate-50 p-3.5">
-
-                    <div className="mb-2 flex items-center justify-between">
-
-                        <span className="text-xs font-bold text-slate-500">
-                            Compatibility
-                        </span>
-
-                        <span className="text-xs font-black text-indigo-600">
-                            {teammate.match}%
-                        </span>
-
-                    </div>
-
-                    <div className="h-1.5 overflow-hidden rounded-full bg-slate-200">
-
-                        <div
-                            className="h-full rounded-full bg-gradient-to-r from-indigo-500 via-violet-500 to-purple-500 transition-all duration-700"
-                            style={{
-                                width: `${teammate.match}%`,
-                            }}
-                        />
-
-                    </div>
-
-                </div>
-
-                {/* Skills */}
-                <div className="mt-5">
-
-                    <p className="mb-2 text-[11px] font-black uppercase tracking-wider text-slate-400">
-                        Skills
-                    </p>
-
-                    <div className="flex flex-wrap gap-1.5">
-
-                        {teammate.skills.map((skill) => (
-                            <span
-                                key={skill}
-                                className="rounded-lg border border-indigo-100 bg-indigo-50 px-2.5 py-1.5 text-xs font-semibold text-indigo-700"
-                            >
-                                {skill}
-                            </span>
-                        ))}
-
-                    </div>
-
-                </div>
-
-                {/* Interests */}
-                <div className="mt-4 flex flex-wrap gap-1.5">
-
-                    {teammate.interests.map((interest) => (
-                        <span
-                            key={interest}
-                            className="rounded-lg bg-slate-100 px-2.5 py-1.5 text-xs font-medium text-slate-500"
-                        >
-                            {interest}
-                        </span>
-                    ))}
-
-                </div>
-
-                {/* Stats */}
-                <div className="mt-5 grid grid-cols-2 divide-x rounded-2xl border border-slate-100 bg-white">
-
-                    <div className="px-3 py-3 text-center">
-
-                        <p className="text-lg font-black text-slate-900">
-                            {teammate.projects}
-                        </p>
-
-                        <p className="text-[11px] font-medium text-slate-400">
-                            Projects
-                        </p>
-
-                    </div>
-
-                    <div className="px-3 py-3 text-center">
-
-                        <p className="text-lg font-black text-slate-900">
-                            {teammate.hackathons}
-                        </p>
-
-                        <p className="text-[11px] font-medium text-slate-400">
-                            Hackathons
-                        </p>
-
-                    </div>
-
-                </div>
-
-                {/* Button */}
-                <button
-                    onClick={onConnect}
-                    className={`mt-5 flex w-full items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold transition-all duration-200 ${
-                        connected
-                            ? "bg-emerald-50 text-emerald-700 hover:bg-emerald-100"
-                            : "bg-slate-950 text-white hover:bg-indigo-600"
-                    }`}
-                >
-                    {connected ? (
-                        <>
-                            <span>✓</span>
-                            Request Sent
-                        </>
-                    ) : (
-                        <>
-                            Connect
-                            <span className="transition-transform group-hover:translate-x-1">
-                                →
-                            </span>
-                        </>
-                    )}
-                </button>
-
-            </div>
-
-        </article>
+  const name =
+    teammate?.name || "Student";
+
+  const role =
+    teammate?.role || "Student Developer";
+
+  const college =
+    teammate?.college ||
+    "College not specified";
+
+  const branch =
+    teammate?.branch ||
+    "Computer Science";
+
+  const year =
+    teammate?.year || "Student";
+
+  const location =
+    teammate?.location || "India";
+
+  const availability =
+    teammate?.availability ||
+    "Available";
+
+  const compatibility = Number(
+    teammate?.compatibility || 0
+  );
+
+  const skills = Array.isArray(
+    teammate?.skills
+  )
+    ? teammate.skills
+    : [];
+
+  const visibleSkills =
+    skills.slice(0, 3);
+
+  const remainingSkills =
+    Math.max(
+      skills.length -
+        visibleSkills.length,
+      0
     );
+
+  const initials =
+    getInitials(name);
+
+  const available =
+    availability
+      .toLowerCase()
+      .includes("available");
+
+  return (
+    <article className="flex h-full min-h-[430px] flex-col rounded-2xl border border-slate-200 bg-white p-5 shadow-sm transition-all duration-200 hover:-translate-y-1 hover:border-slate-300 hover:shadow-lg sm:p-6">
+
+      {/* Header */}
+      <div className="flex items-start justify-between gap-4">
+
+        <div className="flex min-w-0 items-center gap-3.5">
+
+          {/* Avatar */}
+          <div className="relative shrink-0">
+            <div className="flex h-16 w-16 items-center justify-center overflow-hidden rounded-full border-2 border-[#14B8A6]/20 bg-[#14B8A6]/10 text-xl font-extrabold text-[#1E1B4B]">
+              {teammate?.avatar ? (
+                <img
+                  src={teammate.avatar}
+                  alt={name}
+                  className="h-full w-full object-cover"
+                />
+              ) : (
+                <span className="flex h-full w-full items-center justify-center">
+                  {initials}
+                </span>
+              )}
+            </div>
+
+            <span
+              className={
+                "absolute bottom-0.5 right-0.5 h-4 w-4 rounded-full border-[3px] border-white " +
+                (available
+                  ? "bg-emerald-500"
+                  : "bg-amber-400")
+              }
+            />
+          </div>
+
+          <div className="min-w-0">
+
+            <h3 className="truncate text-lg font-extrabold tracking-tight text-[#1E1B4B]">
+              {name}
+            </h3>
+
+            <p className="mt-1 truncate text-sm font-semibold text-slate-500">
+              {role}
+            </p>
+
+            <div className="mt-2 flex items-center gap-1.5">
+              <Clock3 className="h-4 w-4 text-[#14B8A6]" />
+
+              <span
+                className={
+                  "text-xs font-bold " +
+                  (available
+                    ? "text-emerald-600"
+                    : "text-amber-600")
+                }
+              >
+                {availability}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        {/* Match */}
+        <div className="shrink-0 rounded-full bg-[#14B8A6]/10 px-3 py-1.5 text-xs font-extrabold text-[#0f766e]">
+          {compatibility}% Match
+        </div>
+      </div>
+
+      {/* Compatibility */}
+      <div className="mt-6 rounded-xl border border-slate-100 bg-slate-50 p-4">
+
+        <div className="mb-2 flex items-center justify-between">
+
+          <div className="flex items-center gap-2">
+            <Sparkles className="h-4 w-4 text-[#14B8A6]" />
+
+            <span className="text-sm font-bold text-slate-600">
+              Compatibility
+            </span>
+          </div>
+
+          <span className="text-sm font-extrabold text-[#1E1B4B]">
+            {compatibility}%
+          </span>
+        </div>
+
+        <div className="h-2.5 overflow-hidden rounded-full bg-slate-200">
+          <div
+            className="h-full rounded-full bg-[#14B8A6] transition-all duration-500"
+            style={{
+              width:
+                Math.min(
+                  Math.max(
+                    compatibility,
+                    0
+                  ),
+                  100
+                ) + "%",
+            }}
+          />
+        </div>
+      </div>
+
+      {/* Limited Student Information */}
+      <div className="mt-6 space-y-3.5">
+
+        <div className="flex min-w-0 items-start gap-3">
+          <GraduationCap className="mt-0.5 h-5 w-5 shrink-0 text-slate-400" />
+
+          <div className="min-w-0">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+              College
+            </p>
+
+            <p className="mt-1 truncate text-sm font-semibold text-slate-700">
+              {college}
+            </p>
+          </div>
+        </div>
+
+        <div className="flex min-w-0 items-start gap-3">
+          <BriefcaseBusiness className="mt-0.5 h-5 w-5 shrink-0 text-slate-400" />
+
+          <div className="min-w-0">
+            <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+              Branch
+            </p>
+
+            <p className="mt-1 truncate text-sm font-semibold text-slate-700">
+              {branch}
+            </p>
+          </div>
+        </div>
+
+        <div className="grid grid-cols-2 gap-3">
+
+          <div className="flex min-w-0 items-start gap-2.5">
+            <CalendarDays className="mt-0.5 h-4.5 w-4.5 shrink-0 text-slate-400" />
+
+            <div className="min-w-0">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                Year
+              </p>
+
+              <p className="mt-1 truncate text-sm font-semibold text-slate-700">
+                {year}
+              </p>
+            </div>
+          </div>
+
+          <div className="flex min-w-0 items-start gap-2.5">
+            <MapPin className="mt-0.5 h-4.5 w-4.5 shrink-0 text-slate-400" />
+
+            <div className="min-w-0">
+              <p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                Location
+              </p>
+
+              <p className="mt-1 truncate text-sm font-semibold text-slate-700">
+                {location}
+              </p>
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      {/* Skills */}
+      <div className="mt-6">
+
+        <p className="mb-2.5 text-[11px] font-bold uppercase tracking-wider text-slate-400">
+          Key Skills
+        </p>
+
+        <div className="flex flex-wrap gap-2">
+
+          {visibleSkills.length > 0 ? (
+            visibleSkills.map(
+              (skill, index) => (
+                <span
+                  key={
+                    String(skill) +
+                    "-" +
+                    String(index)
+                  }
+                  className="rounded-full border border-slate-200 bg-slate-50 px-3 py-1.5 text-xs font-bold text-slate-600"
+                >
+                  {skill}
+                </span>
+              )
+            )
+          ) : (
+            <span className="text-xs text-slate-400">
+              No skills listed
+            </span>
+          )}
+
+          {remainingSkills > 0 && (
+            <span className="rounded-full border border-[#14B8A6]/20 bg-[#14B8A6]/10 px-3 py-1.5 text-xs font-extrabold text-[#0f766e]">
+              +{remainingSkills}
+            </span>
+          )}
+        </div>
+      </div>
+
+      {/* Buttons */}
+      <div className="mt-auto flex gap-3 pt-7">
+
+        <button
+          type="button"
+          onClick={() => {
+            if (onViewProfile) {
+              onViewProfile(
+                teammate
+              );
+            }
+          }}
+          className="inline-flex flex-1 items-center justify-center gap-2 rounded-xl border border-slate-200 bg-white px-3 py-3 text-sm font-bold text-[#1E1B4B] transition hover:border-slate-300 hover:bg-slate-50"
+        >
+          <Eye className="h-4 w-4" />
+          View Profile
+        </button>
+
+        <button
+          type="button"
+          disabled={connected}
+          onClick={() => {
+            if (
+              onConnect &&
+              !connected
+            ) {
+              onConnect(
+                teammate
+              );
+            }
+          }}
+          className={
+            "inline-flex flex-1 items-center justify-center gap-2 rounded-xl px-3 py-3 text-sm font-bold text-white transition " +
+            (connected
+              ? "cursor-not-allowed bg-emerald-600"
+              : "bg-[#1E1B4B] hover:bg-[#16143a]")
+          }
+        >
+          {connected ? (
+            <>
+              <Check className="h-4 w-4" />
+              Request Sent
+            </>
+          ) : (
+            <>
+              <Send className="h-4 w-4" />
+              Connect
+            </>
+          )}
+        </button>
+
+      </div>
+    </article>
+  );
 }

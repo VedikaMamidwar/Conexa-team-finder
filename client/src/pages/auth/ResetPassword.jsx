@@ -7,41 +7,142 @@ import LeftBanner from "../../components/auth/LeftBanner";
 import AuthInput from "../../components/auth/AuthInput";
 import PasswordStrength from "../../components/auth/PasswordStrength";
 
+import {
+    resetPassword,
+} from "../../services/authService";
+
 export default function ResetPassword() {
-    const navigate = useNavigate();
+    const navigate =
+        useNavigate();
 
-    const [password, setPassword] = useState("");
-    const [confirmPassword, setConfirmPassword] = useState("");
+    const [
+        password,
+        setPassword,
+    ] = useState("");
 
-    const [errors, setErrors] = useState({});
+    const [
+        confirmPassword,
+        setConfirmPassword,
+    ] = useState("");
 
-    const handleSubmit = (e) => {
+    const [
+        errors,
+        setErrors,
+    ] = useState({});
+
+    const [
+        loading,
+        setLoading,
+    ] = useState(false);
+
+    const handleSubmit = async (
+        e
+    ) => {
         e.preventDefault();
 
-        let newErrors = {};
+        const newErrors = {};
 
-        if (!password)
-            newErrors.password = "Password is required.";
+        const resetToken =
+            sessionStorage.getItem(
+                "resetToken"
+            );
 
-        if (password.length < 8)
-            newErrors.password = "Minimum 8 characters required.";
+        if (!resetToken) {
+            setErrors({
+                password:
+                    "Password reset session expired. Please request a new OTP.",
+            });
 
-        if (confirmPassword !== password)
-            newErrors.confirmPassword = "Passwords do not match.";
+            return;
+        }
 
-        setErrors(newErrors);
+        if (!password) {
+            newErrors.password =
+                "Password is required.";
+        } else if (
+            password.length < 8
+        ) {
+            newErrors.password =
+                "Minimum 8 characters required.";
+        }
 
-        if (Object.keys(newErrors).length > 0) return;
+        if (
+            confirmPassword !==
+            password
+        ) {
+            newErrors.confirmPassword =
+                "Passwords do not match.";
+        }
 
-        console.log("Password Changed");
+        setErrors(
+            newErrors
+        );
 
-        // Backend API Later
+        if (
+            Object.keys(
+                newErrors
+            ).length > 0
+        ) {
+            return;
+        }
 
-        navigate("/login");
+        try {
+            setLoading(true);
+
+            const data =
+                await resetPassword(
+                    resetToken,
+                    password
+                );
+
+            if (!data.success) {
+                throw new Error(
+                    data.message ||
+                    "Password reset failed."
+                );
+            }
+
+            // Clear password reset data
+            sessionStorage.removeItem(
+                "resetEmail"
+            );
+
+            sessionStorage.removeItem(
+                "resetToken"
+            );
+
+            alert(
+                "Password reset successfully. Please login with your new password."
+            );
+
+            navigate(
+                "/login",
+                {
+                    replace: true,
+                }
+            );
+        } catch (err) {
+            console.error(
+                "Reset password error:",
+                err
+            );
+
+            setErrors({
+                password:
+                    err.response?.data
+                        ?.message ||
+                    err.message ||
+                    "Unable to reset password.",
+            });
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
-        <AuthLayout left={<LeftBanner />}>
+        <AuthLayout
+            left={<LeftBanner />}
+        >
 
             <div className="bg-white rounded-3xl shadow-xl border border-slate-200 p-8">
 
@@ -58,7 +159,9 @@ export default function ResetPassword() {
                 </div>
 
                 <form
-                    onSubmit={handleSubmit}
+                    onSubmit={
+                        handleSubmit
+                    }
                     className="mt-8 space-y-6"
                 >
 
@@ -66,37 +169,56 @@ export default function ResetPassword() {
                         label="New Password"
                         type="password"
                         icon={Lock}
-                        value={password}
-                        onChange={(e) =>
-                            setPassword(e.target.value)
+                        value={
+                            password
                         }
-                        error={errors.password}
+                        onChange={(e) =>
+                            setPassword(
+                                e.target
+                                    .value
+                            )
+                        }
+                        error={
+                            errors.password
+                        }
                         required
                     />
 
                     <PasswordStrength
-                        password={password}
+                        password={
+                            password
+                        }
                     />
 
                     <AuthInput
                         label="Confirm Password"
                         type="password"
                         icon={Lock}
-                        value={confirmPassword}
+                        value={
+                            confirmPassword
+                        }
                         onChange={(e) =>
                             setConfirmPassword(
-                                e.target.value
+                                e.target
+                                    .value
                             )
                         }
-                        error={errors.confirmPassword}
+                        error={
+                            errors.confirmPassword
+                        }
                         required
                     />
 
                     <button
                         type="submit"
-                        className="w-full h-14 rounded-xl bg-[#1E1B4B] text-white font-semibold hover:bg-[#312E81] transition"
+                        disabled={
+                            loading
+                        }
+                        className="w-full h-14 rounded-xl bg-[#1E1B4B] text-white font-semibold hover:bg-[#312E81] transition disabled:opacity-60 disabled:cursor-not-allowed"
                     >
-                        Update Password
+                        {loading
+                            ? "Updating..."
+                            : "Update Password"}
                     </button>
 
                 </form>

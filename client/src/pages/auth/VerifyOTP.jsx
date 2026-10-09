@@ -1,76 +1,228 @@
 import { useEffect, useRef, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { ShieldCheck, ArrowLeft } from "lucide-react";
+import {
+    ShieldCheck,
+    ArrowLeft,
+} from "lucide-react";
 
 import AuthLayout from "../../components/auth/AuthLayout";
 import LeftBanner from "../../components/auth/LeftBanner";
 
+import {
+    verifyOTP,
+    resendOTP,
+} from "../../services/authService";
+
 export default function VerifyOTP() {
     const navigate = useNavigate();
 
-    const [otp, setOtp] = useState(["", "", "", "", "", ""]);
-    const [timer, setTimer] = useState(60);
+    const [otp, setOtp] = useState([
+        "",
+        "",
+        "",
+        "",
+        "",
+        "",
+    ]);
 
-    const inputs = useRef([]);
+    const [timer, setTimer] =
+        useState(60);
+
+    const [loading, setLoading] =
+        useState(false);
+
+    const [error, setError] =
+        useState("");
+
+    const inputs =
+        useRef([]);
+
+    const email =
+        sessionStorage.getItem(
+            "resetEmail"
+        );
+
+    useEffect(() => {
+        if (!email) {
+            navigate(
+                "/forgot-password",
+                {
+                    replace: true,
+                }
+            );
+        }
+    }, [email, navigate]);
 
     useEffect(() => {
         if (timer > 0) {
-            const interval = setInterval(() => {
-                setTimer((prev) => prev - 1);
-            }, 1000);
+            const interval =
+                setInterval(() => {
+                    setTimer(
+                        (prev) =>
+                            prev - 1
+                    );
+                }, 1000);
 
-            return () => clearInterval(interval);
+            return () =>
+                clearInterval(
+                    interval
+                );
         }
     }, [timer]);
 
-    const handleChange = (value, index) => {
-        if (!/^\d?$/.test(value)) return;
+    const handleChange = (
+        value,
+        index
+    ) => {
+        if (!/^\d?$/.test(value))
+            return;
 
-        const newOtp = [...otp];
+        const newOtp = [
+            ...otp,
+        ];
+
         newOtp[index] = value;
+
         setOtp(newOtp);
 
-        if (value && index < 5) {
-            inputs.current[index + 1].focus();
+        setError("");
+
+        if (
+            value &&
+            index < 5
+        ) {
+            inputs.current[
+                index + 1
+            ]?.focus();
         }
     };
 
-    const handleKeyDown = (e, index) => {
+    const handleKeyDown = (
+        e,
+        index
+    ) => {
         if (
-            e.key === "Backspace" &&
+            e.key ===
+                "Backspace" &&
             !otp[index] &&
             index > 0
         ) {
-            inputs.current[index - 1].focus();
+            inputs.current[
+                index - 1
+            ]?.focus();
         }
     };
 
-    const handleVerify = (e) => {
+    const handleVerify = async (
+        e
+    ) => {
         e.preventDefault();
 
-        const code = otp.join("");
+        const code =
+            otp.join("");
 
-        if (code.length !== 6) {
-            alert("Please enter the complete OTP.");
+        if (
+            code.length !== 6
+        ) {
+            setError(
+                "Please enter the complete OTP."
+            );
             return;
         }
 
-        console.log(code);
+        try {
+            setLoading(true);
+            setError("");
 
-        // Backend verification later
+            const data =
+                await verifyOTP(
+                    email,
+                    code
+                );
 
-        navigate("/reset-password");
+            if (!data.success) {
+                throw new Error(
+                    data.message ||
+                    "Invalid OTP."
+                );
+            }
+
+            // Save temporary reset token
+            sessionStorage.setItem(
+                "resetToken",
+                data.resetToken
+            );
+
+            navigate(
+                "/reset-password"
+            );
+        } catch (err) {
+            console.error(
+                "OTP verification error:",
+                err
+            );
+
+            setError(
+                err.response?.data
+                    ?.message ||
+                err.message ||
+                "Invalid OTP."
+            );
+        } finally {
+            setLoading(false);
+        }
     };
 
-    const resendOTP = () => {
-        setTimer(60);
-        setOtp(["", "", "", "", "", ""]);
+    const handleResend = async () => {
+        try {
+            setLoading(true);
+            setError("");
 
-        console.log("OTP Resent");
+            const data =
+                await resendOTP(
+                    email
+                );
+
+            if (!data.success) {
+                throw new Error(
+                    data.message ||
+                    "Unable to resend OTP."
+                );
+            }
+
+            setTimer(60);
+
+            setOtp([
+                "",
+                "",
+                "",
+                "",
+                "",
+                "",
+            ]);
+
+            inputs.current[0]?.focus();
+        } catch (err) {
+            console.error(
+                "Resend OTP error:",
+                err
+            );
+
+            setError(
+                err.response?.data
+                    ?.message ||
+                err.message ||
+                "Unable to resend OTP."
+            );
+        } finally {
+            setLoading(false);
+        }
     };
 
     return (
-        <AuthLayout left={<LeftBanner />}>
+        <AuthLayout
+            left={<LeftBanner />}
+        >
 
             <div className="bg-white rounded-3xl shadow-xl border border-slate-200 p-8">
 
@@ -93,7 +245,19 @@ export default function VerifyOTP() {
                         Enter the 6-digit verification code sent to your email.
                     </p>
 
+                    {email && (
+                        <p className="mt-2 text-sm font-semibold text-[#1E1B4B]">
+                            {email}
+                        </p>
+                    )}
+
                 </div>
+
+                {error && (
+                    <div className="mt-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600 text-center">
+                        {error}
+                    </div>
+                )}
 
                 <form
                     onSubmit={handleVerify}
@@ -102,34 +266,65 @@ export default function VerifyOTP() {
 
                     <div className="flex justify-between gap-3">
 
-                        {otp.map((digit, index) => (
-
-                            <input
-                                key={index}
-                                ref={(el) => (inputs.current[index] = el)}
-                                value={digit}
-                                maxLength={1}
-                                onChange={(e) =>
-                                    handleChange(
-                                        e.target.value,
+                        {otp.map(
+                            (
+                                digit,
+                                index
+                            ) => (
+                                <input
+                                    key={
                                         index
-                                    )
-                                }
-                                onKeyDown={(e) =>
-                                    handleKeyDown(e, index)
-                                }
-                                className="w-14 h-14 md:w-16 md:h-16 rounded-xl border border-slate-300 text-center text-2xl font-bold outline-none focus:border-[#14B8A6] focus:ring-4 focus:ring-cyan-100 transition"
-                            />
-
-                        ))}
+                                    }
+                                    ref={(
+                                        el
+                                    ) =>
+                                        (inputs.current[
+                                            index
+                                        ] =
+                                            el)
+                                    }
+                                    value={
+                                        digit
+                                    }
+                                    maxLength={
+                                        1
+                                    }
+                                    inputMode="numeric"
+                                    onChange={(
+                                        e
+                                    ) =>
+                                        handleChange(
+                                            e
+                                                .target
+                                                .value,
+                                            index
+                                        )
+                                    }
+                                    onKeyDown={(
+                                        e
+                                    ) =>
+                                        handleKeyDown(
+                                            e,
+                                            index
+                                        )
+                                    }
+                                    className="w-14 h-14 md:w-16 md:h-16 rounded-xl border border-slate-300 text-center text-2xl font-bold outline-none focus:border-[#14B8A6] focus:ring-4 focus:ring-cyan-100 transition"
+                                />
+                            )
+                        )}
 
                     </div>
 
                     <button
                         type="submit"
-                        className="mt-8 w-full h-14 rounded-xl bg-[#1E1B4B] text-white font-semibold hover:bg-[#312E81] transition"
+                        disabled={
+                            loading
+                        }
+                        className="mt-8 w-full h-14 rounded-xl bg-[#1E1B4B] text-white font-semibold hover:bg-[#312E81] transition disabled:opacity-60 disabled:cursor-not-allowed"
                     >
-                        Verify OTP
+                        {loading
+                            ? "Verifying..."
+                            : "Verify OTP"}
                     </button>
 
                 </form>
@@ -137,24 +332,28 @@ export default function VerifyOTP() {
                 <div className="mt-8 text-center">
 
                     {timer > 0 ? (
-
                         <p className="text-slate-500">
+
                             Resend OTP in
+
                             <span className="font-bold text-[#14B8A6]">
                                 {" "}
                                 {timer}s
                             </span>
+
                         </p>
-
                     ) : (
-
                         <button
-                            onClick={resendOTP}
-                            className="font-semibold text-[#14B8A6] hover:underline"
+                            onClick={
+                                handleResend
+                            }
+                            disabled={
+                                loading
+                            }
+                            className="font-semibold text-[#14B8A6] hover:underline disabled:opacity-50"
                         >
                             Resend OTP
                         </button>
-
                     )}
 
                 </div>
@@ -164,7 +363,9 @@ export default function VerifyOTP() {
                     className="mt-8 flex justify-center items-center gap-2 text-slate-600 hover:text-[#1E1B4B]"
                 >
 
-                    <ArrowLeft size={18} />
+                    <ArrowLeft
+                        size={18}
+                    />
 
                     Back to Login
 

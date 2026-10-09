@@ -16,15 +16,27 @@ export default function Landing() {
         <div className="bg-slate-50 text-slate-900">
             <Navbar />
 
-            <Hero />
+            {/* Home */}
+            <section id="home" className="scroll-mt-20">
+                <Hero />
+            </section>
 
             <Trusted />
 
-            <Features />
+            {/* Features */}
+            <section id="features" className="scroll-mt-20">
+                <Features />
+            </section>
 
-            <DashboardShowcase />
+            {/* Demo */}
+            <section id="demo" className="scroll-mt-20">
+                <DashboardShowcase />
+            </section>
 
-            <HowItWorks />
+            {/* How It Works */}
+            <section id="how" className="scroll-mt-20">
+                <HowItWorks />
+            </section>
 
             <Statistics />
 
@@ -32,9 +44,15 @@ export default function Landing() {
 
             <FindTeammatesPreview />
 
-            <FAQ />
+            {/* FAQ */}
+            <section id="faq" className="scroll-mt-20">
+                <FAQ />
+            </section>
 
-            <CTA />
+            {/* Contact */}
+            <section id="contact" className="scroll-mt-20">
+                <CTA />
+            </section>
 
             <Footer />
         </div>
