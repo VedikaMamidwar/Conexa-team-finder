@@ -1,7 +1,12 @@
-import { Routes, Route } from "react-router-dom";
+
+import {
+    Routes,
+    Route,
+    Navigate,
+} from "react-router-dom";
 
 // ==================== PUBLIC ====================
-import Splash from "../pages/Splash";
+import SplashScreen from "../components/splash/SplashScreen";
 import Landing from "../pages/Landing";
 
 // ==================== AUTHENTICATION ====================
@@ -10,6 +15,10 @@ import Login from "../pages/auth/Login";
 import ForgotPassword from "../pages/auth/ForgotPassword";
 import VerifyOTP from "../pages/auth/VerifyOTP";
 import ResetPassword from "../pages/auth/ResetPassword";
+
+// ==================== ADMIN ====================
+import AdminLogin from "../pages/admin/AdminLogin";
+import AdminDashboard from "../pages/admin/AdminDashboard";
 
 // ==================== STUDENT DASHBOARD ====================
 import CompleteProfile from "../pages/dashboard/CompleteProfile";
@@ -21,36 +30,65 @@ import Achievements from "../pages/dashboard/Achievements";
 import Settings from "../pages/dashboard/Settings";
 import UpcomingEvents from "../pages/dashboard/UpcomingEvents";
 import DailyChallenge from "../pages/dashboard/DailyChallenge";
-
-// IMPORTANT:
-// Make sure the actual file name is:
-// src/pages/dashboard/Dashboard-notification.jsx
 import DashboardNotification from "../pages/dashboard/DashboardNotification";
+import RealWorldProblems from "../pages/dashboard/RealWorldProblems";
+import Analytics from "../pages/dashboard/Analytics";
+import Projects from "../pages/dashboard/Projects";
+
+// ==================== HACKATHONS & TEAMS ====================
+import HackathonHome from "../pages/dashboard/HackathonHome";
+import ExploreHackathons from "../pages/dashboard/ExploreHackathons";
+import MyHackathons from "../pages/dashboard/MyHackathons";
+import HackathonDetails from "../pages/dashboard/HackathonDetails";
+import HackathonRegistration from "../pages/dashboard/HackathonRegistration";
+import MyTeam from "../pages/dashboard/MyTeam";
+
+// ==================== AI CHATBOT ====================
+import AiChatbot from "../components/Chatbot/AIChatbot";
+
+// ==================== STAKEHOLDER ====================
+import StakeholderDashboard from "../pages/stakeholder/StakeholderDashboard";
+import CreateProblem from "../pages/stakeholder/CreateProblem";
+import MyProblems from "../pages/stakeholder/MyProblems";
 
 // ==================== CHAT ====================
 import ChatPage from "../pages/chat/ChatPage";
 
-// ==================== PROTECTED ROUTE ====================
+// ==================== ROUTE GUARD ====================
 import ProtectedRoute from "./ProtectedRoute";
 
 export default function AppRoutes() {
     return (
         <Routes>
+            {/* ==================== PUBLIC ==================== */}
 
-            {/* =====================================================
-                PUBLIC ROUTES
-            ===================================================== */}
-            <Route path="/" element={<Splash />} />
+            <Route
+                path="/"
+                element={
+                    <SplashScreen
+                        onComplete={() => {
+                            window.location.replace("/landing");
+                        }}
+                    />
+                }
+            />
 
-            <Route path="/landing" element={<Landing />} />
+            <Route
+                path="/landing"
+                element={<Landing />}
+            />
 
+            {/* ==================== AUTHENTICATION ==================== */}
 
-            {/* =====================================================
-                AUTHENTICATION
-            ===================================================== */}
-            <Route path="/register" element={<Register />} />
+            <Route
+                path="/register"
+                element={<Register />}
+            />
 
-            <Route path="/login" element={<Login />} />
+            <Route
+                path="/login"
+                element={<Login />}
+            />
 
             <Route
                 path="/forgot-password"
@@ -67,75 +105,94 @@ export default function AppRoutes() {
                 element={<ResetPassword />}
             />
 
+            {/* ==================== ADMIN ==================== */}
 
-            {/* =====================================================
-                PROFILE SETUP
-            ===================================================== */}
+            <Route
+                path="/admin/login"
+                element={<AdminLogin />}
+            />
+
+            <Route
+                path="/admin/dashboard"
+                element={<AdminDashboard />}
+            />
+
+            {/* ==================== STUDENT PROFILE ==================== */}
+
             <Route
                 path="/complete-profile"
                 element={
-                    <ProtectedRoute>
+                    <ProtectedRoute allowedAccountType="student">
                         <CompleteProfile />
                     </ProtectedRoute>
                 }
             />
 
+            {/* ==================== STUDENT DASHBOARD ==================== */}
 
-            {/* =====================================================
-                DASHBOARD
-            ===================================================== */}
             <Route
                 path="/dashboard"
                 element={
-                    <ProtectedRoute>
+                    <ProtectedRoute allowedAccountType="student">
                         <Dashboard />
                     </ProtectedRoute>
                 }
             />
 
+            {/* ==================== MY PROJECTS ==================== */}
 
-            {/* =====================================================
-                FIND TEAMMATES
-            ===================================================== */}
+            <Route
+                path="/projects"
+                element={
+                    <ProtectedRoute allowedAccountType="student">
+                        <Projects />
+                    </ProtectedRoute>
+                }
+            />
+
+
             <Route
                 path="/find-teammates"
                 element={
-                    <ProtectedRoute>
+                    <ProtectedRoute allowedAccountType="student">
                         <FindTeammates />
                     </ProtectedRoute>
                 }
             />
 
-
-            {/* =====================================================
-                BUILD TEAM
-            ===================================================== */}
             <Route
                 path="/build-team"
                 element={
-                    <ProtectedRoute>
+                    <ProtectedRoute allowedAccountType="student">
                         <BuildTeam />
                     </ProtectedRoute>
                 }
             />
 
+            {/* ==================== MY TEAMS ==================== */}
 
-            {/* =====================================================
-                CHAT
-            ===================================================== */}
+            {/* Sidebar uses /teams */}
             <Route
-                path="/chat"
+                path="/teams"
                 element={
-                    <ProtectedRoute>
-                        <ChatPage />
+                    <ProtectedRoute allowedAccountType="student">
+                        <MyTeam />
                     </ProtectedRoute>
                 }
             />
 
+            {/* Backward-compatible singular URL */}
+            <Route
+                path="/team"
+                element={
+                    <ProtectedRoute allowedAccountType="student">
+                        <MyTeam />
+                    </ProtectedRoute>
+                }
+            />
 
-            {/* =====================================================
-                PROFILE
-            ===================================================== */}
+            {/* ==================== PROFILE ==================== */}
+
             <Route
                 path="/profile"
                 element={
@@ -145,23 +202,15 @@ export default function AppRoutes() {
                 }
             />
 
-
-            {/* =====================================================
-                ACHIEVEMENTS
-            ===================================================== */}
             <Route
                 path="/achievements"
                 element={
-                    <ProtectedRoute>
+                    <ProtectedRoute allowedAccountType="student">
                         <Achievements />
                     </ProtectedRoute>
                 }
             />
 
-
-            {/* =====================================================
-                SETTINGS
-            ===================================================== */}
             <Route
                 path="/settings"
                 element={
@@ -171,36 +220,39 @@ export default function AppRoutes() {
                 }
             />
 
+            {/* ==================== ANALYTICS ==================== */}
 
-            {/* =====================================================
-                EVENTS
-            ===================================================== */}
+            <Route
+                path="/analytics"
+                element={
+                    <ProtectedRoute allowedAccountType="student">
+                        <Analytics />
+                    </ProtectedRoute>
+                }
+            />
+
+            {/* ==================== EVENTS ==================== */}
+
             <Route
                 path="/events"
                 element={
-                    <ProtectedRoute>
+                    <ProtectedRoute allowedAccountType="student">
                         <UpcomingEvents />
                     </ProtectedRoute>
                 }
             />
 
-
-            {/* =====================================================
-                DAILY CHALLENGE
-            ===================================================== */}
             <Route
                 path="/daily-challenge"
                 element={
-                    <ProtectedRoute>
+                    <ProtectedRoute allowedAccountType="student">
                         <DailyChallenge />
                     </ProtectedRoute>
                 }
             />
 
+            {/* ==================== NOTIFICATIONS ==================== */}
 
-            {/* =====================================================
-                NOTIFICATIONS
-            ===================================================== */}
             <Route
                 path="/dashboard-notification"
                 element={
@@ -210,7 +262,6 @@ export default function AppRoutes() {
                 }
             />
 
-            {/* Optional shorter URL */}
             <Route
                 path="/notifications"
                 element={
@@ -220,6 +271,149 @@ export default function AppRoutes() {
                 }
             />
 
+            {/* ==================== HACKATHONS ==================== */}
+
+            <Route
+                path="/hackathons"
+                element={
+                    <ProtectedRoute allowedAccountType="student">
+                        <HackathonHome />
+                    </ProtectedRoute>
+                }
+            />
+
+            <Route
+                path="/explore-hackathons"
+                element={
+                    <ProtectedRoute allowedAccountType="student">
+                        <ExploreHackathons />
+                    </ProtectedRoute>
+                }
+            />
+
+            <Route
+                path="/my-hackathons"
+                element={
+                    <ProtectedRoute allowedAccountType="student">
+                        <MyHackathons />
+                    </ProtectedRoute>
+                }
+            />
+
+            <Route
+                path="/hackathons/:id/register"
+                element={
+                    <ProtectedRoute allowedAccountType="student">
+                        <HackathonRegistration />
+                    </ProtectedRoute>
+                }
+            />
+
+            <Route
+                path="/hackathons/:id"
+                element={
+                    <ProtectedRoute allowedAccountType="student">
+                        <HackathonDetails />
+                    </ProtectedRoute>
+                }
+            />
+
+            {/* ==================== REAL-WORLD PROBLEMS ==================== */}
+
+            <Route
+                path="/real-world-problems"
+                element={
+                    <ProtectedRoute allowedAccountType="student">
+                        <RealWorldProblems />
+                    </ProtectedRoute>
+                }
+            />
+
+            {/* ==================== AI CHATBOT ==================== */}
+
+            <Route
+                path="/ai-chatbot"
+                element={
+                    <ProtectedRoute allowedAccountType="student">
+                        <AiChatbot />
+                    </ProtectedRoute>
+                }
+            />
+
+            {/* ==================== CHAT ==================== */}
+
+            <Route
+                path="/chat"
+                element={
+                    <ProtectedRoute>
+                        <ChatPage />
+                    </ProtectedRoute>
+                }
+            />
+
+            {/* ==================== STAKEHOLDER DASHBOARD ==================== */}
+
+            <Route
+                path="/stakeholder-dashboard"
+                element={
+                    <ProtectedRoute allowedAccountType="stakeholder">
+                        <StakeholderDashboard />
+                    </ProtectedRoute>
+                }
+            />
+
+            {/* ==================== STAKEHOLDER PROBLEMS ==================== */}
+
+            <Route
+                path="/stakeholder/create-problem"
+                element={
+                    <ProtectedRoute allowedAccountType="stakeholder">
+                        <CreateProblem />
+                    </ProtectedRoute>
+                }
+            />
+
+            <Route
+                path="/stakeholder/problems"
+                element={
+                    <ProtectedRoute allowedAccountType="stakeholder">
+                        <MyProblems />
+                    </ProtectedRoute>
+                }
+            />
+
+            {/* Existing dashboard button uses /my-problems */}
+            <Route
+                path="/my-problems"
+                element={
+                    <ProtectedRoute allowedAccountType="stakeholder">
+                        <Navigate
+                            to="/stakeholder/problems"
+                            replace
+                        />
+                    </ProtectedRoute>
+                }
+            />
+
+            {/* Old pending URL: no verification page */}
+            <Route
+                path="/stakeholder-pending"
+                element={
+                    <ProtectedRoute allowedAccountType="stakeholder">
+                        <Navigate
+                            to="/stakeholder-dashboard"
+                            replace
+                        />
+                    </ProtectedRoute>
+                }
+            />
+
+            {/* ==================== FALLBACK ==================== */}
+
+            <Route
+                path="*"
+                element={<Navigate to="/" replace />}
+            />
         </Routes>
     );
 }

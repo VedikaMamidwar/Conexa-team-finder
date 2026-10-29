@@ -3,16 +3,134 @@ import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
 import { OAuth2Client } from "google-auth-library";
 
-// =====================================================
-// GOOGLE CLIENT
-// =====================================================
-
 const googleClient = new OAuth2Client(
     process.env.GOOGLE_CLIENT_ID
 );
 
 // =====================================================
+// HELPERS
+// =====================================================
+
+const normalizeEmail = (email) =>
+    typeof email === "string"
+        ? email.trim().toLowerCase()
+        : "";
+
+const createToken = (user) => {
+    if (!process.env.JWT_SECRET) {
+        throw new Error("JWT_SECRET is missing in server .env");
+    }
+
+    return jwt.sign(
+        {
+            id: user._id.toString(),
+            accountType: user.accountType,
+        },
+        process.env.JWT_SECRET,
+        {
+            expiresIn: "7d",
+            algorithm: "HS256",
+        }
+    );
+};
+
+const getPublicUser = (user) => ({
+    id: user._id,
+    name: user.name,
+    email: user.email,
+    accountType: user.accountType || "student",
+    accountStatus: user.accountStatus || "active",
+
+    college: user.college || "",
+    branch: user.branch || "",
+    year: user.year || "",
+
+    organizationName: user.organizationName || "",
+    organizationDescription: user.organizationDescription || "",
+    website: user.website || "",
+
+    role: user.role || "MERN Developer",
+    location: user.location || "",
+    bio: user.bio || "",
+    availability: user.availability || "Available",
+    skills: user.skills || [],
+
+    github: user.github || "",
+    linkedin: user.linkedin || "",
+    portfolio: user.portfolio || "",
+
+    photo: user.photo || "",
+    resume: user.resume || {},
+    profileCompleted: Boolean(user.profileCompleted),
+});
+
+const rejectInactiveAccount = (user, res) => {
+    const status = user.accountStatus || "active";
+
+    if (status === "pending") {
+        res.status(403).json({
+            success: false,
+            requiresApproval: true,
+            message:
+                "Your stakeholder application is pending admin approval. You can log in after approval.",
+        });
+
+        return true;
+    }
+
+    if (status === "rejected") {
+        res.status(403).json({
+            success: false,
+            message:
+                user.rejectionReason ||
+                "Your application was rejected. Please contact the administrator.",
+        });
+
+        return true;
+    }
+
+    if (status !== "active") {
+        res.status(403).json({
+            success: false,
+            message:
+                "Your account is not active. Please contact the administrator.",
+        });
+
+        return true;
+    }
+
+    return false;
+};
+
+const validateRegistration = ({ name, email, password }) => {
+    if (
+        typeof name !== "string" ||
+        !name.trim() ||
+        typeof email !== "string" ||
+        !email.trim() ||
+        typeof password !== "string"
+    ) {
+        return "Name, email and password are required.";
+    }
+
+    if (name.trim().length > 100) {
+        return "Name must be 100 characters or fewer.";
+    }
+
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(normalizeEmail(email))) {
+        return "Please enter a valid email address.";
+    }
+
+    if (password.length < 8 || password.length > 128) {
+        return "Password must be between 8 and 128 characters.";
+    }
+
+    return null;
+};
+
+// =====================================================
 // REGISTER STUDENT
+// POST /api/auth/register
 // =====================================================
 
 export const register = async (req, res) => {
@@ -26,101 +144,302 @@ export const register = async (req, res) => {
             year,
         } = req.body;
 
-        if (!name || !email || !password) {
-            return res.status(400).json({
+        // Public student registration cannot create stakeholders
+        // or administrators.
+        if (
+            req.body.accountType &&
+            req.body.accountType !== "student"
+        ) {
+            return res.status(403).json({
                 success: false,
-                message: "Name, Email and Password are required",
+                message:
+                    "Please use the appropriate registration option for your account type.",
             });
         }
 
-        const existingUser = await User.findOne({ email });
-
-        if (existingUser) {
-            return res.status(400).json({
-                success: false,
-                message: "Email already registered",
-            });
-        }
-
-        const hashedPassword = await bcrypt.hash(password, 10);
-
-        const user = await User.create({
+        const validationError = validateRegistration({
             name,
             email,
-            password: hashedPassword,
-            college: college || "",
-            branch: branch || "",
-            year: year || "",
+            password,
         });
 
-        const token = jwt.sign(
-            { id: user._id },
-            process.env.JWT_SECRET,
-            { expiresIn: "7d" }
-        );
+        if (validationError) {
+            return res.status(400).json({
+                success: false,
+                message: validationError,
+            });
+        }
+
+        const normalizedEmail = normalizeEmail(email);
+
+        const existingUser = await User.findOne({
+            email: normalizedEmail,
+        });
+
+        if (existingUser) {
+            return res.status(409).json({
+                success: false,
+                message: "Email already registered. Please log in.",
+            });
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 12);
+
+        const user = await User.create({
+            name: name.trim(),
+            email: normalizedEmail,
+            password: hashedPassword,
+            accountType: "student",
+            accountStatus: "active",
+            college:
+                typeof college === "string" ? college.trim() : "",
+            branch:
+                typeof branch === "string" ? branch.trim() : "",
+            year:
+                typeof year === "string" ? year.trim() : "",
+        });
+
+        const token = createToken(user);
 
         return res.status(201).json({
             success: true,
-            message: "Registration Successful",
+            message: "Student registration successful.",
             token,
-
-            user: {
-                id: user._id,
-                name: user.name,
-                email: user.email,
-                college: user.college,
-                branch: user.branch,
-                year: user.year,
-
-                role: user.role,
-                location: user.location,
-                bio: user.bio,
-                availability: user.availability,
-                skills: user.skills,
-
-                github: user.github,
-                linkedin: user.linkedin,
-                portfolio: user.portfolio,
-
-                photo: user.photo,
-                resume: user.resume,
-
-                profileCompleted: user.profileCompleted,
-            },
+            user: getPublicUser(user),
         });
-
     } catch (error) {
-        console.error("Register Error:", error);
+        console.error("Student Registration Error:", error.message);
+
+        if (error.code === 11000) {
+            return res.status(409).json({
+                success: false,
+                message: "Email already registered. Please log in.",
+            });
+        }
 
         return res.status(500).json({
             success: false,
-            message: "Server Error",
-            error: error.message,
+            message: "Registration failed. Please try again.",
         });
     }
 };
 
 // =====================================================
-// LOGIN STUDENT
+// REGISTER STAKEHOLDER
+// POST /api/auth/register-stakeholder
+// New stakeholder accounts ALWAYS start as pending.
 // =====================================================
+
+export const registerStakeholder = async (req, res) => {
+    try {
+        const {
+            name,
+            email,
+            password,
+            organizationName,
+            organizationDescription,
+            website,
+        } = req.body;
+
+        const validationError = validateRegistration({
+            name,
+            email,
+            password,
+        });
+
+        if (validationError) {
+            return res.status(400).json({
+                success: false,
+                message: validationError,
+            });
+        }
+
+        if (
+            typeof organizationName !== "string" ||
+            !organizationName.trim()
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "Organization name is required.",
+            });
+        }
+
+        if (organizationName.trim().length > 150) {
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Organization name must be 150 characters or fewer.",
+            });
+        }
+
+        if (
+            organizationDescription !== undefined &&
+            typeof organizationDescription !== "string"
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "Organization description must be text.",
+            });
+        }
+
+        if (
+            typeof organizationDescription === "string" &&
+            organizationDescription.length > 2000
+        ) {
+            return res.status(400).json({
+                success: false,
+                message:
+                    "Organization description must be 2000 characters or fewer.",
+            });
+        }
+
+        if (
+            website !== undefined &&
+            website !== "" &&
+            typeof website !== "string"
+        ) {
+            return res.status(400).json({
+                success: false,
+                message: "Website must be a valid URL.",
+            });
+        }
+
+        let normalizedWebsite = "";
+
+        if (typeof website === "string" && website.trim()) {
+            try {
+                const parsedWebsite = new URL(website.trim());
+
+                if (
+                    !["http:", "https:"].includes(parsedWebsite.protocol)
+                ) {
+                    throw new Error("Invalid protocol");
+                }
+
+                normalizedWebsite = parsedWebsite.toString();
+            } catch {
+                return res.status(400).json({
+                    success: false,
+                    message:
+                        "Please enter a valid website URL starting with https:// or http://.",
+                });
+            }
+        }
+
+        const normalizedEmail = normalizeEmail(email);
+
+        const existingUser = await User.findOne({
+            email: normalizedEmail,
+        });
+
+        if (existingUser) {
+            return res.status(409).json({
+                success: false,
+                message: "Email already registered. Please log in.",
+            });
+        }
+
+        const hashedPassword = await bcrypt.hash(password, 12);
+
+        // Do not take accountType or accountStatus from the client.
+        // Every public stakeholder application must start pending.
+        const user = await User.create({
+            name: name.trim(),
+            email: normalizedEmail,
+            password: hashedPassword,
+            accountType: "stakeholder",
+            accountStatus: "pending",
+            organizationName: organizationName.trim(),
+            organizationDescription:
+                typeof organizationDescription === "string"
+                    ? organizationDescription.trim()
+                    : "",
+            website: normalizedWebsite,
+        });
+
+        // Do not issue a token or log in a pending stakeholder.
+        return res.status(201).json({
+            success: true,
+            requiresApproval: true,
+            message:
+                "Your stakeholder application has been submitted successfully. You can log in after an administrator approves your account.",
+            application: {
+                id: user._id,
+                name: user.name,
+                email: user.email,
+                accountType: user.accountType,
+                accountStatus: user.accountStatus,
+                organizationName: user.organizationName,
+            },
+        });
+    } catch (error) {
+        console.error("Stakeholder Registration Error:", error.message);
+
+        if (error.code === 11000) {
+            return res.status(409).json({
+                success: false,
+                message: "Email already registered. Please log in.",
+            });
+        }
+
+        return res.status(500).json({
+            success: false,
+            message:
+                "Stakeholder registration failed. Please try again.",
+        });
+    }
+};
+
+// =====================================================
+// LOGIN
+// POST /api/auth/login
+// =====================================================
+
 
 export const login = async (req, res) => {
     try {
         const { email, password } = req.body;
+        const normalizedEmail = normalizeEmail(email);
 
-        if (!email || !password) {
+        if (
+            !normalizedEmail ||
+            typeof password !== "string" ||
+            !password
+        ) {
             return res.status(400).json({
                 success: false,
-                message: "Email and password are required",
+                message: "Email and password are required.",
             });
         }
 
-        const user = await User.findOne({ email });
+        const user = await User.findOne({
+            email: normalizedEmail,
+        }).select("+password");
+
+        // Temporary diagnostic logs; never log passwords or hashes.
+        console.log("[LOGIN DEBUG]", {
+            emailProvided: Boolean(normalizedEmail),
+            userFound: Boolean(user),
+            accountType: user?.accountType ?? null,
+            accountStatus: user?.accountStatus ?? null,
+            passwordHashPresent: Boolean(user?.password),
+            passwordHashLooksBcrypt:
+                typeof user?.password === "string" &&
+                /^\$2[aby]\$\d{2}\$/.test(user.password),
+        });
 
         if (!user) {
-            return res.status(400).json({
+            return res.status(401).json({
                 success: false,
-                message: "Invalid Email or Password",
+                message: "Invalid email or password.",
+            });
+        }
+
+        if (!user.password) {
+            return res.status(401).json({
+                success: false,
+                message:
+                    "This account has no password configured. Please use the appropriate account recovery option.",
             });
         }
 
@@ -129,82 +448,70 @@ export const login = async (req, res) => {
             user.password
         );
 
+        console.log("[LOGIN DEBUG] Password matched:", isMatch);
+
         if (!isMatch) {
-            return res.status(400).json({
+            return res.status(401).json({
                 success: false,
-                message: "Invalid Email or Password",
+                message: "Invalid email or password.",
             });
         }
 
-        const token = jwt.sign(
-            { id: user._id },
-            process.env.JWT_SECRET,
-            { expiresIn: "7d" }
-        );
+        if (rejectInactiveAccount(user, res)) {
+            return;
+        }
+
+        if (!["student", "stakeholder"].includes(user.accountType)) {
+            return res.status(403).json({
+                success: false,
+                message: "Account type is invalid. Please contact support.",
+            });
+        }
+
+        const token = createToken(user);
 
         return res.status(200).json({
             success: true,
-            message: "Login Successful",
+            message: "Login successful.",
             token,
-
-            user: {
-                id: user._id,
-                name: user.name,
-                email: user.email,
-                college: user.college,
-                branch: user.branch,
-                year: user.year,
-
-                role: user.role,
-                location: user.location,
-                bio: user.bio,
-                availability: user.availability,
-                skills: user.skills,
-
-                github: user.github,
-                linkedin: user.linkedin,
-                portfolio: user.portfolio,
-
-                photo: user.photo,
-                resume: user.resume,
-
-                profileCompleted: user.profileCompleted,
-            },
+            user: getPublicUser(user),
         });
-
     } catch (error) {
-        console.error("Login Error:", error);
+        console.error("Login Error:", error.message);
 
         return res.status(500).json({
             success: false,
-            message: "Server Error",
-            error: error.message,
+            message: "Login failed. Please try again.",
         });
     }
 };
 
+
 // =====================================================
-// GOOGLE LOGIN
+// GOOGLE LOGIN — EXISTING ACCOUNTS ONLY
+// POST /api/auth/google
 // =====================================================
 
 export const googleLogin = async (req, res) => {
     try {
         const { credential } = req.body;
 
-        // ---------------------------------------------
-        // Check Google credential
-        // ---------------------------------------------
-
-        if (!credential) {
+        if (
+            typeof credential !== "string" ||
+            !credential
+        ) {
             return res.status(400).json({
                 success: false,
-                message: "Google credential is required",
+                message: "Google credential is required.",
             });
         }
 
-        // ---------------------------------------------
-        // Verify Google credential
-        // ---------------------------------------------
+        if (!process.env.GOOGLE_CLIENT_ID) {
+            return res.status(500).json({
+                success: false,
+                message: "Google login is not configured.",
+            });
+        }
 
         const ticket = await googleClient.verifyIdToken({
             idToken: credential,
@@ -213,134 +520,71 @@ export const googleLogin = async (req, res) => {
 
         const payload = ticket.getPayload();
 
-        if (!payload) {
-            return res.status(400).json({
+        if (
+            !payload ||
+            !payload.email ||
+            !payload.email_verified
+        ) {
+            return res.status(401).json({
                 success: false,
-                message: "Invalid Google credential",
+                message: "Google email could not be verified.",
             });
         }
 
-        // ---------------------------------------------
-        // Get Google user information
-        // ---------------------------------------------
+        const email = normalizeEmail(payload.email);
 
-        const {
-            sub: googleId,
-            email,
-            name,
-            picture,
-            email_verified,
-        } = payload;
-
-        // ---------------------------------------------
-        // Verify Google email
-        // ---------------------------------------------
-
-        if (!email || !email_verified) {
-            return res.status(400).json({
-                success: false,
-                message: "Google email is not verified",
-            });
-        }
-
-        // ---------------------------------------------
-        // Find existing Conexa user
-        // ---------------------------------------------
-
-        let user = await User.findOne({ email });
-
-        // ---------------------------------------------
-        // Create new user if not found
-        // ---------------------------------------------
+        // Google login never creates new accounts.
+        const user = await User.findOne({ email });
 
         if (!user) {
-            const randomPassword = await bcrypt.hash(
-                `google_${googleId}_${Date.now()}`,
-                10
-            );
-
-            user = await User.create({
-                name: name || "Google User",
-                email,
-                password: randomPassword,
-
-                photo: picture || "",
-
-                college: "",
-                branch: "",
-                year: "",
-
-                profileCompleted: false,
+            return res.status(403).json({
+                success: false,
+                requiresRegistration: true,
+                message:
+                    "No account found. Please register first.",
             });
         }
 
-        // ---------------------------------------------
-        // Update Google profile picture
-        // ---------------------------------------------
+        if (rejectInactiveAccount(user, res)) {
+            return;
+        }
 
-        else if (picture && !user.photo) {
-            user.photo = picture;
+        if (
+            !["student", "stakeholder"].includes(user.accountType)
+        ) {
+            return res.status(403).json({
+                success: false,
+                message:
+                    "Account type is invalid. Please contact support.",
+            });
+        }
+
+        if (payload.picture && !user.photo) {
+            user.photo = payload.picture;
             await user.save();
         }
 
-        // ---------------------------------------------
-        // Create Conexa JWT
-        // ---------------------------------------------
-
-        const token = jwt.sign(
-            { id: user._id },
-            process.env.JWT_SECRET,
-            { expiresIn: "7d" }
-        );
-
-        // ---------------------------------------------
-        // Send response
-        // ---------------------------------------------
+        const token = createToken(user);
 
         return res.status(200).json({
             success: true,
-            message: "Google Login Successful",
+            message: "Google login successful.",
             token,
-
-            user: {
-                id: user._id,
-                name: user.name,
-                email: user.email,
-
-                college: user.college,
-                branch: user.branch,
-                year: user.year,
-
-                role: user.role,
-                location: user.location,
-                bio: user.bio,
-                availability: user.availability,
-                skills: user.skills,
-
-                github: user.github,
-                linkedin: user.linkedin,
-                portfolio: user.portfolio,
-
-                photo: user.photo,
-                resume: user.resume,
-
-                profileCompleted: user.profileCompleted,
-            },
+            user: getPublicUser(user),
         });
-
     } catch (error) {
-        console.error("Google Login Error:", error);
+        console.error("Google Login Error:", error.message);
 
-        return res.status(500).json({
+        return res.status(401).json({
             success: false,
-            message: "Google login failed",
-            error: error.message,
+            message: "Google login failed. Please try again.",
         });
     }
 };
 
 // =====================================================
 // GET LOGGED-IN USER PROFILE
+// GET /api/auth/profile
 // =====================================================
 
 export const getProfile = async (req, res) => {
@@ -351,28 +595,32 @@ export const getProfile = async (req, res) => {
         if (!user) {
             return res.status(404).json({
                 success: false,
-                message: "User not found",
+                message: "User not found.",
             });
+        }
+
+        // Also prevent suspended/rejected users from using an old token.
+        if (rejectInactiveAccount(user, res)) {
+            return;
         }
 
         return res.status(200).json({
             success: true,
-            user,
+            user: getPublicUser(user),
         });
-
     } catch (error) {
-        console.error("Get Profile Error:", error);
+        console.error("Get Profile Error:", error.message);
 
         return res.status(500).json({
             success: false,
-            message: "Server Error",
-            error: error.message,
+            message: "Unable to fetch profile.",
         });
     }
 };
 
 // =====================================================
 // UPDATE PROFILE
+// PUT /api/auth/profile
 // =====================================================
 
 export const updateProfile = async (req, res) => {
@@ -395,32 +643,27 @@ export const updateProfile = async (req, res) => {
             portfolio,
             photo,
             resume,
+            organizationName,
+            organizationDescription,
+            website,
         } = req.body;
 
-        // ---------------------------------------------
-        // Check duplicate email
-        // ---------------------------------------------
+        const currentUser = await User.findById(userId);
 
-        if (email) {
-            const existingUser = await User.findOne({
-                email,
-                _id: { $ne: userId },
+        if (!currentUser) {
+            return res.status(404).json({
+                success: false,
+                message: "User not found.",
             });
-
-            if (existingUser) {
-                return res.status(400).json({
-                    success: false,
-                    message:
-                        "Email already registered by another user",
-                });
-            }
         }
 
-        // ---------------------------------------------
-        // Prepare update data
-        // ---------------------------------------------
+        if (rejectInactiveAccount(currentUser, res)) {
+            return;
+        }
 
-        const updateData = {
+        const updateData = {};
+
+        const allowedFields = {
             name,
             email,
             college,
@@ -430,65 +673,201 @@ export const updateProfile = async (req, res) => {
             location,
             bio,
             availability,
-
-            skills: Array.isArray(skills)
-                ? skills
-                : [],
-
             github,
             linkedin,
             portfolio,
             photo,
             resume,
-
-            profileCompleted: true,
         };
 
-        // Remove undefined values
-        Object.keys(updateData).forEach((key) => {
-            if (updateData[key] === undefined) {
-                delete updateData[key];
+        for (const [key, value] of Object.entries(allowedFields)) {
+            if (value !== undefined) {
+                updateData[key] = value;
             }
-        });
+        }
 
-        // ---------------------------------------------
-        // Update user
-        // ---------------------------------------------
-
-        const updatedUser =
-            await User.findByIdAndUpdate(
-                userId,
-                updateData,
-                {
-                    new: true,
-                    runValidators: true,
+        // Only stakeholder users may update their organization details.
+        // Account type/status are never editable here.
+        if (currentUser.accountType === "stakeholder") {
+            if (organizationName !== undefined) {
+                if (
+                    typeof organizationName !== "string" ||
+                    !organizationName.trim() ||
+                    organizationName.trim().length > 150
+                ) {
+                    return res.status(400).json({
+                        success: false,
+                        message: "Please enter a valid organization name.",
+                    });
                 }
-            ).select("-password");
+
+                updateData.organizationName = organizationName.trim();
+            }
+
+            if (organizationDescription !== undefined) {
+                if (
+                    typeof organizationDescription !== "string" ||
+                    organizationDescription.length > 2000
+                ) {
+                    return res.status(400).json({
+                        success: false,
+                        message:
+                            "Organization description must be text of at most 2000 characters.",
+                    });
+                }
+
+                updateData.organizationDescription =
+                    organizationDescription.trim();
+            }
+
+            if (website !== undefined) {
+                if (typeof website !== "string") {
+                    return res.status(400).json({
+                        success: false,
+                        message: "Invalid website URL.",
+                    });
+                }
+
+                if (website.trim()) {
+                    try {
+                        const parsedWebsite = new URL(website.trim());
+
+                        if (
+                            !["http:", "https:"].includes(
+                                parsedWebsite.protocol
+                            )
+                        ) {
+                            throw new Error("Invalid protocol");
+                        }
+
+                        updateData.website = parsedWebsite.toString();
+                    } catch {
+                        return res.status(400).json({
+                            success: false,
+                            message: "Please enter a valid website URL.",
+                        });
+                    }
+                } else {
+                    updateData.website = "";
+                }
+            }
+        }
+
+        if (updateData.name !== undefined) {
+            if (
+                typeof updateData.name !== "string" ||
+                !updateData.name.trim() ||
+                updateData.name.trim().length > 100
+            ) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Please enter a valid name.",
+                });
+            }
+
+            updateData.name = updateData.name.trim();
+        }
+
+        if (updateData.email !== undefined) {
+            if (typeof updateData.email !== "string") {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid email.",
+                });
+            }
+
+            updateData.email = normalizeEmail(updateData.email);
+
+            if (
+                !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(updateData.email)
+            ) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Please enter a valid email.",
+                });
+            }
+
+            const existingUser = await User.findOne({
+                email: updateData.email,
+                _id: { $ne: userId },
+            });
+
+            if (existingUser) {
+                return res.status(409).json({
+                    success: false,
+                    message: "Email already used by another account.",
+                });
+            }
+        }
+
+        if (updateData.skills !== undefined) {
+            if (!Array.isArray(updateData.skills)) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Skills must be a list.",
+                });
+            }
+
+            updateData.skills = updateData.skills
+                .filter((skill) => typeof skill === "string")
+                .map((skill) => skill.trim())
+                .filter(Boolean);
+        }
+
+        if (updateData.availability !== undefined) {
+            const allowedAvailability = [
+                "Available",
+                "Looking for Team",
+                "Busy",
+            ];
+
+            if (
+                !allowedAvailability.includes(updateData.availability)
+            ) {
+                return res.status(400).json({
+                    success: false,
+                    message: "Invalid availability value.",
+                });
+            }
+        }
+
+        updateData.profileCompleted = true;
+
+        const updatedUser = await User.findByIdAndUpdate(
+            userId,
+            updateData,
+            {
+                new: true,
+                runValidators: true,
+            }
+        ).select("-password");
 
         if (!updatedUser) {
             return res.status(404).json({
                 success: false,
-                message: "User not found",
+                message: "User not found.",
             });
         }
 
-        // ---------------------------------------------
-        // Response
-        // ---------------------------------------------
-
         return res.status(200).json({
             success: true,
-            message: "Profile updated successfully",
-            user: updatedUser,
+            message: "Profile updated successfully.",
+            user: getPublicUser(updatedUser),
         });
-
     } catch (error) {
-        console.error("Update Profile Error:", error);
+        console.error("Update Profile Error:", error.message);
+
+        if (error.code === 11000) {
+            return res.status(409).json({
+                success: false,
+                message: "Email already used by another account.",
+            });
+        }
 
         return res.status(500).json({
             success: false,
-            message: "Failed to update profile",
-            error: error.message,
+            message: "Failed to update profile.",
         });
     }
 };
+

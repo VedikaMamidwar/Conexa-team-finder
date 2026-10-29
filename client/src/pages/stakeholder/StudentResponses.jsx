@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from "react";
+
+import React, { useCallback, useEffect, useState } from "react";
 import axios from "axios";
 import {
     ArrowLeft,
@@ -11,10 +12,27 @@ import {
     Clock3,
     ExternalLink,
     BriefcaseBusiness,
+    RefreshCw,
 } from "lucide-react";
 import { Link, useParams } from "react-router-dom";
 
-const API_URL = "http://localhost:5000/api";
+const API_URL = (
+    import.meta.env.VITE_API_URL || "http://localhost:5000/api"
+).trim().replace(/\/+$/, "");
+
+const getAuthConfig = () => {
+    const token = localStorage.getItem("token");
+
+    if (!token) {
+        throw new Error("Your session has expired. Please log in again.");
+    }
+
+    return {
+        headers: {
+            Authorization: `Bearer ${token}`,
+        },
+    };
+};
 
 export default function StudentResponses() {
     const { problemId } = useParams();
@@ -24,98 +42,117 @@ export default function StudentResponses() {
     const [loading, setLoading] = useState(true);
     const [actionLoading, setActionLoading] = useState(null);
     const [error, setError] = useState("");
+    const [notice, setNotice] = useState("");
 
-    useEffect(() => {
-        fetchResponses();
-    }, [problemId]);
+    const fetchResponses = useCallback(async () => {
+        if (!problemId) {
+            setError("Problem ID is missing from the URL.");
+            setLoading(false);
+            return;
+        }
 
-    const fetchResponses = async () => {
         try {
             setLoading(true);
             setError("");
-
-            const token = localStorage.getItem("token");
+            setNotice("");
 
             const response = await axios.get(
-                `${API_URL}/problem-interests/problem/${problemId}`,
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                }
+                `${API_URL}/problems/${problemId}/engagement`,
+                getAuthConfig()
             );
 
-            const data = response.data;
+            const data = response.data || {};
 
-            setResponses(data?.responses || []);
+            // Support the common response shapes returned by the backend.
+            const problemData =
+                data.problem ||
+                data.data?.problem ||
+                (data._id ? data : null);
 
-            if (data?.responses?.length > 0) {
-                setProblem(
-                    data.responses[0]?.problemId
-                );
-            }
+            const contactRequests =
+                data.responses ||
+                data.contactRequests ||
+                data.data?.responses ||
+                data.data?.contactRequests ||
+                problemData?.contactRequests ||
+                [];
+
+            setProblem(problemData);
+            setResponses(
+                Array.isArray(contactRequests) ? contactRequests : []
+            );
         } catch (err) {
             console.error(
-                "Fetch responses error:",
-                err
+                "Fetch student responses error:",
+                err.response?.data || err.message
             );
 
-            setError(
-                err.response?.data?.message ||
-                "Failed to load student responses."
-            );
+            if (err.response?.status === 401) {
+                setError("Your session has expired. Please log in again.");
+            } else if (err.response?.status === 403) {
+                setError(
+                    "You are not authorized to view responses for this problem."
+                );
+            } else if (err.response?.status === 404) {
+                setError(
+                    "Problem or response endpoint not found. Please check the backend routes."
+                );
+            } else {
+                setError(
+                    err.response?.data?.message ||
+                    err.message ||
+                    "Failed to load student responses."
+                );
+            }
         } finally {
             setLoading(false);
         }
-    };
+    }, [problemId]);
+
+    useEffect(() => {
+        fetchResponses();
+    }, [fetchResponses]);
 
     // =====================================================
     // ACCEPT / REJECT
     // =====================================================
 
-    const updateStatus = async (
-        interestId,
-        status
-    ) => {
+    const updateStatus = async (requestId, status) => {
+        if (!requestId || actionLoading) return;
+
         try {
-            setActionLoading(interestId);
+            setActionLoading(requestId);
+            setError("");
+            setNotice("");
 
-            const token =
-                localStorage.getItem("token");
-
-            const response = await axios.patch(
-                `${API_URL}/problem-interests/${interestId}/status`,
-                {
-                    status,
-                },
-                {
-                    headers: {
-                        Authorization: `Bearer ${token}`,
-                    },
-                }
+            await axios.patch(
+                `${API_URL}/problems/${problemId}/contact-requests/${requestId}`,
+                { status },
+                getAuthConfig()
             );
 
-            const updated =
-                response.data?.interest;
+            setResponses((previous) =>
+                previous.map((item) =>
+                    String(item._id) === String(requestId)
+                        ? { ...item, status }
+                        : item
+                )
+            );
 
-            if (updated) {
-                setResponses((prev) =>
-                    prev.map((item) =>
-                        item._id === interestId
-                            ? updated
-                            : item
-                    )
-                );
-            }
+            setNotice(
+                status === "accepted"
+                    ? "Student response accepted successfully."
+                    : "Student response rejected successfully."
+            );
         } catch (err) {
             console.error(
-                "Update response error:",
-                err
+                "Update student response error:",
+                err.response?.data || err.message
             );
 
-            alert(
+            setError(
                 err.response?.data?.message ||
-                "Failed to update response."
+                "Failed to update the response. Please try again."
             );
         } finally {
             setActionLoading(null);
@@ -128,424 +165,349 @@ export default function StudentResponses() {
 
     if (loading) {
         return (
-            <div className="min-h-screen bg-slate-50 flex items-center justify-center">
-                <div className="w-10 h-10 border-4 border-slate-200 border-t-[#14B8A6] rounded-full animate-spin" />
+            <div className="flex min-h-screen items-center justify-center bg-slate-50">
+                <div className="h-10 w-10 animate-spin rounded-full border-4 border-slate-200 border-t-[#14B8A6]" />
             </div>
         );
     }
 
     return (
         <div className="min-h-screen bg-slate-50">
-
-            {/* =================================================
-                HEADER
-            ================================================= */}
-
-            <header className="bg-white border-b border-slate-200">
-
-                <div className="max-w-7xl mx-auto px-6 py-5">
-
+            {/* HEADER */}
+            <header className="border-b border-slate-200 bg-white">
+                <div className="mx-auto max-w-7xl px-6 py-5">
                     <Link
                         to="/stakeholder/problems"
-                        className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 hover:text-[#14B8A6] transition"
+                        className="inline-flex items-center gap-2 text-sm font-semibold text-slate-500 transition hover:text-[#14B8A6]"
                     >
-                        <ArrowLeft className="w-4 h-4" />
+                        <ArrowLeft className="h-4 w-4" />
                         Back to My Problems
                     </Link>
-
                 </div>
-
             </header>
 
+            {/* MAIN */}
+            <main className="mx-auto max-w-7xl px-6 py-8">
+                <div className="mb-8 flex flex-col justify-between gap-4 sm:flex-row sm:items-end">
+                    <div>
+                        <div className="mb-2 flex items-center gap-2 text-sm font-bold text-[#14B8A6]">
+                            <BriefcaseBusiness className="h-4 w-4" />
+                            STUDENT RESPONSES
+                        </div>
 
-            {/* =================================================
-                MAIN
-            ================================================= */}
+                        <h1 className="text-3xl font-black text-[#1E1B4B]">
+                            Interested Students
+                        </h1>
 
-            <main className="max-w-7xl mx-auto px-6 py-8">
-
-                {/* TITLE */}
-
-                <div className="mb-8">
-
-                    <div className="flex items-center gap-2 text-[#14B8A6] text-sm font-bold mb-2">
-                        <BriefcaseBusiness className="w-4 h-4" />
-                        STUDENT RESPONSES
+                        {problem?.title && (
+                            <p className="mt-2 text-slate-500">
+                                Responses for{" "}
+                                <span className="font-semibold text-[#1E1B4B]">
+                                    {problem.title}
+                                </span>
+                            </p>
+                        )}
                     </div>
 
-                    <h1 className="text-3xl font-black text-[#1E1B4B]">
-                        Interested Students
-                    </h1>
-
-                    {problem?.title && (
-                        <p className="text-slate-500 mt-2">
-                            Responses for{" "}
-                            <span className="font-semibold text-[#1E1B4B]">
-                                {problem.title}
-                            </span>
-                        </p>
-                    )}
-
+                    <button
+                        type="button"
+                        onClick={fetchResponses}
+                        className="inline-flex items-center justify-center gap-2 self-start rounded-xl border border-slate-300 bg-white px-4 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-slate-100 sm:self-auto"
+                    >
+                        <RefreshCw className="h-4 w-4" />
+                        Refresh
+                    </button>
                 </div>
 
-
                 {/* ERROR */}
-
                 {error && (
-                    <div className="mb-6 bg-red-50 border border-red-200 text-red-600 rounded-2xl p-5">
-                        {error}
+                    <div
+                        role="alert"
+                        className="mb-6 flex items-start justify-between gap-4 rounded-2xl border border-red-200 bg-red-50 p-5 text-red-600"
+                    >
+                        <p>{error}</p>
+
+                        <button
+                            type="button"
+                            onClick={() => setError("")}
+                            className="shrink-0 font-bold"
+                            aria-label="Dismiss error"
+                        >
+                            <XCircle className="h-5 w-5" />
+                        </button>
                     </div>
                 )}
 
+                {/* SUCCESS */}
+                {notice && (
+                    <div
+                        role="status"
+                        className="mb-6 rounded-2xl border border-teal-200 bg-teal-50 p-4 text-sm font-semibold text-teal-800"
+                    >
+                        {notice}
+                    </div>
+                )}
 
                 {/* EMPTY */}
-
-                {!error &&
-                    responses.length === 0 && (
-                        <div className="bg-white border border-slate-200 rounded-3xl p-12 text-center">
-
-                            <div className="w-16 h-16 mx-auto rounded-2xl bg-teal-50 flex items-center justify-center">
-                                <User className="w-7 h-7 text-[#14B8A6]" />
-                            </div>
-
-                            <h2 className="text-xl font-black text-[#1E1B4B] mt-5">
-                                No Student Responses Yet
-                            </h2>
-
-                            <p className="text-slate-500 mt-2">
-                                Students who show interest
-                                in this problem will appear
-                                here.
-                            </p>
-
+                {!error && responses.length === 0 && (
+                    <div className="rounded-3xl border border-slate-200 bg-white p-12 text-center">
+                        <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-2xl bg-teal-50">
+                            <User className="h-7 w-7 text-[#14B8A6]" />
                         </div>
-                    )}
 
+                        <h2 className="mt-5 text-xl font-black text-[#1E1B4B]">
+                            No Student Responses Yet
+                        </h2>
+
+                        <p className="mt-2 text-slate-500">
+                            Students who contact you about this problem will
+                            appear here.
+                        </p>
+                    </div>
+                )}
 
                 {/* RESPONSE LIST */}
-
                 <div className="grid gap-5">
-
                     {responses.map((response) => {
-
+                        // The backend stores the student in studentId.
                         const student =
-                            response.studentId || {};
+                            response.studentId &&
+                                typeof response.studentId === "object"
+                                ? response.studentId
+                                : response.student &&
+                                    typeof response.student === "object"
+                                    ? response.student
+                                    : {};
 
-                        const isLoading =
-                            actionLoading ===
-                            response._id;
+                        const isLoading = actionLoading === response._id;
 
                         return (
                             <div
                                 key={response._id}
-                                className="bg-white border border-slate-200 rounded-3xl p-6 shadow-sm"
+                                className="rounded-3xl border border-slate-200 bg-white p-6 shadow-sm"
                             >
-
                                 {/* STUDENT HEADER */}
-
-                                <div className="flex flex-col md:flex-row md:items-start justify-between gap-5">
-
+                                <div className="flex flex-col justify-between gap-5 md:flex-row md:items-start">
                                     <div className="flex gap-4">
-
-                                        <div className="w-14 h-14 rounded-2xl bg-[#1E1B4B] flex items-center justify-center overflow-hidden shrink-0">
-
+                                        <div className="flex h-14 w-14 shrink-0 items-center justify-center overflow-hidden rounded-2xl bg-[#1E1B4B]">
                                             {student.photo ? (
                                                 <img
-                                                    src={
-                                                        student.photo
-                                                    }
-                                                    alt={
-                                                        student.name
-                                                    }
-                                                    className="w-full h-full object-cover"
+                                                    src={student.photo}
+                                                    alt={student.name || "Student"}
+                                                    className="h-full w-full object-cover"
                                                 />
                                             ) : (
                                                 <span className="text-xl font-black text-white">
                                                     {student.name
-                                                        ?.charAt(
-                                                            0
-                                                        )
-                                                        ?.toUpperCase() ||
-                                                        "S"}
+                                                        ?.charAt(0)
+                                                        ?.toUpperCase() || "S"}
                                                 </span>
                                             )}
-
                                         </div>
 
                                         <div>
-
                                             <h2 className="text-xl font-black text-[#1E1B4B]">
-                                                {student.name ||
-                                                    "Student"}
+                                                {student.name || "Student"}
                                             </h2>
 
-                                            <div className="flex items-center gap-2 text-sm text-slate-500 mt-1">
-                                                <Mail className="w-4 h-4" />
-                                                {student.email ||
-                                                    "No email"}
+                                            <div className="mt-1 flex items-center gap-2 text-sm text-slate-500">
+                                                <Mail className="h-4 w-4" />
+                                                {student.email || "No email"}
                                             </div>
 
+                                            {response.createdAt && (
+                                                <p className="mt-2 text-xs text-slate-400">
+                                                    Responded{" "}
+                                                    {new Date(
+                                                        response.createdAt
+                                                    ).toLocaleDateString()}
+                                                </p>
+                                            )}
                                         </div>
-
                                     </div>
 
-
-                                    {/* STATUS */}
-
-                                    <StatusBadge
-                                        status={
-                                            response.status
-                                        }
-                                    />
-
+                                    <StatusBadge status={response.status} />
                                 </div>
-
 
                                 {/* STUDENT DETAILS */}
-
-                                <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 mt-6">
-
+                                <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
                                     <InfoBox
-                                        icon={
-                                            GraduationCap
-                                        }
+                                        icon={GraduationCap}
                                         label="College"
-                                        value={
-                                            student.college ||
-                                            "Not provided"
-                                        }
+                                        value={student.college || "Not provided"}
                                     />
 
                                     <InfoBox
-                                        icon={
-                                            GraduationCap
-                                        }
+                                        icon={GraduationCap}
                                         label="Branch / Year"
-                                        value={`${student.branch || "N/A"} • ${student.year ||
-                                            "N/A"
-                                            }`}
+                                        value={`${student.branch || "N/A"} • ${student.year || "N/A"}`}
                                     />
 
                                     <InfoBox
-                                        icon={
-                                            BriefcaseBusiness
-                                        }
+                                        icon={BriefcaseBusiness}
                                         label="Role"
-                                        value={
-                                            student.role ||
-                                            "Not specified"
-                                        }
+                                        value={student.role || "Not specified"}
                                     />
-
                                 </div>
 
-
                                 {/* SKILLS */}
-
-                                {student.skills?.length >
-                                    0 && (
+                                {Array.isArray(student.skills) &&
+                                    student.skills.length > 0 && (
                                         <div className="mt-6">
-
-                                            <div className="flex items-center gap-2 text-sm font-bold text-[#1E1B4B] mb-3">
-                                                <Code2 className="w-4 h-4 text-[#14B8A6]" />
+                                            <div className="mb-3 flex items-center gap-2 text-sm font-bold text-[#1E1B4B]">
+                                                <Code2 className="h-4 w-4 text-[#14B8A6]" />
                                                 Skills
                                             </div>
 
                                             <div className="flex flex-wrap gap-2">
-
                                                 {student.skills.map(
-                                                    (
-                                                        skill,
-                                                        index
-                                                    ) => (
+                                                    (skill, index) => (
                                                         <span
                                                             key={`${skill}-${index}`}
-                                                            className="px-3 py-1.5 rounded-lg bg-teal-50 text-teal-700 text-xs font-semibold"
+                                                            className="rounded-lg bg-teal-50 px-3 py-1.5 text-xs font-semibold text-teal-700"
                                                         >
-                                                            {
-                                                                skill
-                                                            }
+                                                            {skill}
                                                         </span>
                                                     )
                                                 )}
-
                                             </div>
-
                                         </div>
                                     )}
 
-
                                 {/* STUDENT MESSAGE */}
-
                                 {response.message && (
-                                    <div className="mt-6 p-4 rounded-2xl bg-slate-50">
-
-                                        <p className="text-xs font-bold text-[#14B8A6] uppercase mb-2">
+                                    <div className="mt-6 rounded-2xl bg-slate-50 p-4">
+                                        <p className="mb-2 text-xs font-bold uppercase text-[#14B8A6]">
                                             Student Message
                                         </p>
 
-                                        <p className="text-sm text-slate-600 leading-relaxed">
-                                            {
-                                                response.message
-                                            }
+                                        <p className="whitespace-pre-wrap text-sm leading-relaxed text-slate-600">
+                                            {response.message}
                                         </p>
-
                                     </div>
                                 )}
 
-
                                 {/* ACTIONS */}
+                                <div className="mt-6 flex flex-wrap items-center gap-3 border-t border-slate-100 pt-5">
+                                    {response.status === "pending" && (
+                                        <>
+                                            <button
+                                                type="button"
+                                                disabled={isLoading}
+                                                onClick={() =>
+                                                    updateStatus(
+                                                        response._id,
+                                                        "accepted"
+                                                    )
+                                                }
+                                                className="flex items-center gap-2 rounded-xl bg-[#14B8A6] px-5 py-2.5 font-bold text-white transition hover:bg-[#0d9488] disabled:cursor-not-allowed disabled:opacity-50"
+                                            >
+                                                <CheckCircle className="h-4 w-4" />
+                                                {isLoading
+                                                    ? "Updating..."
+                                                    : "Accept"}
+                                            </button>
 
-                                <div className="flex flex-wrap items-center gap-3 mt-6 pt-5 border-t border-slate-100">
-
-                                    {response.status ===
-                                        "pending" && (
-                                            <>
-                                                <button
-                                                    type="button"
-                                                    disabled={
-                                                        isLoading
-                                                    }
-                                                    onClick={() =>
-                                                        updateStatus(
-                                                            response._id,
-                                                            "accepted"
-                                                        )
-                                                    }
-                                                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#14B8A6] text-white font-bold hover:bg-[#0d9488] transition disabled:opacity-50"
-                                                >
-                                                    <CheckCircle className="w-4 h-4" />
-
-                                                    {isLoading
-                                                        ? "Updating..."
-                                                        : "Accept"}
-                                                </button>
-
-                                                <button
-                                                    type="button"
-                                                    disabled={
-                                                        isLoading
-                                                    }
-                                                    onClick={() =>
-                                                        updateStatus(
-                                                            response._id,
-                                                            "rejected"
-                                                        )
-                                                    }
-                                                    className="flex items-center gap-2 px-5 py-2.5 rounded-xl bg-red-50 text-red-600 font-bold hover:bg-red-100 transition disabled:opacity-50"
-                                                >
-                                                    <XCircle className="w-4 h-4" />
-                                                    Reject
-                                                </button>
-                                            </>
-                                        )}
-
+                                            <button
+                                                type="button"
+                                                disabled={isLoading}
+                                                onClick={() =>
+                                                    updateStatus(
+                                                        response._id,
+                                                        "rejected"
+                                                    )
+                                                }
+                                                className="flex items-center gap-2 rounded-xl bg-red-50 px-5 py-2.5 font-bold text-red-600 transition hover:bg-red-100 disabled:cursor-not-allowed disabled:opacity-50"
+                                            >
+                                                <XCircle className="h-4 w-4" />
+                                                {isLoading
+                                                    ? "Updating..."
+                                                    : "Reject"}
+                                            </button>
+                                        </>
+                                    )}
 
                                     {student.email && (
                                         <a
                                             href={`mailto:${student.email}`}
-                                            className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-slate-300 text-slate-600 font-semibold hover:bg-slate-50 transition"
+                                            className="flex items-center gap-2 rounded-xl border border-slate-300 px-5 py-2.5 font-semibold text-slate-600 transition hover:bg-slate-50"
                                         >
-                                            <Mail className="w-4 h-4" />
+                                            <Mail className="h-4 w-4" />
                                             Contact
                                         </a>
                                     )}
 
                                     {student.linkedin && (
                                         <a
-                                            href={
-                                                student.linkedin
-                                            }
+                                            href={student.linkedin}
                                             target="_blank"
-                                            rel="noreferrer"
-                                            className="flex items-center gap-2 px-5 py-2.5 rounded-xl border border-slate-300 text-slate-600 font-semibold hover:bg-slate-50 transition"
+                                            rel="noopener noreferrer"
+                                            className="flex items-center gap-2 rounded-xl border border-slate-300 px-5 py-2.5 font-semibold text-slate-600 transition hover:bg-slate-50"
                                         >
                                             LinkedIn
-                                            <ExternalLink className="w-4 h-4" />
+                                            <ExternalLink className="h-4 w-4" />
                                         </a>
                                     )}
-
                                 </div>
-
                             </div>
                         );
                     })}
-
                 </div>
-
             </main>
-
         </div>
     );
 }
-
 
 // =====================================================
 // INFO BOX
 // =====================================================
 
-function InfoBox({
-    icon: Icon,
-    label,
-    value,
-}) {
+function InfoBox({ icon: Icon, label, value }) {
     return (
-        <div className="p-4 rounded-2xl bg-slate-50">
-
-            <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase">
-                <Icon className="w-4 h-4 text-[#14B8A6]" />
+        <div className="rounded-2xl bg-slate-50 p-4">
+            <div className="flex items-center gap-2 text-xs font-bold uppercase text-slate-400">
+                <Icon className="h-4 w-4 text-[#14B8A6]" />
                 {label}
             </div>
 
-            <p className="text-sm font-semibold text-[#1E1B4B] mt-2">
+            <p className="mt-2 break-words text-sm font-semibold text-[#1E1B4B]">
                 {value}
             </p>
-
         </div>
     );
 }
-
 
 // =====================================================
 // STATUS BADGE
 // =====================================================
 
 function StatusBadge({ status }) {
-
     const config = {
         pending: {
             label: "Pending",
-            className:
-                "bg-amber-50 text-amber-600",
+            className: "bg-amber-50 text-amber-600",
             icon: Clock3,
         },
-
         accepted: {
             label: "Accepted",
-            className:
-                "bg-green-50 text-green-600",
+            className: "bg-green-50 text-green-600",
             icon: CheckCircle,
         },
-
         rejected: {
             label: "Rejected",
-            className:
-                "bg-red-50 text-red-600",
+            className: "bg-red-50 text-red-600",
             icon: XCircle,
         },
     };
 
-    const current =
-        config[status] ||
-        config.pending;
-
+    const current = config[status] || config.pending;
     const Icon = current.icon;
 
     return (
         <span
-            className={`inline-flex items-center gap-2 px-3 py-1.5 rounded-full text-xs font-bold ${current.className}`}
+            className={`inline-flex items-center gap-2 self-start rounded-full px-3 py-1.5 text-xs font-bold ${current.className}`}
         >
-            <Icon className="w-4 h-4" />
+            <Icon className="h-4 w-4" />
             {current.label}
         </span>
     );

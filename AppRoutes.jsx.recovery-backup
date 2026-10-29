@@ -1,0 +1,370 @@
+
+import React from "react";
+import {
+    Routes,
+    Route,
+    Navigate,
+    Link,
+    useLocation,
+} from "react-router-dom";
+import { ArrowRight } from "lucide-react";
+
+// ==================== PUBLIC ====================
+import SplashScreen from "../components/splash/SplashScreen";
+import Landing from "../pages/Landing";
+
+// ==================== AUTHENTICATION ====================
+import Register from "../pages/auth/Register";
+import Login from "../pages/auth/Login";
+import ForgotPassword from "../pages/auth/ForgotPassword";
+import VerifyOTP from "../pages/auth/VerifyOTP";
+import ResetPassword from "../pages/auth/ResetPassword";
+
+// ==================== ADMIN ====================
+import AdminLogin from "../pages/admin/AdminLogin";
+import AdminDashboard from "../pages/admin/AdminDashboard";
+
+// ==================== STUDENT DASHBOARD ====================
+import CompleteProfile from "../pages/dashboard/CompleteProfile";
+import Dashboard from "../pages/dashboard/Dashboard";
+import BuildTeam from "../pages/dashboard/BuildTeam";
+import FindTeammates from "../pages/dashboard/FindTeammates";
+import Profile from "../pages/dashboard/Profile";
+import Achievements from "../pages/dashboard/Achievements";
+import Settings from "../pages/dashboard/Settings";
+import UpcomingEvents from "../pages/dashboard/UpcomingEvents";
+import DailyChallenge from "../pages/dashboard/DailyChallenge";
+import DashboardNotification from "../pages/dashboard/DashboardNotification";
+import RealWorldProblems from "../pages/dashboard/RealWorldProblems";
+import MyTeam from "../pages/dashboard/MyTeam";
+
+// ==================== HACKATHON PAGES ====================
+import HackathonHome from "../pages/dashboard/HackathonHome";
+import ExploreHackathons from "../pages/dashboard/ExploreHackathons";
+import MyHackathons from "../pages/dashboard/MyHackathons";
+import HackathonDetails from "../pages/dashboard/HackathonDetails";
+import HackathonRegistration from "../pages/dashboard/HackathonRegistration";
+
+// ==================== STAKEHOLDER ====================
+import StakeholderDashboard from "../pages/stakeholder/StakeholderDashboard";
+import CreateProblem from "../pages/stakeholder/CreateProblem";
+import MyProblems from "../pages/stakeholder/MyProblems";
+
+// ==================== CHAT ====================
+import ChatPage from "../pages/chat/ChatPage";
+
+// ==================== PROTECTED ROUTE ====================
+import ProtectedRoute from "./ProtectedRoute";
+
+export default function AppRoutes() {
+    return (
+        <Routes>
+            {/* ==================== PUBLIC ==================== */}
+            <Route path="/" element={<SplashScreen />} />
+            <Route path="/landing" element={<Landing />} />
+
+            <Route path="/register" element={<Register />} />
+            <Route path="/login" element={<Login />} />
+
+            <Route
+                path="/forgot-password"
+                element={<ForgotPassword />}
+            />
+
+            <Route
+                path="/verify-otp"
+                element={<VerifyOTP />}
+            />
+
+            <Route
+                path="/reset-password"
+                element={<ResetPassword />}
+            />
+
+            <Route
+                path="/stakeholder-pending"
+                element={<StakeholderPending />}
+            />
+
+            {/* ==================== ADMIN ==================== */}
+            <Route
+                path="/admin/login"
+                element={<AdminLogin />}
+            />
+
+            <Route
+                path="/admin/dashboard"
+                element={<AdminDashboard />}
+            />
+
+            {/* ==================== STUDENT DASHBOARD ==================== */}
+            <Route
+                path="/complete-profile"
+                element={
+                    <ProtectedRoute allowedAccountType="student">
+                        <CompleteProfile />
+                    </ProtectedRoute>
+                }
+            />
+
+            <Route
+                path="/dashboard"
+                element={
+                    <ProtectedRoute allowedAccountType="student">
+                        <Dashboard />
+                    </ProtectedRoute>
+                }
+            />
+
+            <Route
+                path="/find-teammates"
+                element={
+                    <ProtectedRoute allowedAccountType="student">
+                        <FindTeammates />
+                    </ProtectedRoute>
+                }
+            />
+
+            <Route
+                path="/build-team"
+                element={
+                    <ProtectedRoute allowedAccountType="student">
+                        <BuildTeam />
+                    </ProtectedRoute>
+                }
+            />
+
+            <Route
+                path="/my-team"
+                element={
+                    <ProtectedRoute allowedAccountType="student">
+                        <MyTeam />
+                    </ProtectedRoute>
+                }
+            />
+
+            <Route
+                path="/profile"
+                element={
+                    <ProtectedRoute>
+                        <Profile />
+                    </ProtectedRoute>
+                }
+            />
+
+            <Route
+                path="/achievements"
+                element={
+                    <ProtectedRoute allowedAccountType="student">
+                        <Achievements />
+                    </ProtectedRoute>
+                }
+            />
+
+            <Route
+                path="/settings"
+                element={
+                    <ProtectedRoute>
+                        <Settings />
+                    </ProtectedRoute>
+                }
+            />
+
+            <Route
+                path="/events"
+                element={
+                    <ProtectedRoute allowedAccountType="student">
+                        <UpcomingEvents />
+                    </ProtectedRoute>
+                }
+            />
+
+            <Route
+                path="/daily-challenge"
+                element={
+                    <ProtectedRoute allowedAccountType="student">
+                        <DailyChallenge />
+                    </ProtectedRoute>
+                }
+            />
+
+            <Route
+                path="/dashboard-notification"
+                element={
+                    <ProtectedRoute>
+                        <DashboardNotification />
+                    </ProtectedRoute>
+                }
+            />
+
+            <Route
+                path="/notifications"
+                element={
+                    <ProtectedRoute>
+                        <DashboardNotification />
+                    </ProtectedRoute>
+                }
+            />
+
+            {/* ==================== HACKATHONS ==================== */}
+            <Route
+                path="/hackathons"
+                element={
+                    <ProtectedRoute allowedAccountType="student">
+                        <HackathonHome />
+                    </ProtectedRoute>
+                }
+            />
+
+            <Route
+                path="/explore-hackathons"
+                element={
+                    <ProtectedRoute allowedAccountType="student">
+                        <ExploreHackathons />
+                    </ProtectedRoute>
+                }
+            />
+
+            <Route
+                path="/my-hackathons"
+                element={
+                    <ProtectedRoute allowedAccountType="student">
+                        <MyHackathons />
+                    </ProtectedRoute>
+                }
+            />
+
+            <Route
+                path="/hackathons/:id"
+                element={
+                    <ProtectedRoute allowedAccountType="student">
+                        <HackathonDetails />
+                    </ProtectedRoute>
+                }
+            />
+
+            <Route
+                path="/hackathons/:id/register"
+                element={
+                    <ProtectedRoute allowedAccountType="student">
+                        <HackathonRegistration />
+                    </ProtectedRoute>
+                }
+            />
+
+            {/* ==================== REAL-WORLD PROBLEMS ==================== */}
+            <Route
+                path="/real-world-problems"
+                element={
+                    <ProtectedRoute allowedAccountType="student">
+                        <RealWorldProblems />
+                    </ProtectedRoute>
+                }
+            />
+
+            {/* ==================== CHAT ==================== */}
+            <Route
+                path="/chat"
+                element={
+                    <ProtectedRoute>
+                        <ChatPage />
+                    </ProtectedRoute>
+                }
+            />
+
+            {/* ==================== STAKEHOLDER ==================== */}
+            <Route
+                path="/stakeholder-dashboard"
+                element={
+                    <ProtectedRoute allowedAccountType="stakeholder">
+                        <StakeholderDashboard />
+                    </ProtectedRoute>
+                }
+            />
+
+            <Route
+                path="/stakeholder/create-problem"
+                element={
+                    <ProtectedRoute allowedAccountType="stakeholder">
+                        <CreateProblem />
+                    </ProtectedRoute>
+                }
+            />
+
+            <Route
+                path="/stakeholder/problems"
+                element={
+                    <ProtectedRoute allowedAccountType="stakeholder">
+                        <MyProblems />
+                    </ProtectedRoute>
+                }
+            />
+
+            <Route
+                path="/my-problems"
+                element={
+                    <ProtectedRoute allowedAccountType="stakeholder">
+                        <Navigate
+                            to="/stakeholder/problems"
+                            replace
+                        />
+                    </ProtectedRoute>
+                }
+            />
+
+            {/* ==================== FALLBACK ==================== */}
+            <Route
+                path="*"
+                element={<Navigate to="/" replace />}
+            />
+        </Routes>
+    );
+}
+
+// ==================== STAKEHOLDER PENDING PAGE ====================
+function StakeholderPending() {
+    const location = useLocation();
+
+    const message =
+        location.state?.message ||
+        "Your stakeholder application has been submitted. You can sign in after an administrator approves your account.";
+
+    return (
+        <div className="flex min-h-screen items-center justify-center bg-[#F8FAFC] px-4">
+            <div className="w-full max-w-md rounded-2xl border border-amber-200 bg-white p-8 text-center shadow-xl">
+                <div className="mx-auto mb-5 flex h-16 w-16 items-center justify-center rounded-full bg-amber-100 text-amber-700">
+                    <span className="text-3xl">⏳</span>
+                </div>
+
+                <h1 className="text-2xl font-black text-[#1E1B4B]">
+                    Application Pending
+                </h1>
+
+                <p className="mt-3 text-sm leading-6 text-slate-600">
+                    {message}
+                </p>
+
+                <p className="mt-3 text-sm leading-6 text-slate-500">
+                    Our admin team will review your organization.
+                    You can access your stakeholder dashboard after approval.
+                </p>
+
+                <Link
+                    to="/login"
+                    className="mt-6 inline-flex h-11 items-center justify-center gap-2 rounded-xl bg-[#1E1B4B] px-6 text-sm font-bold text-white transition hover:bg-[#312E81]"
+                >
+                    Go to Sign In
+                    <ArrowRight size={16} />
+                </Link>
+
+                <Link
+                    to="/landing"
+                    className="mt-4 block text-sm font-semibold text-slate-500 hover:text-[#14B8A6]"
+                >
+                    Back to Home
+                </Link>
+            </div>
+        </div>
+    );
+}
+

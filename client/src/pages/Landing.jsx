@@ -10,6 +10,8 @@ import FAQ from "../components/landing/FAQ";
 import CTA from "../components/landing/CTA";
 import Footer from "../components/layout/Footer";
 import FindTeammatesPreview from "../components/landing/FindTeammatesPreview";
+import AIChatbot from "../components/Chatbot/AIChatbot";
+
 
 export default function Landing() {
     return (
@@ -55,6 +57,8 @@ export default function Landing() {
             </section>
 
             <Footer />
+            <AIChatbot />
+
         </div>
     );
 }

@@ -1,15 +1,13 @@
+
 import mongoose from "mongoose";
 
 const userSchema = new mongoose.Schema(
     {
-        // =========================
-        // BASIC USER INFORMATION
-        // =========================
-
         name: {
             type: String,
             required: true,
             trim: true,
+            maxlength: 100,
         },
 
         email: {
@@ -23,50 +21,56 @@ const userSchema = new mongoose.Schema(
         password: {
             type: String,
             required: true,
+            select: false,
         },
 
-        // =========================
-        // EDUCATION
-        // =========================
+        accountType: {
+            type: String,
+            enum: ["student", "stakeholder"],
+            default: "student",
+            required: true,
+        },
 
-        college: {
+        accountStatus: {
+            type: String,
+            enum: ["active", "pending", "rejected", "suspended"],
+            default: "active",
+            required: true,
+        },
+
+        // Stakeholder approval audit information
+        reviewedBy: {
+            type: mongoose.Schema.Types.ObjectId,
+            ref: "Admin",
+            default: null,
+        },
+
+        reviewedAt: {
+            type: Date,
+            default: null,
+        },
+
+        rejectionReason: {
             type: String,
             default: "",
             trim: true,
+            maxlength: 500,
         },
 
-        branch: {
-            type: String,
-            default: "",
-            trim: true,
-        },
+        // Student education
+        college: { type: String, default: "", trim: true },
+        branch: { type: String, default: "", trim: true },
+        year: { type: String, default: "", trim: true },
 
-        year: {
-            type: String,
-            default: "",
-        },
+        // Stakeholder organization
+        organizationName: { type: String, default: "", trim: true },
+        organizationDescription: { type: String, default: "", trim: true },
+        website: { type: String, default: "", trim: true },
 
-        // =========================
-        // PROFILE INFORMATION
-        // =========================
-
-        role: {
-            type: String,
-            default: "MERN Developer",
-            trim: true,
-        },
-
-        location: {
-            type: String,
-            default: "",
-            trim: true,
-        },
-
-        bio: {
-            type: String,
-            default: "",
-            trim: true,
-        },
+        // Profile information
+        role: { type: String, default: "MERN Developer", trim: true },
+        location: { type: String, default: "", trim: true },
+        bio: { type: String, default: "", trim: true },
 
         availability: {
             type: String,
@@ -74,84 +78,28 @@ const userSchema = new mongoose.Schema(
             default: "Available",
         },
 
-        // =========================
-        // SKILLS
-        // =========================
+        skills: { type: [String], default: [] },
 
-        skills: {
-            type: [String],
-            default: [],
-        },
+        github: { type: String, default: "", trim: true },
+        linkedin: { type: String, default: "", trim: true },
+        portfolio: { type: String, default: "", trim: true },
 
-        // =========================
-        // SOCIAL LINKS
-        // =========================
-
-        github: {
-            type: String,
-            default: "",
-            trim: true,
-        },
-
-        linkedin: {
-            type: String,
-            default: "",
-            trim: true,
-        },
-
-        portfolio: {
-            type: String,
-            default: "",
-            trim: true,
-        },
-
-        // =========================
-        // PROFILE PHOTO
-        // =========================
-
-        photo: {
-            type: String,
-            default: "",
-        },
-
-        // =========================
-        // RESUME
-        // =========================
+        photo: { type: String, default: "" },
 
         resume: {
-            name: {
-                type: String,
-                default: "",
-            },
-
-            size: {
-                type: Number,
-                default: 0,
-            },
-
-            type: {
-                type: String,
-                default: "",
-            },
-
-            data: {
-                type: String,
-                default: "",
-            },
+            name: { type: String, default: "" },
+            size: { type: Number, default: 0 },
+            type: { type: String, default: "" },
+            data: { type: String, default: "" },
         },
-
-        // =========================
-        // PROFILE COMPLETION
-        // =========================
 
         profileCompleted: {
             type: Boolean,
             default: false,
         },
     },
-    {
-        timestamps: true,
-    }
+    { timestamps: true }
 );
 
 export default mongoose.model("User", userSchema);
+
