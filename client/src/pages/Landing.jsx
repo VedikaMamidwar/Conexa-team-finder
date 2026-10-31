@@ -3,7 +3,7 @@ import Hero from "../components/landing/Hero";
 import Trusted from "../components/landing/Trusted";
 import Features from "../components/landing/Features";
 import DashboardShowcase from "../components/landing/DashboardShowcase";
-import HowItWorks from "../components/landing/HowItWorks";
+import HowItWorks from "../components/landing/howItWorks";
 import Statistics from "../components/landing/Statistics";
 import Testimonials from "../components/landing/Testimonials";
 import FAQ from "../components/landing/FAQ";
